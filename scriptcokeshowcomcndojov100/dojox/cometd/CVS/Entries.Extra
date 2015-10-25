@@ -1,0 +1,12 @@
+D/_notes///
+/HttpChannels.js///
+/README///
+/RestChannels.js///
+/_base.js///
+/ack.js///
+/callbackPollTransport.js///
+/longPollTransport.js///
+/longPollTransportFormEncoded.js///
+/longPollTransportJsonEncoded.js///
+/timestamp.js///
+/timesync.js///

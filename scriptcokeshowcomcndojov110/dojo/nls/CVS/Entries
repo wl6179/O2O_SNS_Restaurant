@@ -1,0 +1,115 @@
+D/ar////
+D/ca////
+D/cs////
+D/da////
+D/de////
+D/el////
+D/es////
+D/fi////
+D/fr////
+D/he////
+D/hu////
+D/it////
+D/ja////
+D/ko////
+D/nb////
+D/nl////
+D/pl////
+D/pt////
+D/pt-pt////
+D/ru////
+D/sk////
+D/sl////
+D/sv////
+D/th////
+D/tr////
+D/zh////
+D/zh-tw////
+D/_notes////
+/colors.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_ROOT.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_ar.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_ca.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_cs.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_da.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_de-de.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_de.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_el.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_en-gb.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_es-es.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_es.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_fi-fi.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_fi.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_fr-fr.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_fr.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_he-il.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_he.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_hu.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_it-it.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_it.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_ja-jp.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_ja.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_ko-kr.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_ko.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_nb.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_nl-nl.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_nl.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_pl.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_pt-br.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_pt-pt.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_pt.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_ru.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_sk.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_sl.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_sv.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_th.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_tr.js/1.1/Sat May 29 18:07:23 2010//
+/dojo.CXBG.CokeShow.com.cn_xx.js/1.1/Sat May 29 18:07:24 2010//
+/dojo_ROOT.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_ar.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_ca.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_cs.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_da.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_de-de.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_de.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_el.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_en-gb.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_en-us.js/1.1/Sat May 29 18:07:23 2010//
+/dojo_en.js/1.1/Sat May 29 18:07:23 2010//
+/dojo_es-es.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_es.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_fi-fi.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_fi.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_fr-fr.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_fr.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_he-il.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_he.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_hu.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_it-it.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_it.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_ja-jp.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_ja.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_ko-kr.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_ko.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_nb.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_nl-nl.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_nl.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_pl.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_pt-br.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_pt-pt.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_pt.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_ru.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_sk.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_sl.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_sv.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_th.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_tr.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_xx.js/1.1/Wed May  5 06:00:19 2010//
+/dojo_zh-cn.js/1.1/Sat May 29 18:07:24 2010//
+/dojo_zh-tw.js/1.1/Sat May 29 18:07:24 2010//
+/dojo_zh.js/1.1/Sat May 29 18:07:24 2010//
+/复件 dojo_en-us.js/1.1/Wed May  5 06:00:19 2010//
+/复件 dojo_en.js/1.1/Wed May  5 06:00:19 2010//
+/复件 dojo_zh-cn.js/1.1/Wed May  5 06:00:19 2010//
+/复件 dojo_zh-tw.js/1.1/Wed May  5 06:00:19 2010//
+/复件 dojo_zh.js/1.1/Wed May  5 06:00:19 2010//
