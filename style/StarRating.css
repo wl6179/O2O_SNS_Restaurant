@@ -1,0 +1,60 @@
+﻿/* 评级最外层列表样式 */
+.rating {
+    list-style:none;
+    margin:0px;
+    padding:0px;
+    width:100px;
+    height:20px;
+    position:relative;
+    background:url('/images/StarRating.gif') top left repeat-x; 
+}
+
+/* 评级列表项样式 */
+.rating li {
+    padding:0px;
+    margin:0px;
+    float:left;
+}
+
+/* 评级列表项内超链接样式 */
+.rating li a {
+    display:block;
+    width:20px;
+    height:20px;
+    text-decoration:none;
+    text-indent:-3000px;
+    z-index:20;
+    position:absolute;
+    padding:0px;
+}
+
+/* 评级列表项内超链接被鼠标覆盖时样式 */
+.rating li a:hover {
+    background:url('/images/StarRating.gif') left bottom;
+    z-index:2;
+    left:0px;
+}
+
+/* 1钻-5钻的样式 */
+.rating a.diamond1 { left:0px; }
+.rating a.diamond1:hover { width:20px; }
+.diamond1_hover { width:120px; }
+
+.rating a.diamond2 { left:20px; }
+.rating a.diamond2:hover { width:40px; }
+.rating a.diamond3 { left:40px; }
+.rating a.diamond3:hover { width:60px; }
+.rating a.diamond4 { left:60px; }
+.rating a.diamond4:hover { width:80px; }
+.rating a.diamond5 { left:80px; }
+.rating a.diamond5:hover { width:100px; }
+
+/* 当前等级样式，数据库中记载已选择的等级显示 */
+.rating li.current-rating {
+    background:url('/images/StarRating.gif') left center;
+    position:relative;
+    height:20px;
+    display:block;
+    text-indent:-1000px;
+    z-index:1;
+}

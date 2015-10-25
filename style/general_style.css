@@ -1,0 +1,295 @@
+﻿/** {
+	margin: 0px;
+}*/
+a {
+	color:#003366;
+	text-decoration:none;
+}
+
+a.current {
+	color:#999999;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+body {
+	font-family: verdana, tahoma, helvetica, arial, sans-serif;
+	font-size: 100%;
+	background-color:#FFFFFF;
+	margin: 0em;
+}
+
+from {
+	padding: 0px;
+	margin: 0px;
+}
+
+
+ul {
+	font-size: 12px;
+	color:#666666;
+	line-height: 1.5em;
+	list-style: none;
+}
+
+h1 {
+	color:#FF9933;
+	font-weight:bold;
+	padding-left: 0.5em;
+	padding-top: 0.2em;
+	float:none;
+}
+
+h2 {
+	color:#FF9933;
+	font-size:70%;
+	font-weight:bold;
+	border-bottom-style:solid; border-bottom-width:1px; border-bottom-color:#E5E5E5;
+	float:none;
+}
+
+h3 {
+	color:#FF9933;
+	font-size:70%;
+	font-weight:bold;
+}
+
+h3 a{
+	color:#FF9933;
+}
+
+p {
+	text-align:justify;
+	color:#777777;
+	font-size: 70%;
+	line-height: 1.5em;
+}
+
+.orange {
+	color: #FF9933;
+}
+
+.blue {
+	color: #003366;
+}
+
+.green {
+	color: #DFFFBE;
+}
+
+.gray {
+	font-weight:normal;
+	font-size:80%;
+	color: #999999;
+}
+
+/* ----- Superior Bar -----  */
+div.supBar {
+	vertical-align: middle;
+	margin: 0px;
+}
+
+div.search {
+	margin: 0px;
+	width: 33em;
+	float: right;
+	clear: right;
+	color:#003366;
+	font-size: 70%;
+	margin: 1.3em 1em 0em 0em;
+	text-align: right;
+	
+}
+
+.searchbox {
+	color:#666666;
+	background-color:#F8F8F8;
+	border-style:solid; border-width:1px; border-color:#F0F0F0;
+}
+
+/* ----- Menu -----*/
+div.menu {
+	clear:both;
+	margin: 0px;
+	width: auto;
+	height: 36px;
+	vertical-align: middle;
+	font-size:80%;
+	background-color:#003366;
+	padding: 0.8em 1em 0em 1em;
+	border-style:solid; border-width:1px; border-color:#E5E5E5;
+	text-align: right;
+	color:#FFFFFF;
+	
+}
+
+div.menu a{
+	color:#FFFFFF;
+}
+
+/* ----- right Info - News -----*/
+
+div.newsContainer{
+	float: left;
+	clear: left;
+	width: 12em;
+	margin: 0.5em 0.5em 0em 0.5em;
+}
+
+div.news1{
+	width: 12em;
+	background-color:#F8F8F8;
+	border-style:solid; border-width:1px; border-color:#F0F0F0;
+	margin-bottom: 0.5em;
+	padding: 0.5em 0.5em 0.5em 0.5em;	
+}
+
+div.news2{
+	width: 12em;
+	background-color:#DFFFBE;
+	border-style:solid; border-width:1px; border-color:#F0F0F0;
+	margin-bottom: 0.5em;
+	padding: 0.5em 0.5em 0.5em 0.5em;
+}
+
+/* ----- main Container ----- */
+div.mainContainer{
+	margin: 0em 0em 0em 13.3em;
+}
+
+div.rightInfo{
+	float: right;
+	clear: right;
+	width: 12em;
+	background-color:#FFFFFF;
+	border-style:solid; border-width:1px; border-color:#FFF3CE;
+	
+	margin: 0.5em 0.5em 0.5em 0em;
+	padding: 0.5em 0.5em 0.5em 0.5em;
+}
+
+div.rightInfo h2{
+	color:#FFFFFF;
+	background-color:#FF9933;
+	border-style:solid; border-width:1px; border-color:#FF9933;
+}
+
+div.mainInfo{
+	width: auto;
+	border-style:solid; border-width:1px; border-color:#F0F0F0;
+	
+	margin: 0.5em 0.5em 0.5em 0.5em;
+	padding: 0.5em 0.5em 0.5em 0.5em;
+}
+
+div.mainInfo h3 a{
+	color:#003366;
+}
+
+div.image {
+	float:left;
+	width: 80px;
+	height: 80px;
+	margin-right:0.5em;
+	margin-bottom:0.5em;
+	background-color:#F0F0F0;
+	border-style:dotted; border-width:1px; border-color:#F0F0F0;
+}
+
+div.image h3{
+	color:#CCCCCC;
+}
+
+/* ----- sub Compainer ----- */
+div.subContainer{
+	clear:both;
+	width: auto;
+	font-size:70%;
+	background-color:#F8F8F8;
+	border-style:solid; border-width:1px; border-color:#E5E5E5;
+	margin: 0em 0em 0em 0em;
+	padding: 1em 0.5em 1em 0.5em;
+}
+
+div.copyright {
+	color: #999999;
+	text-align:right;
+	margin-left:20em;
+	margin-right:0.5em;
+	font-size:80%;
+}
+
+div.copyright a{
+	color:#999999;
+}
+
+div.subLinks{
+	float:left;
+	clear:left;
+	color:#777777;
+	margin-left:2em;
+}
+
+div.subLinks a{
+	color:#777777;
+}
+
+
+
+/*listGo*/
+table#listGo {
+	border: 1px #cccccc solid;
+	font-size: 12px;;
+}
+
+table#listGo thead tr th{
+	background-color: #eeeeee;
+	background-image:url(../images/titleBar.png);
+	background-repeat:repeat-x;
+	color: #333333;
+	font-weight: normal;
+
+	padding: 3px 10px 3px 10px;
+	border: 0px #eeeeee solid;
+	text-align: center;
+}
+
+table#listGo tbody tr td {
+	padding: 3px 10px 3px 10px;
+	border: 1px #eeeeee solid;
+	
+	line-height:30px;
+}
+
+
+input.dojoButton1 {
+	border-color:#dedede;
+	background: #f5f5f5 url(../images/buttonActive.png) top left repeat-x;
+	/*background: none;*/
+	padding: 1px;
+	font-size: 12px;
+	border: 1px black solid !important;
+	/*
+	color:#243C5F;
+	background:#fcfcfc url("../images/buttonHover.png") repeat-x top left;
+	
+	border-color:#dedede;
+	background: #f5f5f5 url("../images/buttonActive.png") top left repeat-x;*/
+}
+
+
+.fontdlline{ text-decoration:line-through; color:#666666; font-size:10px;}
+
+
+/*DOJO样式区域*/
+
+/*专门处理文本框*/
+.input_tell{ height:20px; line-height:20px; background-color:#FFFFFF;  font-size:12px; width:160px; padding:0px; }
+/*通用的dojo文本框样式，WL，超级难找出啦呀...*/
+.input_tell { line-height:20px; height:20px; }
+.input_tell .dijitReset { line-height:20px; height:20px; }
+
+/*dojit.form.Button样式，iconClass*/
+.iconClass_back { background-image:url(../images/loading3.gif); background-repeat:no-repeat; width:16px; height:16px; }

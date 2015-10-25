@@ -1,0 +1,591 @@
+﻿<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+
+
+Response.ExpiresAbsolute = Now() - 1 
+Response.Expires = 0 
+Response.CacheControl = "no-cache" 
+Response.AddHeader "Pragma", "No-Cache"
+%>
+<%
+'模块说明：登录页.
+'日期说明：2010-05-16
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+
+<!--#include virtual="/system/md5.asp"-->
+
+
+
+
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+
+%>
+
+
+<%
+'处理退出.
+If Request("Action")="Logout" Then
+	Session("id")		=""
+	Session("username")=""				'销毁登录标记.
+	Session("password")=""				'销毁登录标记.
+	Session("lastloginip")=""			'销毁登录标记.
+	Session("lastlogintime")=""			'销毁登录标记.
+	Session("logintimes")=""			'销毁登录标记.
+	Session("account_level")=""			'销毁登录标记.
+	Session("cnname")=""				'销毁登录标记.
+	Session("deleted")=""				'销毁登录标记.
+'	Session("isHaveWork_account")=""	'销毁登录标记.
+'	Session("myjifen")		=""
+'	Session("money_WriteIn")		=""
+	Session("Birthday")		=""				'销毁登录标记.
+	Session("Sex")			=""				'销毁登录标记.
+	Session("province")		=""				'销毁登录标记.
+	Session("city")			=""				'销毁登录标记.
+	Session("adddate")		=""				'销毁登录标记.
+	Session("client_name")			=""				'销毁登录标记.
+	Session("client_telephone")		=""				'销毁登录标记.
+	Session("client_schooling")		=""				'销毁登录标记.
+	Session("client_memberoffamily")=""				'销毁登录标记.
+	Session("client_befondof")		=""				'销毁登录标记.
+	Session("client_MonthlyIncome")	=""				'销毁登录标记.
+	Session("client_work")			=""				'销毁登录标记.
+	Session("isBindingVIPCardNumber")	=""				'销毁登录标记.
+	Session("BindingVIPCardNumber")	=""				'销毁登录标记.
+	
+	Session("YouCanLoginID_Temp")=""	'销毁会话中介！WL
+	
+	If Request("fromurl")<>"" And Len(Request("fromurl"))>10 Then
+		Response.Redirect( CokeShow.DecodeURL(Request("fromurl")) )
+	Else
+		'验证不过，自动转向登录页面.
+		Response.Redirect "/ONCEFOREVER/LogOn.Welcome"
+	End If
+End If
+%>
+
+
+<%
+'初始化赋值.
+'变量定义.
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+Dim strGuide								'导航文字.
+Dim Action
+
+Dim fromurl
+
+
+
+'接收参数.
+Action		=CokeShow.filtRequest(Request("Action"))
+fromurl		=Request("fromurl")
+'CokeMark	=CokeShow.filtRequest(Request("CokeMark"))		'使用加密解密函数！
+
+
+
+'接收参数.
+CurrentTableName 	="[CXBG_account]"		'此模块涉及的[表]名.
+CurrentPageNow 		="login.asp"
+UnitName			="会员登录区"
+
+'response.Write CokeShow.AddCode_Num(6)
+
+'处理参数.
+'处理查询执行 控制变量
+'If classid="" Then
+'	classid=0
+'Else
+'	If isNumeric(classid) Then classid=CokeShow.CokeClng(classid) Else classid=0		'为了不让大导航条的首页按钮亮显.
+'End If
+''当前的菜品ID.
+'If CokeMark="" Then
+'	CokeMark=0
+'Else
+'	If isNumeric( CokeShow.DelCode_Num(CokeMark) ) Then
+'		CokeMark=CokeShow.CokeClng( CokeShow.DelCode_Num(CokeMark) )
+'	Else
+'		CokeMark=0
+'	End If
+'End If
+
+'response.Write "<br />CokeMark:"& CokeMark
+
+'定义当前分类（菜品分类）的classid.专门用于控制是否显示首页高亮显示.[当大导航上的某个分类被浏览时，依然可以高亮显示该分类导航！]
+Dim intCurrentClassid
+'intCurrentClassid = classid
+intCurrentClassid = 99999		'如果等于99999，则表示无论如何，大导航都不会有高亮显示！
+
+
+
+
+
+%>
+
+<%
+'主程序.Begin
+'如果已经登录，则立刻跳转到/ONCEFOREVER/'如果已经有登录状态，请转到用户中心.
+If CokeShow.CheckUserLogined()=True And isNumeric(Session("id")) And Len(Session("username"))>=10 And CokeShow.ChkPost=True Then
+	If fromurl<>"" And Len(fromurl)>10 Then
+		Response.Redirect( CokeShow.DecodeURL(fromurl) )
+'		'如果已经登录，则继续进行购物.
+'		If CokeShow.CheckUserLogined()=True And isNumeric(Session("id")) And Len(Session("username"))>=10 And CokeShow.ChkPost=True Then
+'			'通行.
+'		Else
+'			Response.Redirect "/ONCEFOREVER/LogOn.Welcome?fromurl="& CokeShow.EncodeURL( CokeShow.GetAllUrlII,"" )
+'		End If
+	Else
+		Response.Redirect "/ONCEFOREVER/"
+	End If
+Else
+	'不处理，直接进入loginUI.
+End If
+'主程序.End
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<META HTTP-EQUIV="Pragma" CONTENT="no-cache" />   
+	<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache" />   
+	<META HTTP-EQUIV="expires" CONTENT="0" />
+    
+	<link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="会员Club新会员注册" />
+	<meta http-equiv="Description" content="会员Club——新会员注册申请，点评家的诞生圣地：）" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+	<title>会员Club—美食家登录进入(会员登录) <% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_title",True,0) %></title>
+    
+    <link href="/css/other_yhzx.css" type="text/css" rel="stylesheet" />
+    <link href="/css/dlzc.css" type="text/css" rel="stylesheet" />
+    <link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+    
+<!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+		@import "/style/UpdateStyle.css";
+	</style>
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.Form");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		//dojo.require("dijit.Dialog");
+		dojo.require("dijit.form.ValidationTextBox");
+		dojo.require("dijit.form.Button");
+		
+		dojo.addOnLoad(function(){
+			dojo.byId("username").focus();
+		});
+	</script>
+    <script type="text/javascript" src="/script/public.js"></script>
+    
+
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgbody">
+
+<div id="cxbgbg_img">
+ <div id="dlzc_imgmid">
+  <div id="dlzc_headbg" style="background:url(../images/dlzc_img01A.jpg) repeat-y;">
+	<span class="fontred">抢座预订：<span class="font25">6493 0888</span>， 6493 7666</span>
+  </div>
+<!--middle start-->
+  <div class="dlzcmidbg">
+    <div class="dlzccentbg">
+      <div class="hydlzcbt">美食家登录：</div>
+	  <div class="hyzctable">
+	  
+<!--主页面-->
+<%
+'判断处理
+If Action<>"Login" Then
+	Call LoginUI()
+Else
+	Call LoginNow()
+End If
+
+If FoundErr=True Then
+	CokeShow.AlertErrMsg_foreground( ErrMsg )
+End If
+%>
+<!--主页面-->
+      
+      
+	</div>
+	</div>
+    <div class="clear"></div>
+  </div>
+  <div class="zcdlfooter"></div>
+<!--middle end-->
+</div>
+</div>
+</body>
+</html>
+<%
+'登录界面.
+Sub LoginUI()
+%>
+<script type="text/javascript" src="/script/getcity.js"></script>
+<script type="text/javascript">
+   function update_strength(input_field_id, output_display_id) 
+    {
+    var input_field = document.getElementById(input_field_id);
+    var output_display = document.getElementById(output_display_id);
+        
+    var input_str = input_field.value;
+    var input_length = input_str.length;
+
+    var strength = 0;
+
+    // increase strength if contains [0-9]
+    number_re = new RegExp("[0-9]");
+    if (number_re.test(input_str)) {
+      strength++;
+    }
+    // increase strength if contains non alpha
+    non_alpha_re = new RegExp("[^A-Za-z0-9]");
+    if (non_alpha_re.test(input_str)) {
+      strength++;
+    }
+
+    // increase strength if contains upper case
+    upper_alpha_re = new RegExp("[A-Z]");
+    if (upper_alpha_re.test(input_str)) {
+      strength++;
+    }
+    
+    // increase strength if long enough
+    if(input_length >=8) {
+      strength++;
+    }    
+
+    var strength_str; 
+    if (strength <= 1) {
+        strength_str = '&nbsp;&nbsp;<span class="yhmmtxt">密码强度：</span> <img src="/images/yes.gif" alt="正确" /><span class="mmqryl">弱</span> <span class="mmqrhs">中</span> <span class="mmqrhs">强</span>';
+    } else if (strength <= 2) {
+      strength_str = '&nbsp;&nbsp;<span class="yhmmtxt">密码强度：</span> <img src="/images/yes.gif" alt="正确" /><span class="mmqryl">弱</span> <span class="mmqryl">中</span> <span class="mmqrhs">强</span>';
+    } else {
+      strength_str = '&nbsp;&nbsp;<span class="yhmmtxt">密码强度：</span> <img src="/images/yes.gif" alt="正确" /><span class="mmqryl">弱</span> <span class="mmqryl">中</span> <span class="mmqryl">强</span>';
+    }
+    
+    if(input_str.length < 6) {
+      strength_str = '&nbsp;&nbsp;<span class="yhmmtxt">密码强度：</span> <span class="mmqryl">无效</span> <span class="mmqrhs">中</span> <span class="mmqrhs">强</span>';
+    }
+
+    output_display.innerHTML  = strength_str;
+}
+</script>
+      <form action="/ONCEFOREVER/LogOn.Welcome" method="post" name="reg" id="reg"
+        dojoType="dijit.form.Form"
+        execute="processForm('reg')"
+      ><!--dojoType="dijit.form.Form"-->
+      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+          <td width="17%"><span class="fontred">*</span> 账号：</td>
+          <td width="83%">
+            <input type="text" id="username" name="username"
+			dojoType="dijit.form.ValidationTextBox"
+			required="true"
+            propercase="false"
+			promptMessage="欢迎光临"
+			invalidMessage="请填写正确的Email电子邮件格式，例如：yourname6179@qq.com"
+			trim="true"
+			lowercase="true"
+            value=""
+			regExp="^[0-9a-zA-Z]+([0-9a-zA-Z]|_|\.|-)+[0-9a-zA-Z]+@(([0-9a-zA-Z]+\.)|([0-9a-zA-Z]+-))+[0-9a-zA-Z]+$"
+			style="width:250px;"
+            class="input_200"
+			/>&nbsp;&nbsp;(您的Email)
+          </td>
+        </tr>
+        <tr>
+          <td><span class="fontred">*</span> 密码：</td>
+          <td>
+		  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td width="50%">
+             	<input type="password" id="password" name="password" size="20"
+                dojoType="dijit.form.ValidationTextBox"
+                required="true"
+                propercase="false"
+                invalidMessage="密码不能为空！并且长度不应少于6位！"
+                trim="true"
+                lowercase="false"
+                value=""
+                regExp=".{6,20}"
+                style="width:x200px;"
+                class="input_150"
+                constraints="{ pattern:'@' }"
+                 onKeyup="update_strength('password','output_display_id')"
+                /> 
+              </td>
+              <td width="50%">
+              	<div id="output_display_id">
+                    &nbsp;
+                    <span class="yhmmtxt">密码强度：</span> 
+                    <span class="mmqryl">无效</span> 
+                    <span class="mmqrhs">中</span> 
+                    <span class="mmqrhs">强</span>
+                </div>
+              </td>
+            </tr>
+          </table>
+		  </td>
+        </tr>
+        <tr>
+          <td><span class="fontred">*</span> 验证码：</td>
+          <td>
+            <input type="text" id="CodeStr" name="CodeStr" size="4"
+			dojoType="dijit.form.ValidationTextBox"
+			required="true"
+			propercase="false"
+			invalidMessage="请填写4位数字！"
+			trim="true"
+            lowercase="false"
+            value=""
+			regExp="\d{4}"
+			style="width:80px;"
+			class="input_150"
+            maxlength="4"
+			/>
+            &nbsp;
+            <%
+			Randomize()		'生成随机数种子.
+			%>
+            <img id="GetCode" src="/public/code.asp?CokeShow=<% =Rnd() %>" style="cursor:hand" onClick="this.src='/public/code.asp?c='+Math.random()" alt="点击更换验证码" />
+            
+		  </td>
+        </tr>
+        <tr>
+          <td height="50" colspan="2" align="center" valign="middle">
+          	<button type="submit" id="submitbtn" 
+              dojoType="dijit.form.Button"
+              class="button"
+              >
+              &nbsp;登录进入&nbsp;
+            </button>
+              
+              <!--<input type="submit" name="submitbtn" id="submitbtn"
+              value="&nbsp;注册&nbsp;"
+              class="button"
+              />
+              
+              <input type="button" name="backbtn" id="backbtn"
+              value="&nbsp;返回&nbsp;"
+              class="button"
+               onclick="history.back(-1);"
+              />-->
+              <button type="button" id="backbtn" 
+              dojoType="dijit.form.Button"
+              class="button"
+               onclick="history.back(-1);"
+              >
+              &nbsp;返回&nbsp;
+              </button>
+              
+              	<div>&nbsp;</div>
+                <div class="mjmatxtdiv" style="font-size:14px;"><img src="/images/bit_05.gif" width="5" height="9" /> <img src="/images/ico/small/group_add.png" /> <a href="/ONCEFOREVER/AccedeToRegiste.Welcome<% If fromurl<>"" And Len(fromurl)>10 Then Response.Write "?fromurl="& CokeShow.EncodeURL( fromurl,"" ) %>">立刻免费注册</a></div>
+				<div class="mjmatxtdiv">
+                <img src="/images/bit_05.gif" width="5" height="9" /> <a href="/ONCEFOREVER/LostPassword.Welcome">忘记密码?</a>
+                &nbsp;
+                <img src="/images/bit_05.gif" width="5" height="9" /> <a href="/">返回首页</a>
+                </div>
+                <div class="mjmatxtdiv"></div>
+                <%
+		'		'如果尚未注册会员，则注册完后，继续进行购物.
+		'		<a href="/ONCEFOREVER/AccedeToRegiste.Welcome?fromurl=< % =CokeShow.EncodeURL( CokeShow.GetAllUrlII,"" ) % >">我尚无帐号,现在注册并继续刚才操作</a>
+				%>
+            
+          </td>
+        </tr>
+        <tr>
+          <td colspan="2" style=" text-align:center;">
+          	<span style="color:#FF3300;"><% =Request("Message") %></span>
+		  </td>
+        </tr>
+      </table>
+      <input type="hidden" name="Action" value="Login" />
+	  <input type="hidden" name="fromurl" value="<% =fromurl %>" />
+      </form>
+<%
+End Sub
+
+
+'登录处理.
+Sub LoginNow()
+	
+	Dim enterName,enterPassword
+	
+	If CokeShow.ChkPost=False Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br /><li>请您在站内登录，记入日志！</li>"
+	End If
+	
+	If Not CokeShow.CodePass Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br /><li>验证码错误！</li>"
+	End If
+	
+	'获取登录帐号.
+	enterName		=CokeShow.filtPass(Request("username"))
+	enterPassword	=CokeShow.filtPass(Request("password"))
+	
+	'验证
+	If enterName="" Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br /><li>帐号不能为空！</li>"
+	Else
+		If CokeShow.strLength(enterName)>50 Or CokeShow.strLength(enterName)<10 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br /><li>您的Email帐号长度不应大于50个字符，也不应小于10个字符的！</li>"
+		Else
+			If CokeShow.IsValidEmail(enterName)=False Then
+				FoundErr=True
+				ErrMsg=ErrMsg & "<br /><li>您的帐号(即Email)格式不正确！</li>"
+			Else
+				enterName=enterName
+			End If
+		End If
+	End If
+	
+	If enterPassword="" Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br /><li>密码不能为空！</li>"
+	Else
+		If CokeShow.strLength(enterPassword)>20 Or CokeShow.strLength(enterPassword)<6 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br><li>密码长度不能大于20个字符，也不能小于6个字符（至少六位）！</li>"
+		Else
+			enterPassword=enterPassword
+		End If
+	End If
+	
+	
+	'拦截错误，不然错误往下进行！
+	If FoundErr=True Then Exit Sub
+	
+	
+	enterPassword=md5(enterPassword)
+	'检测是否有此帐号.
+	Set RS=Server.CreateObject("Adodb.RecordSet")
+	sql="SELECT * FROM "& CurrentTableName &" WHERE deleted=0 AND username='"& enterName &"'"
+	If Not IsObject(CONN) Then link_database
+	RS.Open sql,CONN,1,3
+	
+	'没有此帐号.
+	If RS.Bof And RS.Eof Then
+		FoundErr=True
+		ErrMsg=ErrMsg & "<br /><li>没有此帐号“"& enterName &"”！</li>"
+	Else
+	'存在此帐号时，开始检测密码.
+		If enterPassword<>RS("password") Then
+			FoundErr=True
+			ErrMsg=ErrMsg & "<br /><li>帐号或密码错误！</li>"
+		Else
+		'通过验证.
+			'登录成功赋值.
+			Session.Timeout=120
+			Session("id")			=RS("id")
+			Session("username")		=RS("username")
+			Session("password")		=RS("password")
+			Session("lastloginip")	=RS("lastloginip")
+			Session("lastlogintime")=RS("lastlogintime")
+			Session("logintimes")	=RS("logintimes")
+			Session("account_level")=RS("account_level")
+			Session("cnname")		=RS("cnname")
+			Session("deleted")		=RS("deleted")
+'			Session("isHaveWork_account")=RS("isHaveWork_account")
+'			Session("myjifen")		=RS("myjifen")
+'			Session("money_WriteIn")		=RS("money_WriteIn")
+			Session("Birthday")		=RS("Birthday")
+			Session("Sex")			=RS("Sex")
+			Session("province")		=RS("province")
+			Session("city")			=RS("city")
+			Session("adddate")		=RS("adddate")
+			Session("client_name")			=RS("client_name")
+			Session("client_telephone")		=RS("client_telephone")
+			Session("client_schooling")		=RS("client_schooling")
+			Session("client_memberoffamily")=RS("client_memberoffamily")
+			Session("client_befondof")		=RS("client_befondof")
+			Session("client_MonthlyIncome")	=RS("client_MonthlyIncome")
+			Session("client_work")			=RS("client_work")
+			Session("isBindingVIPCardNumber")	=RS("isBindingVIPCardNumber")
+			Session("BindingVIPCardNumber")	=RS("BindingVIPCardNumber")
+			
+			'更新此次登录信息.
+			RS("lastloginip")	=Request.ServerVariables("REMOTE_ADDR")
+			RS("lastlogintime")	=Now()
+			RS("logintimes")	=RS("logintimes") + 1
+			
+			RS.Update
+			
+			'积分运算.Begin
+				'今日首次登录.
+				If DateDiff("d", Session("lastlogintime"), Now())>0 Then	'如果上回登录的日期，距离当天有1天以上之隔，那么今天是第一次正常登录！所以可以获得积分！
+					If CokeShow.JifenSystemExecute(5,Session("username"),3,"成功通过登录验证,您已成功获得了餐厅送出的3网站积分.",0)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+				End If
+			'积分运算.End
+			
+			'根据用户级别跳转到相应页面.
+			Select Case Session("account_level")
+				Case 0,1,2
+					If fromurl<>"" And Len(fromurl)>10 Then
+						Response.Redirect( CokeShow.DecodeURL(fromurl) )
+					Else
+						Response.Redirect "/ONCEFOREVER/"
+					End If
+				Case 3
+					Response.Redirect "xxx.asp"
+				Case 4
+					Response.Redirect "xxx.asp"
+				Case Else
+					Response.Write "请联系网站的管理者为您处理问题，并为您开通可以审核通过的会员等级！"
+				
+			End Select
+			'Response.Redirect( CokeShow.DecodeURL(fromurl) )
+			'Response.Redirect( CokeShow.comeurl )
+		End If
+		
+	End If
+	
+End Sub
+%>

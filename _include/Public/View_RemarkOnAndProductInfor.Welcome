@@ -1,0 +1,155 @@
+﻿<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：查看点评的对话框.
+'日期说明：2010-05-22
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+
+%>
+
+<%
+'初始化赋值.
+'变量定义.
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+Dim strGuide								'导航文字.
+
+Dim id
+
+'接收参数.
+id		=CokeShow.filtRequest(Request("id"))
+
+'接收参数.
+CurrentTableName 	="[View_RemarkOn_AccountInfor]"		'此模块涉及的[表]名.
+CurrentPageNow 		="/_include/Public/View_RemarkOnAndProductInfor.Welcome"
+UnitName			="点评查看"
+
+'response.Write CokeShow.AddCode_Num(6)
+
+'处理参数.
+'处理查询执行 控制变量
+If id="" Then
+	id=0
+Else
+	If isNumeric(id) Then id=CokeShow.CokeClng(id) Else id=0
+End If
+
+%>
+<%
+'主程序.Begin
+sql="SELECT TOP 1 * FROM "& CurrentTableName &" WHERE deleted=0 AND id="& id
+If Not IsObject(CONN) Then link_database
+Set RS=Server.CreateObject("Adodb.RecordSet")
+'	Response.Write "<br />"& sql
+'	Response.End 
+RS.Open sql,CONN,1,1
+
+If RS.Eof And RS.Bof Then
+	Response.Redirect "/err404.asp"
+	'该菜品已经下架.
+End If
+
+'主程序.End
+%>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	
+	
+	<link href="/css/club_index.css" type="text/css" rel="stylesheet" />
+</head>
+
+<body>
+
+    <table width="100%" border="0" cellspacing="1" cellpadding="0">
+	    <thead>
+         <tr>
+           <td width="6%">头像</td>
+           <td width="17%">昵称</td>
+           <td width="11%">点评日子</td>
+           <td width="11%">评星级</td>
+           <td width="15%">评价口味分数</td>
+           <td width="9%">评价环境分数</td>
+           <td width="8%">评价服务分数</td>
+           <td width="16%">评价人均消费</td>
+           <td width="7%">内容</td>
+         </tr>
+		</thead>
+		<tbody>
+         <tr class="trfff">
+           <td>
+           		<img style="border:1px #CCC solid;" src="<%
+				   If RS("Sex")=0 Then
+						Response.Write "/images/hytx/secrecy_100.jpg"
+				   ElseIf RS("Sex")=1 Then
+						Response.Write "/images/hytx/girl_36.jpg"
+				   ElseIf RS("Sex")=2 Then
+						Response.Write "/images/hytx/boy_36.jpg"
+				   Else
+						Response.Write "/images/NoPic.png"
+				   End If
+				   %>" width="45" height="45" />
+           </td>
+           <td><a href="/Club/MembersInformation.Welcome?CokeMark=<% =CokeShow.AddCode_Num( RS("Account_LoginID") ) %>" target="_blank"><% =RS("cnname") %></a></td>
+           <td><% =RS("adddate") %></td>
+           <td>
+           		<ul class="rating">
+                <li class="current-rating" style="width:<% =RS("theStarRatingForChineseDishInformation") * 20 %>px"></li>
+                
+                </ul>
+           </td>
+           <td>
+           		<strong style="font-size:14px; font-family: Georgia, 'Times New Roman', Times, serif;"><% =RS("ChineseDish_Taste") %></strong> 分
+           </td>
+           <td><% =RS("ChineseDish_DiningArea") %>分</td>
+           <td><% =RS("ChineseDish_Service") %>分</td>
+           <td><% =FormatCurrency(RS("ChineseDish_ConsumePerPerson"),2) %></td>
+           <td><% =RS("logtext") %></td>
+         </tr>
+         <!--<tr class="trgoy">
+           <td class="wai"><img src="images/hytx/boy_hy20.jpg" width="20" height="20" /></td>
+           <td>痴心不改</td>
+           <td>100分</td>
+           <td>50</td>
+           <td>280</td>
+           <td>500</td>
+           <td><img src="images/card_02.jpg" width="19" height="14" /></td>
+           <td>01月09日</td>
+           <td><a class="fontred_a" href="">查看</a></td>
+         </tr>-->
+		</tbody>
+       </table>
+
+</body>
+</html>

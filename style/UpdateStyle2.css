@@ -1,0 +1,75 @@
+﻿/*去掉一些顽固的dj默认样式*/
+/*针对食品详情页的dijitProgressBarEmpty进度条样式*/
+/*先分析捕捉到的dj的相关css*/
+/*.tundra .dijitProgressBar {
+margin:2px 0;
+}
+.tundra .dijitProgressBarEmpty {
+background:url("") repeat-x scroll center center #FFFFFF;进度空白处的样式
+border-color:#A2A2A2 #B8B8B8 #B8B8B8 #A2A2A2;进度空四周围边框的样式
+}
+.tundra .dijitProgressBarTile {
+background:url("images/progressBarFull.png") repeat-x scroll center center #F0F0F0;前进中进度的条的主样式
+}
+.tundra .dijitProgressBarFull {
+border-right:1px solid #B8B8B8;前进中进度的条的右边缘的突出一点的样式
+}
+.tundra .dijitProgressBarLabel {
+color:#293A4B;进度条上文字颜色的样式
+}
+.tundra .dijitProgressBarIndeterminate .dijitProgressBarTile {
+background:url("images/progressBarAnim.gif") repeat-x scroll center center #CAD2DE;动态的滚动的进度条动画，暂时用不到此处样式
+}
+*/
+
+/*防住ProgressBar样式*/
+.tundra .dijitProgressBarEmpty {
+background:url("") repeat-x scroll center center #FFFFFF;
+border-color:#eee #B8B8B8 #eee #ccc;
+}
+.tundra .dijitProgressBarTile {
+background:url("") repeat-x scroll center center #FFC68C;
+}
+.tundra .dijitProgressBarFull {
+border-right:1px solid #fff;
+}
+.tundra .dijitProgressBarLabel {
+color:#666; font-family: Georgia, "Times New Roman", Times, serif;
+}
+
+
+
+
+
+
+
+
+/*针对dj按钮*/
+/*去掉一些顽固的dj默认样式*/
+/*防住了无动作时的白色背景*/
+.tundra .dijitButtonNode {
+	url("/images/button_02.jpg") repeat scroll 0 -44px transparent;
+
+}
+
+/*防住了掠过时的白色背景*/
+.tundra #reg .dijitButtonHover .dijitReset .dijitButtonNode {
+	url("/images/button_02.jpg") repeat scroll 0 -44px transparent;
+}
+
+/*防住了点击时的白色背景*/
+.tundra #reg .dijitButtonActive .dijitReset .dijitButtonNode {
+	url("/images/button_02.jpg") repeat scroll 0 -44px transparent;
+}
+
+/*直接修改文字样式*/
+.tundra #reg .dijitButtonContents .dijitButtonText {
+	color: #F60;
+	font-size:12px;
+	font-weight:bold;
+	line-height: 23px;/*控制字体具体行高位置*/
+}
+
+.tundra #reg .dijitButtonText {
+	line-height: 28px;/*控制字体具体行高位置*/
+}

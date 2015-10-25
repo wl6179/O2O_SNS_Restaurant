@@ -1,0 +1,85 @@
+﻿<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：搜索菜品对话框.
+'日期说明：2010-09-20
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script type="text/javascript">
+		//dojo的ContentPane加载url时遇到重复注册控件问题.
+		//目前可以应对的方法，就是在load页面时判断该ID所对应的Widget是否存在，如果存在，就删除它.
+		////dijit.byId("FName").destroy();
+		////dijit.byId("FEmail").destroy();
+		
+	</script>
+	
+	
+	<style type="text/css">
+		.tuijianpengyouTable td {
+			height:30px;
+		}
+		
+	</style>
+</head>
+
+<body>
+
+    <form action="/ChineseDish/ChineseDish.Welcome" method="get" name="ShowDialog_Search" id="ShowDialog_Search" target="_blank"
+    
+    
+    ><!--dojoType="dijit.form.Form"
+    execute="processForm('tuijianpengyou')"-->
+		<table width="100%" border="0" cellspacing="3" cellpadding="0" class="tuijianpengyouTable">
+           <tr>
+             <td valign="top">搜索关键字：</td>
+             <td colspan="3">
+                <input type="text" id="Keyword" name="Keyword" size="8"
+                dojoType="dijit.form.ValidationTextBox"
+                required="true"
+                propercase="true"
+                invalidMessage="请填写您要搜索的关键字，如:佛跳墙"
+                trim="true"
+                lowercase="true"
+                value=""
+                regExp=".{1,8}"
+                style="width:x200px;"
+                class="input_150"
+                />
+             </td>
+           </tr>
+           
+           <tr>
+             <td colspan="4" style="text-align:center;">
+                <button type="button" id="xxxxxx"
+                dojoType="dijit.form.Button"
+                 onClick="dojo.byId('ShowDialog_Search').submit();"
+                >
+                &nbsp;搜索&nbsp;
+                </button>
+                <br />
+                <span id="responseDialog" style="color:#090;"><img src=/images/ico/small/emotion_smile.png /> 例如：甜~</span>
+             </td>
+           </tr>
+           
+       </table>
+       
+       
+        <input type="hidden" name="ExecuteSearch" value="10" />
+        <input type="hidden" name="Action" value="ShowDialog_Search" />
+        
+    </form>
+
+</body>
+</html>

@@ -1,0 +1,249 @@
+﻿<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：帐号管理中心——我的礼品券列表.
+'日期说明：2010-05-25
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/ONCEFOREVER/inc/_AccountTop.asp"-->
+
+
+<%
+'处理退出.
+If Request("Action")="Logout" Then
+	Session("id")			=""	'销毁登录标记.
+	Session("username")		=""	'销毁登录标记.
+	Session("password")		=""	'销毁登录标记.
+	Session("lastloginip")	=""	'销毁登录标记.
+	Session("lastlogintime")=""	'销毁登录标记.
+	Session("logintimes")	=""	'销毁登录标记.
+	Session("account_level")=""	'销毁登录标记.
+	Session("cnname")		=""	'销毁登录标记.
+	Session("deleted")		=""	'销毁登录标记.
+	
+	Session("Birthday")		=""	'销毁登录标记.
+	Session("Sex")			=""	'销毁登录标记.
+	Session("province")		=""	'销毁登录标记.
+	Session("city")			=""	'销毁登录标记.
+	Session("adddate")		=""	'销毁登录标记.
+	Session("client_name")			=""	'销毁登录标记.
+	Session("client_telephone")		=""	'销毁登录标记.
+	Session("client_schooling")		=""	'销毁登录标记.
+	Session("client_memberoffamily")=""	'销毁登录标记.
+	Session("client_befondof")		=""	'销毁登录标记.
+	Session("client_MonthlyIncome")	=""	'销毁登录标记.
+	Session("client_work")			=""	'销毁登录标记.
+	Session("isBindingVIPCardNumber")	=""	'销毁登录标记.
+	Session("BindingVIPCardNumber")	=""	'销毁登录标记.
+	
+	Response.Redirect "/ONCEFOREVER/LogOn.Welcome"	'验证不过，自动转向登录页面.
+End If
+%>
+
+
+<%
+'初始化赋值.
+'变量定义.
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+Dim strGuide								'导航文字.
+Dim Action
+Dim fromurl
+Dim username
+
+
+
+'接收参数.
+Action		=CokeShow.filtRequest(Request("Action"))
+fromurl		=Request("fromurl")
+username	=CokeShow.filtPass(Session("username"))
+
+
+
+'接收参数.
+CurrentTableName 	="[CXBG_account]"		'此模块涉及的[表]名.
+CurrentPageNow 		="login.asp"
+UnitName			="会员登录区"
+
+
+'处理参数.
+'验证
+If username="" Then
+	FoundErr=True
+	ErrMsg=ErrMsg &"<br /><li>帐号不能为空！</li>"
+Else
+	If CokeShow.strLength(username)>50 Or CokeShow.strLength(username)<10 Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br /><li>您的Email帐号长度不应大于50个字符，也不应小于10个字符的！请填写您的正确Email地址以方便我们和您取得联系.</li>"
+	Else
+		If CokeShow.IsValidEmail(username)=False Then
+			FoundErr=True
+			ErrMsg=ErrMsg & "<br /><li>您的帐号(即Email)格式不正确！</li>"
+		Else
+			username=username
+		End If
+	End If
+End If
+	
+'定义当前导航项.
+Dim ShowNavigationNo
+ShowNavigationNo=6
+%>
+
+<%
+'如果有未完成的操作，立刻跳转！WL
+If fromurl<>"" And Len(fromurl)>10 Then
+	Response.Redirect( CokeShow.DecodeURL(fromurl) )
+	Response.End()
+	
+End If
+%>
+
+<%
+'主程序.Begin
+'sql="SELECT * FROM "& CurrentTableName &" WHERE deleted=0 AND username='"& username &"'"
+sql="SELECT TOP 500 *,(select distinct sum(Jifen) over(partition by Account_LoginID) as sumJifen from [CXBG_account_JifenSystem] where deleted=0 and JifenWhichOperationRule='+' and Account_LoginID=[CXBG_account].username) as sumJifen_Now,DATEDIFF(day,GETDATE(),dateadd(year,year(GETDATE())-year(Birthday),Birthday)) AS now_day_num,(select distinct count(id) over(partition by Account_LoginID) as countRemarkOnTotal from [CXBG_account_RemarkOn] where deleted=0 and Account_LoginID=[CXBG_account].username) as countRemarkOnTotal_Now,(select distinct count(id) over(partition by Account_LoginID) as countRemarkOnStarRating from [CXBG_account_RemarkOn] where deleted=0 and Account_LoginID=[CXBG_account].username and theStarRatingForChineseDishInformation>0) as countRemarkOnStarRating_Now FROM [CXBG_account] Where deleted=0 and username='"& username &"'"
+Set RS=CONN.Execute(sql)
+
+If RS.Bof And RS.Eof Then
+	FoundErr=True
+	ErrMsg=ErrMsg &"<br /><li>您的帐号:"& username &" 不正确，或者此帐号尚未通过审核，无法登录操作！请与网站取得联系帮助您解决问题.</li>"
+End If
+'主程序.End
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="会员Club" />
+	<meta http-equiv="Description" content="会员Club" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+	<%
+	'定义当前页的标题文字.
+	Dim PageTitleWords
+	PageTitleWords = "我的帐号管理中心 - 痴心不改餐厅，一生为您服务"
+	%>
+	<title><% =PageTitleWords %></title>
+    
+	<link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+	<link href="/css/club_index.css" type="text/css" rel="stylesheet" />
+	
+    
+    <!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+	</style>
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		//dojo.require("dojo.parser");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		//dojo.require("dijit.Dialog");
+		
+		dojo.addOnLoad(function(){
+			
+		});
+	</script>
+    <script type="text/javascript" src="/script/public.js"></script>
+	
+    <link href="/style/StarRating.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/script/ONCEFOREVER/StarRating.js"></script>
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgclubbody">
+
+<div id="cxbgbg_clubimg">
+ <div id="cxbgbg_clubimgmid">
+ <!--header start-->
+  <div id="cxbgclub_headbg">
+ 	<!--header start-->
+	<!--#include virtual="/_include/_include_PublicHeadSearch_Code.asp"-->
+ 	<!--header end-->
+  </div>
+ <!--header end-->
+ <!--middle start-->
+<div class="yhzsmidbgclub">
+    <div class="hyzs_ymbg">
+      <div id="hyzs_club"><span class="fontred lfdisplay">欢迎光临，抢座预订请拨打：</span><span class="font25 fontred lfdisplay">6493 0888</span>， 6493 7666<span class="rtdisplay font14">评菜推荐赢积分·快乐兑换礼品券！</span></div>
+      
+      <!--左侧菜单-->
+      <!--#include virtual="/ONCEFOREVER/inc/_AccountLeft.asp"-->
+      <!--左侧菜单-->
+      
+	  <div class="rightyhzs_ht">
+	    <div class="club_htxx">
+         <div class="club_btmid"><span class="font12fff">您现在的位置：</span><a class="f00012" href="/">首页</a><span class="font12000">-</span><a class="f00012" href="/Club/">会员Club</a><span class="font12000">-</span><a class="f00014" href="###">我的礼品券</a></div>
+
+            <!--右侧内容-->
+            <%
+            
+            '判断处理
+            If Action<>"Login" Then
+                'Call ShowUI()
+				%>
+                        <!--会员的菜品点评列表-->
+						<!--#include virtual="/_include/ONCEFOREVER/_include_MemberInformation_GiftCertificated_Code.asp"-->
+                        <!--会员的菜品点评列表-->
+
+                <%
+            Else
+                Call LoginNow()
+            End If
+            
+            
+            If FoundErr=True Then
+                CokeShow.AlertErrMsg_foreground( ErrMsg )
+            End If
+            
+            %>
+		</div>
+	  </div>
+	</div>
+	
+	<div class="clear"></div>
+  </div>
+<!--middle end-->
+  <div class="left_line03"></div>
+  <div class="footer_club">
+	<!--底部-->
+	<!--#include virtual="/_include/_include_PublicFootCopyright_Code.asp"-->
+    <!--底部-->
+  </div>
+  <div class="footerclub_bom"></div>
+ </div>
+</div>
+</body>
+</html>
+<%
+'显示界面.
+Sub ShowUI()
+%>
+	
+<%
+End Sub
+
+%>

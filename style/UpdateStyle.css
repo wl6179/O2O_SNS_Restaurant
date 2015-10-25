@@ -1,0 +1,225 @@
+﻿/*去掉一些顽固的dj默认样式*/
+/*防住了无动作时的白色背景*/
+.tundra .dijitButtonNode {
+	background:none;
+	border:0;
+}
+
+/*防住了掠过时的白色背景*/
+.tundra #reg .dijitButtonHover .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*防住了点击时的白色背景*/
+.tundra #reg .dijitButtonActive .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*直接修改文字样式*/
+.tundra .dijitButtonContents .dijitButtonText {
+	color:#FFF;
+	font-size:14px;
+	font-weight:bold;
+	line-height: 23px;/*控制字体具体行高位置*/
+}
+
+/*全部参考：.tundra .dijitButtonHover .dijitButtonNode, 
+.tundra .dijitButtonNodeHover, 
+.tundra .dijitToggleButtonHover .dijitButtonNode, 
+.tundra .dijitDropDownButtonHover .dijitButtonNode, 
+.tundra .dijitComboButtonHover .dijitButtonContents, 
+.tundra .dijitComboButtonDownArrowHover .dijitDownArrowButton {
+	background:none;
+}*/
+
+.tundra .dijitButtonText {
+	line-height: 28px;/*控制字体具体行高位置*/
+}
+
+
+
+/*面向注册登录*/
+.tundra div .dijitInputField #username {
+	font-weight:bold;
+	font-family: Georgia, "Times New Roman", Times, serif;
+	text-align:center;
+	font-size:14px;
+	height:20px;
+	line-height:20px;
+	/*padding-left:3px;*/
+}
+.tundra div .dijitInputField #password, .tundra div .dijitInputField #repassword {
+	font-weight:bold;
+	text-align:center;
+	font-size:14px;
+	height:20px;
+	line-height:20px;
+}
+
+
+
+
+
+/*去掉一些顽固的dj默认样式——针对Club会员管理的留言页*/
+/*防住了无动作时的白色背景*/
+.tundra .dijitButtonNode {
+	background:none;
+	border:0;
+}
+
+/*防住了掠过时的白色背景*/
+.tundra #SendMessageForm .dijitButtonHover .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*防住了点击时的白色背景*/
+.tundra #SendMessageForm .dijitButtonActive .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*直接修改文字样式*/
+.tundra .dijitButtonContents .dijitButtonText {
+	color:#FFF;
+	font-size:14px;
+	font-weight:bold;
+	line-height: 23px;/*控制字体具体行高位置*/
+	
+}
+
+
+
+
+/*去掉一些顽固的dj默认样式——针对Club会员管理的留言页*/
+/*防住了无动作时的白色背景*/
+.tundra .dijitButtonNode {
+	background:none;
+	border:0;
+}
+
+/*防住了掠过时的白色背景*/
+.tundra #BindingMyVIPCardForm .dijitButtonHover .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*防住了点击时的白色背景*/
+.tundra #BindingMyVIPCardForm .dijitButtonActive .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*直接修改文字样式*/
+.tundra .dijitButtonContents .dijitButtonText {
+	color:#FFF;
+	font-size:14px;
+	font-weight:bold;
+	line-height: 23px;/*控制字体具体行高位置*/
+	
+}
+
+
+
+
+/*去掉一些顽固的dj默认样式——针对Club会员管理的留言页*/
+/*防住了无动作时的白色背景*/
+.tundra .dijitButtonNode {
+	background:none;
+	border:0;
+}
+
+/*防住了掠过时的白色背景*/
+.tundra #ChangePassword .dijitButtonHover .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*防住了点击时的白色背景*/
+.tundra #ChangePassword .dijitButtonActive .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*直接修改文字样式*/
+.tundra .dijitButtonContents .dijitButtonText {
+	color:#FFF;
+	font-size:14px;
+	font-weight:bold;
+	line-height: 23px;/*控制字体具体行高位置*/
+	
+}
+
+
+/*面向修改密码*/
+.tundra form#ChangePassword .dijitInputField #username {
+	font-weight:bold;
+	font-family: Georgia, "Times New Roman", Times, serif;
+	text-align:left;
+	font-size:14px;
+	height:20px;
+	line-height:20px;
+	/*padding-left:3px;*/
+}
+.tundra form#ChangePassword .dijitInputField #password, .tundra form#ChangePassword .dijitInputField #repassword {
+	font-weight:bold;
+	text-align:left;
+	font-size:14px;
+	height:20px;
+	line-height:20px;
+}
+
+
+
+
+
+
+/*去掉一些顽固的dj默认样式——针对Club会员管理的个人资料管理页*/
+/*防住了无动作时的白色背景*/
+.tundra .dijitButtonNode {
+	background:none;
+	border:0;
+}
+
+/*防住了掠过时的白色背景*/
+.tundra #PersonalInformationForm .dijitButtonHover .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*防住了点击时的白色背景*/
+.tundra #PersonalInformationForm .dijitButtonActive .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*直接修改文字样式*/
+.tundra .dijitButtonContents .dijitButtonText {
+	color:#FFF;
+	font-size:14px;
+	font-weight:bold;
+	line-height: 23px;/*控制字体具体行高位置*/
+	
+}
+
+
+
+
+
+/*去掉一些顽固的dj默认样式——针对大后台登录*/
+/*防住了无动作时的白色背景*/
+.tundra .dijitButtonNode {
+	background:none;
+	border:0;
+}
+
+/*防住了掠过时的白色背景*/
+.tundra #Login .dijitButtonHover .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*防住了点击时的白色背景*/
+.tundra #Login .dijitButtonActive .dijitReset .dijitButtonNode {
+	background:none;
+}
+
+/*直接修改文字样式*/
+.tundra .dijitButtonContents .dijitButtonText {
+	color:#FFF;
+	font-size:14px;
+	font-weight:bold;
+	line-height: 23px;/*控制字体具体行高位置*/
+	
+}

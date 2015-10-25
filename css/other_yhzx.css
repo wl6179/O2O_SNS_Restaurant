@@ -1,0 +1,9 @@
+@charset "utf-8";
+/* CSS Document */
+
+
+/*密码强度*/
+.yhmmtxt{text-align:right; padding-right:10px; line-height:28px; width:100px;}
+.mmqryl,.mmqrhs{width:50px; height:22px; line-height:22px; text-align:center;}
+.mmqryl{border-bottom:2px #FC7300 solid;}
+.mmqrhs{border-bottom:2px #DADADA solid;}

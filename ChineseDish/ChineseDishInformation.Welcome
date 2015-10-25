@@ -1,0 +1,860 @@
+﻿<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：菜品详情.
+'日期说明：2010-05-09
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+<!--#include virtual="/system/foreground_ToBrowseRecordsClass.asp"-->
+
+<%'!--#include virtual="/CokeCart/Shoppingcart.Class.asp"--%>
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+
+''购物车类实例化
+'Dim CokeCart
+'Set CokeCart = New ShoppingcartClass
+%>
+
+<%
+'初始化赋值.
+'变量定义.
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+Dim strGuide								'导航文字.
+
+Dim classid
+Dim CokeMark
+
+
+
+'接收参数.
+classid		=CokeShow.filtRequest(Request("classid"))
+CokeMark	=CokeShow.filtRequest(Request("CokeMark"))		'使用加密解密函数！
+
+
+
+'接收参数.
+CurrentTableName 	="[CXBG_product]"		'此模块涉及的[表]名.
+CurrentPageNow 		="/ChineseDish/ChineseDishInformation.Welcome"
+UnitName			="菜品"
+
+'response.Write CokeShow.AddCode_Num(6)
+
+'处理参数.
+'处理查询执行 控制变量
+If classid="" Then
+	classid=0
+Else
+	If isNumeric(classid) Then classid=CokeShow.CokeClng(classid) Else classid=0		'为了不让大导航条的首页按钮亮显.
+End If
+'当前的菜品ID.
+If CokeMark="" Then
+	CokeMark=0
+Else
+	If isNumeric( CokeShow.DelCode_Num(CokeMark) ) Then
+		CokeMark=CokeShow.CokeClng( CokeShow.DelCode_Num(CokeMark) )
+	Else
+		CokeMark=0
+	End If
+End If
+
+'response.Write "<br />CokeMark:"& CokeMark
+
+'定义当前分类（菜品分类）的classid.专门用于控制是否显示首页高亮显示.[当大导航上的某个分类被浏览时，依然可以高亮显示该分类导航！]
+Dim intCurrentClassid
+'intCurrentClassid = classid
+intCurrentClassid = 99999		'如果等于99999，则表示无论如何，大导航都不会有高亮显示！
+%>
+
+<%
+'主程序.Begin
+sql="SELECT TOP 10 * FROM "& CurrentTableName &" WHERE deleted=0 AND (isOnsale=1 or 1=1) AND id="& CokeMark
+If Not IsObject(CONN) Then link_database
+Set RS=Server.CreateObject("Adodb.RecordSet")
+'	Response.Write "<br />"& sql
+'	Response.End 
+RS.Open sql,CONN,1,1
+
+If RS.Eof And RS.Bof Then
+	Response.Redirect "/err404.asp"
+	'该菜品已经下架.
+End If
+
+
+
+'新增浏览历史.
+Dim ToBrowseRecords
+Set ToBrowseRecords = New ToBrowseRecordsClass
+
+'//'根据CokeMark获取第一张菜品图片.
+'//	Dim rsTmp__ToBrowseRecordsAddProduct,strTmp__ToBrowseRecordsAddProduct
+'//	Set rsTmp__ToBrowseRecordsAddProduct=CONN.Execute("SELECT TOP 1 * FROM [CXBG_product__photos] WHERE product_id="& CokeShow.CokeClng(CokeMark) &"ORDER BY photos_orderid DESC,id ASC")
+'//	If Not rsTmp__ToBrowseRecordsAddProduct.Eof Then
+'//		strTmp__ToBrowseRecordsAddProduct=Replace(rsTmp__ToBrowseRecordsAddProduct("photos_src"),"/uploadimages/","/uploadimages/60/")
+'//	Else
+'//		strTmp__ToBrowseRecordsAddProduct="/images/NoPic.gif"
+'//	End If
+'//	rsTmp__ToBrowseRecordsAddProduct.Close
+'//	Set rsTmp__ToBrowseRecordsAddProduct=Nothing
+	
+'//If ToBrowseRecords.AddProduct( CokeMark, RS("ProductName") &"$$"& RS("UnitPrice") &"$$"& strTmp__ToBrowseRecordsAddProduct &"" )=False Then Response.Write "<script>alert('浏览历史添加尚未成功.');< /script>"
+If ToBrowseRecords.AddProduct( CokeMark, RS("ProductName") &"$$"& RS("UnitPrice") &"$$"& RS("photo") &"" )=False Then Response.Write "<script>alert('浏览历史添加有误!');</script>"
+Set ToBrowseRecords = Nothing
+
+
+
+'主程序.End
+%>
+<%
+'定义当前导航项.
+Dim ShowNavigationNo
+ShowNavigationNo=2
+
+%>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="<% =Trim( RS("ProductName") ) %>" />
+	<meta http-equiv="Description" content="<% =CokeShow.nohtmlII( RS("description") ) %>" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+    <%
+	'定义当前页的标题文字.
+	Dim PageTitleWords
+	PageTitleWords = RS("ProductName") &" - "& CokeShow.otherField("[CXBG_controller]",1,"ID","site_title",True,0)
+	%>
+	<title><% =PageTitleWords %></title>
+	
+    
+    
+    <link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+    <link href="/css/sjym.css" type="text/css" rel="stylesheet" />
+    
+    
+	<!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+		
+		@import "/style/UpdateStyle2.css";
+	</style>
+	<!--@import "<% =dir_dj_system_foreground %>dojox/widget/Toaster/Toaster.css";-->
+    
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		dojo.require("dojo.parser");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.Form");
+		dojo.require("dijit.form.ValidationTextBox");
+		dojo.require("dijit.Dialog");
+		//dojo.require("dojox.widget.Toaster");
+		dojo.require("dijit.Tooltip");
+		
+		dojo.require("dijit.ProgressBar");
+		dojo.require("dojo.string");
+		
+		dojo.addOnLoad(function(){
+			
+		});
+		
+	</script>
+    <script type="text/javascript" src="/script/public.js"></script>
+	<link href="/style/StarRating.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/script/ONCEFOREVER/StarRating.js"></script>
+    
+    <style type="text/css">
+		ul.sjxx_mid_txt li.decoration span.xxright a {
+			text-decoration:underline;
+		}
+		.tjzjdp_sjym_txtpp img {
+			float:none;
+		}
+	</style>
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgbody">
+<a name="TopArea" id="TopArea"></a>
+<div id="cxbgbg_img">
+ <div id="cxbgbg_imgmid">
+  <div id="cxbg_headbg">
+ <!--header start-->
+  <!--#include virtual="/_include/_include_PublicHeadSearch_Code.asp"-->
+ <!--header end-->
+  </div>
+ <!--middle start-->
+<div class="sjymmidbg">
+<div class="sjym_txtimg_bg">
+   <div id="sjymfuctbg" class="fontred">欢迎光临，抢座预订请拨打：<span class="font25">6493 0888</span>， 6493 7666</div>
+   <div id="sjymwztbg">
+	 
+     <span class="font12fff">您现在的位置：</span><a href="/" class="f00012">首页</a><span class="font12000">-</span> <%
+		If REQUEST("StarRating")="True" Then
+			Response.Write "<a class=""f00014"" href=""/ChineseDish/ChineseDish.Welcome?StarRating=True"">星级菜</a>"
+		Else
+			If REQUEST("RoomService")="True" Then	'是否社区送餐.
+				Response.Write "<a class=""f00014"" href=""/ChineseDish/ChineseDish.Welcome?classid=26&RoomService=True"">社区送餐</a>"
+			Else
+				Response.Write "<a class=""f00014"" href=""/ChineseDish/ChineseDish.Welcome"">点餐牌</a>"
+			End If
+		End If
+		%><% If Coke.ShowNavigation_ForOnlyClass( RS("product_class_id"),"/ChineseDish/ChineseDish.Welcome?hello=痴心不改" )<>"" Then Response.Write Coke.ShowNavigation_ForOnlyClass( RS("product_class_id"),"/ChineseDish/ChineseDish.Welcome?hello=痴心不改" ) %><!--<span class="font12000">:</span>--> &gt; <% =RS("ProductName") %>
+        
+   </div>
+   <div class="sjymxx_mid">
+     <p class="sjxx_mid_img" style="height:auto;"><img src="<% If RS("Photo_Detail")<>"" Then Response.Write RS("Photo_Detail") Else Response.Write "/images/NoPic.png" %>" width="520" height="260" /></p>
+	 <ul class="sjxx_mid_txt">
+	   
+       
+       <li><span class="xxleft">菜 名：</span>
+           <span class="xxright fontred14_txt" style="font-weight:; font-size:16px;">
+                
+				<% =RS("ProductName") %>
+                
+                <%
+                  '如果已经下架，则提示.
+                  If RS("isOnsale")=0 Then
+                  %>
+                      (<span style="color:red;"><img src="/images/ico/small/emotion_unhappy.png"/>该菜品已经下架了</span>)
+                  <%
+                  Else
+                  '如果菜品并没有下架【1】，则可以显示缺货状态，不然就借用缺货状态的位置显示该菜品已下架！
+                  %>
+                      <!--正常上架-->
+                  <%
+                  End If
+                  %>
+           </span>
+       </li>
+       
+       
+       
+       
+	   <li class="coloreee"><span class="xxleft">价 格：</span><span class="xxright fontred14_txt"><% =FormatCurrency( RS("UnitPrice_Market"),2 ) %></span></li>
+	   <li><span class="xxleft">持会员卡价格：</span><span class="xxright fontred14_txt"><% =FormatCurrency( RS("UnitPrice"),2 ) %>　　 <a  id="AboutVIPCard01" class="fontgreen" style="font-size:12px;" href="/Details/DetailsInformation.Welcome?CokeMark=JPKMENJ" target="_blank"><img src="/images/ico/small/creditcards.png" /> 持卡可尊享就餐优惠&amp;双倍赢取网站积分哦...</a></span> </li>
+	   
+       <li class="coloreee decoration"><span class="xxleft">所属分类：</span>
+           <span class="xxright">
+           <%
+			'主分类.
+			Response.Write "<a href=""/ChineseDish/ChineseDish.Welcome?classid="& RS("product_class_id") &""" target=""_blank"">"& CokeShow.otherField("[CXBG_product_class]",RS("product_class_id"),"classid","classname",True,0) &"</a>"
+			
+			'扩展分类.
+			Dim product_class_id_extend_Array
+			product_class_id_extend_Array=Split(RS("product_class_id_extend"), ",")
+			Dim i_001
+			For i_001=0 To Ubound(product_class_id_extend_Array)
+				'处理特殊零的情况.
+				If CokeShow.CokeClng(product_class_id_extend_Array(i_001))<>0 Then
+					Response.Write "&nbsp;&nbsp;&nbsp;<a href=""/ChineseDish/ChineseDish.Welcome?classid="& CokeShow.CokeClng(product_class_id_extend_Array(i_001)) &""" target=""_blank"">"& CokeShow.otherField("[CXBG_product_class]",CokeShow.CokeClng(product_class_id_extend_Array(i_001)),"classid","classname",True,0) &"</a>"
+				End If
+				'response.Write "&nbsp;"& CokeShow.CokeClng(product_class_id_extend_Array(i_001))
+			Next
+			
+			%>
+           </span>
+       </li>
+	   <li class="decoration"><span class="xxleft">所属菜系：</span>
+           <span class="xxright">
+           <%
+			'主所属菜系.
+			Response.Write "<a href=""/ChineseDish/ChineseDish.Welcome?product_businessUSE_id="& RS("product_businessUSE_id") &""" target=""_blank"">"& CokeShow.otherField("[CXBG_product_businessUSE]",RS("product_businessUSE_id"),"classid","classname",True,0) &"</a>"
+			
+			'扩展所属菜系.
+			Dim product_businessUSE_id_extend_Array
+			product_businessUSE_id_extend_Array=Split(RS("product_businessUSE_id_extend"), ",")
+			'//Dim i_001
+			For i_001=0 To Ubound(product_businessUSE_id_extend_Array)
+				'处理特殊零的情况.
+				If CokeShow.CokeClng(product_businessUSE_id_extend_Array(i_001))<>0 Then
+					Response.Write "&nbsp;&nbsp;&nbsp;<a href=""/ChineseDish/ChineseDish.Welcome?product_businessUSE_id="& CokeShow.CokeClng(product_businessUSE_id_extend_Array(i_001)) &""" target=""_blank"">"& CokeShow.otherField("[CXBG_product_businessUSE]",CokeShow.CokeClng(product_businessUSE_id_extend_Array(i_001)),"classid","classname",True,0) &"</a>"
+				End If
+				'response.Write "&nbsp;"& CokeShow.CokeClng(product_businessUSE_id_extend_Array(i_001))
+			Next
+			
+			%>
+           </span>
+       </li>
+	   
+       <li class="coloreee decoration"><span class="xxleft">所属口味：</span>
+           <span class="xxright">
+           <%
+			'主所属菜系.
+			Response.Write "<a href=""/ChineseDish/ChineseDish.Welcome?product_activityUSE_id="& RS("product_activityUSE_id") &""" target=""_blank"">"& CokeShow.otherField("[CXBG_product_activityUSE]",RS("product_activityUSE_id"),"classid","classname",True,0) &"</a>"
+			
+			'扩展所属菜系.
+			Dim product_activityUSE_id_extend_Array
+			product_activityUSE_id_extend_Array=Split(RS("product_activityUSE_id_extend"), ",")
+			'//Dim i_001
+			For i_001=0 To Ubound(product_activityUSE_id_extend_Array)
+				'处理特殊零的情况.
+				If CokeShow.CokeClng(product_activityUSE_id_extend_Array(i_001))<>0 Then
+					Response.Write "&nbsp;&nbsp;&nbsp;<a href=""/ChineseDish/ChineseDish.Welcome?product_activityUSE_id="& CokeShow.CokeClng(product_activityUSE_id_extend_Array(i_001)) &""" target=""_blank"">"& CokeShow.otherField("[CXBG_product_activityUSE]",CokeShow.CokeClng(product_activityUSE_id_extend_Array(i_001)),"classid","classname",True,0) &"</a>"
+				End If
+				'response.Write "&nbsp;"& CokeShow.CokeClng(product_activityUSE_id_extend_Array(i_001))
+			Next
+			
+			%>
+           </span>
+       </li>
+       
+       
+       <li><span class="xxleft">辣椒指数：</span>
+           <span class="xxright">
+           <%
+			Dim i_303874,strNoticFor_ProductChiliIndex,strImage_ProductChiliIndex
+			'无辣椒级别时.
+			If CokeShow.CokeClng(RS("product_chiliIndex_id"))=0 Then Response.Write "清淡"
+			'有辣椒级别时.
+			For i_303874=1 To CokeShow.CokeClng(RS("product_chiliIndex_id"))
+				'判断要显示的文字提示.
+				Select Case CokeShow.CokeClng(RS("product_chiliIndex_id"))
+				Case 1
+					strNoticFor_ProductChiliIndex	="(微辣)"
+					strImage_ProductChiliIndex		="LajiaoYellow.gif"
+				Case 2
+					strNoticFor_ProductChiliIndex	="(中辣)"
+					strImage_ProductChiliIndex		="LajiaoGreen.gif"
+				Case 3
+					strNoticFor_ProductChiliIndex	="(重辣)"
+					strImage_ProductChiliIndex		="LajiaoRed.gif"
+				Case 4
+					strNoticFor_ProductChiliIndex	="(Supper辣)"
+					strImage_ProductChiliIndex		="LajiaoRed2.gif"
+				Case 5
+					strNoticFor_ProductChiliIndex	="(无敌辣)"
+					strImage_ProductChiliIndex		="LajiaoRed2.gif"
+				End Select
+			%>
+				<img src="/images/<% =strImage_ProductChiliIndex %>" width="12" alt="<% =strNoticFor_ProductChiliIndex %>" />
+			<%
+			Next
+			
+			%>
+            	&nbsp;<% =strNoticFor_ProductChiliIndex %>
+           </span>
+       </li>
+       <li class="coloreee"><span class="xxleft">供应及份量描述：</span>
+           <span class="xxright">
+           份量：<% =RS("QuantityName") %>
+           <% If RS("QuantityDes")<>"" Then Response.Write "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;份量描述："& RS("QuantityDes") &"" Else Response.Write "" %>
+           <% If RS("EverydaySupply")<>"" Then Response.Write "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;每天供应量："& RS("EverydaySupply") &""& RS("QuantityName") Else Response.Write "" %>
+		   
+           </span>
+       </li>
+       
+	   <li style="height:<% If Coke.ShowProductStarRating_Num(RS("id"))>0 Then Response.Write "90px" Else Response.Write "60px" %>;">
+       <span class="xxleft" style="padding-top:8px;">星　级：</span>
+       <span class="xxright">
+       		
+            <ul class="rating" style="margin-top:12px;">
+            <li class="current-rating" style="width:<% =Coke.ShowProductStarRating_Num(RS("id")) * 20 + 1 %>px;"></li>
+            
+            </ul>
+                
+            <%
+			'输出星级.
+			'Dim i_starrating
+			'For i_starrating=1 To CokeShow.CokeClng( Coke.ShowProductStarRating_Num(RS("id")) )
+			%>
+				<!--<img src="/images/xx.gif" width="16" height="16" />-->
+			<%
+			'Next
+			%>
+            <%
+			'输出灰补星级.
+			'For i_starrating=(5-1) To CokeShow.CokeClng( Coke.ShowProductStarRating_Num(RS("id")) ) Step -1
+			%>
+				<!--<img src="/images/xx_goy.gif" width="16" height="16" />-->
+			<%
+			'Next
+			%>
+            
+            <% If Coke.ShowProductStarRating_Num(RS("id"))>0 Then %>
+            <font style=" display:inline-block; float:left; color:#CD4400;">持卡会员总评菜品为：<strong style="font-size:18px; font-family: Georgia, 'Times New Roman', Times, serif;"><% =Coke.ShowProductStarRating_Num(RS("id")) %></strong> 星级菜品</font>
+            <% End If %>
+       </span>
+       <span class="xxright">
+       		<% =Coke.ShowProductStarRating_Str( Coke.ShowProductStarRating_Num(RS("id")) ) %>
+       </span>
+       </li>
+       
+       <%
+	   '召唤推荐朋友页.
+	   '<a class="fghy" href="#" onClick="ShowDialog('<img src=/favicon.ico width=16 /> 推荐朋友','/tuijianpengyou.asp?CokeMark=<% =Request("CokeMark") % >&PName=< % =Server.URLencode(RS("ProductName")) % >&PPrice=<% =PPrice % >&controlStr=' + Math.random() ,'width:400px;height:280px;');"></a>
+	   %>
+       <li><span class="xxleft">美食家操作：</span>
+           <span class="xxright fontred14_txt" style=" font-size:12px;">
+                <a class="button_img77" href="javascript:return false;" onClick="addFavoriteAjax(<% =CokeShow.CokeClng(RS("id")) %>);" style=" display: inline-block"><img src="/images/ico/small/cup_add.png" /> 收藏菜品</a>
+                &nbsp;
+                <a class="button_img77" href="javascript:return false;" onClick="addAccount_TuijianPengyou(<% =""& RS("id") &"" %>);" style=" display: inline-block"><img src="/images/ico/small/coins_add.png" /> 推荐朋友</a>
+                
+                &nbsp;
+                <a class="button_img77" href="/Details/DetailsInformation.Welcome?CokeMark=JPIRFMN" target="_blank" style=" display: inline-block" title="持卡可尊享就餐优惠 &amp; 双倍赢取网站积分 &amp; 点亮点评菜品星级权限"><img src="/images/ico/small/creditcards.png" /> 办会员卡</a>
+                &nbsp;
+                <a class="button_img77" href="#RemarkOnArea" style=" display: inline-block"><img src="/images/ico/small/bullet_star.png" />美食点评</a>
+           </span>
+       </li>
+	   
+       <li class="coloreee"><span class="xxleft">口味平均分：</span><span class="xxright" style="color:#CD4400;"><strong style="font-size:14px; font-family: Georgia, 'Times New Roman', Times, serif;"><% =Coke.ShowProductChineseDish_Taste_Num(RS("id")) %></strong> 分</span></li>
+	   <li><span class="xxleft">其它的评分：</span><span class="xxright">环境平均分：<% =Coke.ShowProductChineseDish_DiningArea_Num(RS("id")) %>分 ； 服务平均分：<% =Coke.ShowProductChineseDish_Service_Num(RS("id")) %>分 ； 人均消费：<% =Coke.ShowProductChineseDish_ConsumePerPerson_Num(RS("id")) %></span></li>
+       
+       
+	   
+       <li class="coloreee"><span class="xxleft">点评赢取积分：</span><span class="xxright" style="color:#CD4400;"><% =RS("jifen") %> 积分</span></li>
+       <li><span class="xxleft">顾客访问：</span><span class="xxright">(已有<% =RS("iis") %>位顾客关注)</span></li>
+       <li><span class="xxleft">上架日期：</span><span class="xxright"><% =CokeShow.filt_DateStr( RS("ComeIntoTheMarketDate") ) %></span></li>
+       <li class="coloreee"><span class="xxleft">餐厅地址：</span><span class="xxright"><% =CokeShow.setup(31,0) %></span></li>
+	   <li><span class="xxright"><a class="fontgreen" href="/Details/DetailsInformation.Welcome?CokeMark=JPHPEPR" target="_blank">&gt; 查看餐厅官方地图 <img src="/images/ico/small/map_magnify.png" /></a>　　<a class="fontgreen" href="/Details/DetailsInformation.Welcome?CokeMark=JPHQRRP" target="_blank">&gt; 查看餐厅乘车路线  <img src="/images/ico/small/map_magnify.png" /></a></span></li>
+       
+<% If 1=11 Then %>
+        <li>
+        <%
+        '如果菜品缺货，则显示缺货登记按钮.
+        If RS("isOutOfStore")=1 Then
+        %>
+        <a class="mousjr_OutOfStoreToRregister" href="javascript:return false;" onClick="addOutOfStoreToRregisterNow(<% =CokeShow.CokeClng(RS("id")) %>);"></a>
+        <%
+        Else
+        '如果菜品并没有缺货，则正常显示加入购物车按钮！
+        %>
+        <a class="mousjr" href="/CokeCart/CokeCart.Services.asp?Action=Add&id=<% =CokeMark %>" target="_blank"></a>
+        <%
+        End If
+        %>
+        <a class="fghy" href="#" onClick="ShowDialog('<img src=/favicon.ico width=16 /> 推荐朋友','/tuijianpengyou.asp?CokeMark=<% =Request("CokeMark") %>&PName=<% =Server.URLencode(RS("ProductName")) %>&PPrice=<% =PPrice %>&controlStr=' + Math.random() ,'width:400px;height:280px;');"></a>
+        <a class="jrsc" href="javascript:return false;" onClick="addFavoriteAjax(<% =CokeShow.CokeClng(RS("id")) %>);"></a>
+        </li>
+<% End If %>
+
+       <!--<li><span class="xxleft">菜品用途：</span><span class="xxright"><% '=Coke.ShowProductUSE( CokeMark,"/" ) %></span></li>-->
+	 </ul>
+	 <div class="tjzjdp_sjym">
+	   <p class="coloreee_bt">推荐最佳搭配</p>
+	   <p class="tjzjdp_sjym_imgtxt">
+            <!--推荐最佳搭配 Begin-->
+            <!--#include virtual="/_include/ChineseDish/_include_Information_BoundProductArea_Code.asp"-->
+            <!--推荐最佳搭配 End-->
+	   </p>
+	 </div>
+	 <div class="tjzjdp_sjym">
+	   <p class="coloreee_bt">详情</p>
+	   <div class="tjzjdp_sjym_txtpp">
+	     <p>
+		 <% =RS("description") %>
+         		<center><script type="text/javascript" charset="utf-8">
+				(function(){
+				  var _w = 106 , _h = 58;
+				  var param = {
+					url:location.href,
+					type:'5',
+					count:'1', /**是否显示分享数，1显示(可选)*/
+					appkey:'1305808566', /**您申请的应用appkey,显示分享来源(可选)*/
+					title:'向大家分享美味菜品：<% =RS("ProductName") %>！相信已经有很多人在点评这道菜了哦，详情您可以点击：', /**分享的文字内容(可选，默认为所在页面的title)*/
+					pic:'<% If RS("Photo_Detail")<>"" Then Response.Write "http://www.chixinbugai.me"& RS("Photo_Detail") Else Response.Write "http://www.chixinbugai.me/images/NoPic.png" %>', /**分享图片的路径(可选)*/
+					ralateUid:'1750355351', /**关联用户的UID，分享微博会@该用户(可选)*/
+					rnd:new Date().valueOf()
+				  }
+				  var temp = [];
+				  for( var p in param ){
+					temp.push(p + '=' + encodeURIComponent( param[p] || '' ) )
+				  }
+				  document.write('<iframe allowTransparency="true" frameborder="0" scrolling="no" src="http://hits.sinajs.cn/A1/weiboshare.html?' + temp.join('&') + '" width="'+ _w+'" height="'+_h+'"></iframe>')
+				})()
+				</script>
+                </center>
+         </p>
+	     <p></p>
+	   </div>
+	 </div>
+	 <div class="tjzjdp_sjym">
+	   <p class="coloreee_bt">同菜系推荐</p>
+	   <p class="tjzjdp_sjym_imgtxt">
+	     	<!--同菜系推荐 Begin-->
+            <!--#include virtual="/_include/ChineseDish/_include_Information_SameTypesProductArea_Code.asp"-->
+            <!--同菜系推荐 End-->
+	   </p>
+	 </div>
+	 <div class="tjzjdp_sjym">
+	   <p class="coloreee_bt">所有会员对此菜品的点评：<a name="RemarkOnArea_start" id="RemarkOnArea_start"></a></p>
+        
+	   <!--点评列表 Begin-->
+       <!--#include virtual="/_include/ChineseDish/_include_Information_RemarkOnListArea_Code.asp"-->
+       <!--点评列表 End-->
+		
+	 </div>
+	 
+	 <div class="tjzjdp_sjym">
+       <p class="coloreee_bt" style="border:0px #ccc solid;">
+           <span style="font-size:16px; font-family:'Courier New', Courier, monospace;">我要点评:</span>&nbsp;&nbsp;&nbsp;<% =RS("ProductName") %>
+           <br />
+           <span style="color:#999;">( 点评此菜品可以赢取 <img src="/images/ico/small/coins_add.png" /> <% =RS("jifen") %> 积分哦，如绑定了 <img src="/images/ico/small/creditcards.png" /> 会员卡 您还可以获得双倍积分呢！)</span>
+       </p>
+	   <div class="tjzjdp_sjym_txtpp">
+	     
+         <form action="/ONCEFOREVER/Account.Services.Private.asp" method="post" name="RemarkOnForm" id="RemarkOnForm"
+         
+            
+          ><!--execute="processFormAjax"
+          dojoType="dijit.form.Form"-->
+         <table width="100%" border="0" cellspacing="3" cellpadding="0">
+           <tr>
+             <td valign="top">您的身份：</td>
+             <td colspan="3">
+                <% If CokeShow.CheckUserLogined()=True And isNumeric(Session("id")) And Len(Session("username"))>=10 Then %>
+                    <img src="<% =Coke.ShowMemberSexPicURL(Session("id")) %>" width="20" />
+                    <% If Session("isBindingVIPCardNumber")=1 Then %><img src="/images/hytx/card_01.gif" width="10" height="7" /><% End If %>
+                    欢迎光临<span style="color: #F30;"><% =Session("cnname") %></span>，
+                    
+                    您可以发表点评了.
+                    
+                <% Else %>
+             		<img src="/images/ico/small/error.png" /><span style="color:red;"> 您尚未登录，请<strong></strong><strong>先登录/注册</strong>再书写点评 </span>
+                    
+                <% End If %>
+             </td>
+           </tr>
+           		
+           <tr>
+             <td valign="top" style="text-align:center;">点评星级：<br /><a href="javascript:return false;" onClick="showRatingInformation();">(<span style='color:orange;'>↑</span> 详情)</a></td>
+             <td colspan="3">
+                <% 'If Cstr(Session("isBindingVIPCardNumber"))="1" And Session("BindingVIPCardNumber")<>"" And Len(Session("BindingVIPCardNumber"))>=4 Then %>
+                <input type="hidden" id="yuanyemian_opinionvalue" name="yuanyemian_opinionvalue" value="0" />
+                <% 'Else %>
+                <!--<input type="hidden" id="yuanyemian_opinionvalue" name="yuanyemian_opinionvalue" value="1" />-->
+                <% 'End If %>
+                <ul class="rating">
+                <li class="current-rating" style="width:0px" id="CurrentRating"></li>
+                
+                <li><a href="javascript:return false;" onClick="vote('100','1');" title="1 星级-难吃" class="diamond1" hidefocus="true">1</a></li>
+                <li><a href="javascript:return false;" onClick="vote('100','2');" title="2 星级-不好吃" class="diamond2" hidefocus="true">2</a></li>
+                <li><a href="javascript:return false;" onClick="vote('100','3');" title="3 星级-不错哦" class="diamond3" hidefocus="true">3</a></li>
+                <li><a href="javascript:return false;" onClick="vote('100','4');" title="4 星级-挺好吃" class="diamond4" hidefocus="true">4</a></li>
+                <li><a href="javascript:return false;" onClick="vote('100','5');" title="5 星级-超级好吃哇，荐" class="diamond5" hidefocus="true">5</a></li>
+                
+                </ul>
+             	&nbsp;
+                <span id="showRatingMessage"><!--<span style='color: #999;'>↑ 星级已经开发给所有的网站会员参与评星哦！</span>--></span>
+                餐厅广告：<a class="fontgreen" style="font-size:12px;" href="/Details/DetailsInformation.Welcome?CokeMark=JPIRFMN" target="_blank" id="AboutVIPCard02"> 如何办理餐厅会员卡?</a>
+                &nbsp;
+                <!--<a class="fontgreen" style="font-size:12px;" href="###" id="AboutVIPCard02"> 如何绑定餐厅卡号到网站帐号?</a>-->
+                <input type="hidden" id="theStarRatingForChineseDishInformation" name="theStarRatingForChineseDishInformation" value="0" />
+             </td>
+           </tr>
+           <tr>
+             <td valign="top">口味：<span class="fontred">*</span></td>
+             <td width="36%">
+                 <select class="input_150" name="ChineseDish_Taste">
+                 	<option value="0">请选择</option>
+                    <option value="5">非常好(5分)</option>
+                    <option value="4">很好(4分)</option>
+                    <option value="3">好(3分)</option>
+                    <option value="2">一般(2分)</option>
+                    <option value="1">差(1分)</option>
+                 </select>
+             </td>
+             <td width="14%" valign="top">环境：<span class="fontred">*</span></td>
+             <td width="37%">
+                 <select class="input_150" name="ChineseDish_DiningArea">
+                 	<option value="0">请选择</option>
+                    <option value="5">非常好(5分)</option>
+                    <option value="4">很好(4分)</option>
+                    <option value="3">好(3分)</option>
+                    <option value="2">一般(2分)</option>
+                    <option value="1">差(1分)</option>
+                 </select>
+             </td>
+           </tr>
+           <tr>
+             <td valign="top">服务：<span class="fontred">*</span></td>
+             <td>
+                 <select class="input_150" name="ChineseDish_Service">
+                 	<option value="0">请选择</option>
+                    <option value="5">非常好(5分)</option>
+                    <option value="4">很好(4分)</option>
+                    <option value="3">好(3分)</option>
+                    <option value="2">一般(2分)</option>
+                    <option value="1">差(1分)</option>
+                 </select>
+             </td>
+             <td valign="top">人均消费：<span class="fontred">*</span></td>
+             <td>
+                 <span class="fontred14">&yen;</span>
+                 
+                 <input type="text" id="ChineseDish_ConsumePerPerson" name="ChineseDish_ConsumePerPerson"
+                    dojoType="dijit.form.ValidationTextBox"
+                    required="true"
+                    propercase="false"
+                    promptMessage=""
+                    invalidMessage="请填写数字哦"
+                    trim="true"
+                    lowercase="false"
+                    value="0"
+                    regExp="\d{1,3}"
+                    style="width:100px;"
+                    class="input_135"
+                    />
+             </td>
+           </tr>
+           
+           <tr>
+             <td valign="top">内容：<span class="fontred">*</span><br />( 188字内)</td>
+             <td colspan="3">
+             	<textarea class="textarea_400" name="logtext" id="testBarInput"></textarea>
+                <br />
+                <div id="testBar" style='width:400px; height:10px; font-size:10px; line-height:10px;' dojoType="dijit.ProgressBar" width="400"
+                  annotate="true" maximum="188" duration="2000">
+                  <script type="dojo/method" event="report">
+                    //return dojo.string.substitute("${0} /${1}", [this.progress, this.maximum]);
+					return this.progress + "   Word  , Welcome To chixinbugai.me";
+                  </script>
+                  <script type="dojo/method">
+                    dojo.connect(dojo.byId("testBarInput"), "onkeyup", 
+                      dojo.hitch(this, function(e){
+                        if(e.target.value.length > Number(this.maximum)){          
+                          e.target.value = e.target.value.substring(0, this.maximum);
+                        }
+                        this.update({progress:e.target.value.length});
+                      })
+                    );
+                  </script>
+                </div>
+                
+                
+               
+             </td>
+             </tr>
+           
+           <tr>
+             <td valign="top">验证码：<span class="fontred">*</span></td>
+             <td colspan="3">
+             	<input type="text" id="CodeStr" name="CodeStr" size="4"
+                dojoType="dijit.form.ValidationTextBox"
+                required="true"
+                propercase="false"
+                invalidMessage="请填写4位数字！"
+                trim="true"
+                lowercase="false"
+                value=""
+                regExp="\d{4}"
+                style="width:80px;"
+                class="input_150"
+                maxlength="4"
+                />
+                &nbsp;
+            	<img id="GetCode" src="/public/code.asp" style="cursor:hand; float:none;" onClick="this.src='/public/code.asp?c='+Math.random()" alt="点击更换验证码" />
+                &nbsp;
+                <a href="javascript:return false;" onClick="dojo.byId('GetCode').src='/public/code.asp?c='+Math.random()" class="fontgreen">重新刷新验证码</a>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <a class="" style="font-size:12px;" href="#TopArea"> 回到顶部↑</a>	
+             </td>
+             </tr>
+             
+           <tr>
+             <td height="30" colspan="4" align="center" valign="bottom">
+             	<% If CokeShow.CheckUserLogined()=True And isNumeric(Session("id")) And Len(Session("username"))>=10 Then %>
+                    <button type="submit" id="theSubmitButton" 
+                      dojoType="dijit.form.Button"
+                      class="button777"
+                      >
+                      &nbsp;发表点评&nbsp;
+                	</button>
+                    <br />
+                    
+                    
+                <% Else %>
+             		
+                	<a class="button_img77" style="display:inline-block; color:;" href="javascript:return false;" onClick="ShowDialog('<span style=color:black;>确认操作</span>','','width:300px;height:200px;','<div style=background-color:#ffffff;width:auto;height:auto;><span style=color: #666;><img src=/images/ico/emotion_happy.png />您确认要跳转进入登录/注册页面吗？<br /><br /><center>是的，我现在要<a class=button_img77 style=display:inline-block; color:red; href=/ONCEFOREVER/LogOn.Welcome?fromurl=<% =CokeShow.EncodeURL( CokeShow.GetAllUrlII,"RemarkOnArea" ) %>>登录/注册</a></center></span></div>');">先登录/注册</a>，再回来点评
+                    <!--<a class="button_img77" style="display:inline-block; color:red;" href="/ONCEFOREVER/LogOn.Welcome?fromurl=<% =CokeShow.EncodeURL( CokeShow.GetAllUrlII,"RemarkOnArea" ) %>">先登录/注册</a>，再回来点评-->
+                    
+                <% End If %>
+                <br />
+                <span id="response" style="color:#F30;">&nbsp;</span>
+             </td>
+             </tr>
+         </table>
+         <input type="hidden" id="id" name="id" value="<% =RS("id") %>" />
+         <input type="hidden" id="ServicesAction" name="ServicesAction" value="addAccount_RemarkOn" />
+         </form>
+	   </div>
+	   </div>
+	 <div class="clear"></div>
+   </div>
+</div>
+</div>
+<!--middle end-->
+<a name="RemarkOnArea" id="RemarkOnArea"></a>
+  <div class="left_line02"></div>
+    <div class="footer">
+  	<!--底部-->
+	<!--#include virtual="/_include/_include_PublicFootCopyright_Code.asp"-->
+    <!--底部-->
+    </div>
+  <div class="footer_bom"></div>
+ </div>
+</div>
+
+<!--通知模块-->
+<!--<div dojoType="dojox.widget.Toaster"
+duration="0"
+messageTopic="xhrAddFavoriteScc"
+positionDirection="tr-left"
+
+/>--><!--"br-up","br-left","bl-up","bl-right","tr-down","tr-left","tl-down","tl-right"-->
+<!--<div dojoType="dojox.widget.Toaster"
+duration="0"
+messageTopic="xhrAddFavoriteError"
+positionDirection="tr-left"
+
+/>-->
+<!--<div dojoType="dojox.widget.Toaster"
+duration="0"
+messageTopic="xhrAddFavoriteLoading"
+positionDirection="tr-left"
+
+/>-->
+
+<!--<div dojoType="dojox.widget.Toaster"
+duration="0"
+messageTopic="xhrAddOutOfStoreToRregisterScc"
+positionDirection="tr-left"
+
+/>--><!--"br-up","br-left","bl-up","bl-right","tr-down","tr-left","tl-down","tl-right"-->
+<!--<div dojoType="dojox.widget.Toaster"
+duration="0"
+messageTopic="xhrAddOutOfStoreToRregisterError"
+positionDirection="tr-left"
+
+/>-->
+<!--通知模块-->
+
+<!--通知模块-->
+<span dojoType="dijit.Tooltip"
+connectId="AboutVIPCard01"
+style="display:none;"
+>
+	+ 持卡可尊享就餐优惠 <img src="/images/ico/small/creditcards.png" />
+    <br />
+    + 双倍赢取网站积分 <img src="/images/ico/small/coins_add.png" /> * 2
+    <br />
+    + 点亮点评星级的特殊权限<img src="/images/ico/small/bullet_star.png" /><img src="/images/ico/small/bullet_star.png" /><img src="/images/ico/small/bullet_star.png" /><img src="/images/ico/small/bullet_star.png" /><img src="/images/ico/small/bullet_star.png" />
+    <br />
+    <span style="color:#690;">&lt;&lt;详情请点击</span>
+</span>
+
+<span dojoType="dijit.Tooltip"
+connectId="AboutVIPCard02"
+style="display:none;"
+>
+	+ 持卡可尊享就餐优惠 <img src="/images/ico/small/creditcards.png" />
+    <br />
+    + 双倍赢取网站积分 <img src="/images/ico/small/coins_add.png" /> * 2
+    <br />
+    + 点亮点评星级的特殊权限<img src="/images/ico/small/bullet_star.png" /><img src="/images/ico/small/bullet_star.png" /><img src="/images/ico/small/bullet_star.png" /><img src="/images/ico/small/bullet_star.png" /><img src="/images/ico/small/bullet_star.png" />
+    <br />
+    <span style="color:#690;">&lt;&lt;详情请点击</span>
+</span>
+<!--通知模块-->
+
+</body>
+</html>
+<%
+'UPDATE更新访问量.
+'如果没有访问过的痕迹，则加一.
+If isEmpty(Session("visitor_ChineseDish_datetime_"& RS("id") )) Or isNull(Session("visitor_ChineseDish_datetime_"& RS("id") )) Or Session("visitor_ChineseDish_datetime_"& RS("id") )="" Then
+	
+	CONN.Execute( "UPDATE [CXBG_product] SET iis=iis+1 WHERE id="& RS("id") )
+'如果有访问过的迹象，则不加一.
+Else
+	'有Session就不做计数.
+End If
+'记下被当前访客访问的痕迹！
+Session("visitor_ChineseDish_datetime_"& RS("id") )="gogogo"
+%>
+
+
+<%
+''UPDATE更新访问量.
+''如果没有访问过的痕迹，则加一.
+'If isEmpty(Session("visitor_gamesinformation_datetime_"& CokeMark )) Or isNull(Session("visitor_gamesinformation_datetime_"& CokeMark )) Or Session("visitor_gamesinformation_datetime_"& CokeMark )="" Then
+'	
+'	CONN.Execute( "UPDATE [CXBG_Game] SET iis=iis+1 WHERE id="& CokeMark )
+'	
+'	
+''如果有访问过的迹象，则不加一.
+'Else
+'	'有Session就不做计数.
+'End If
+''记下被当前访客访问的痕迹！
+'Session("visitor_gamesinformation_datetime_"& CokeMark )="gogogo"
+
+'针对会员访问.
+'对于正在会员状态的会员来说，如果今天某个时间段没有来访过，那么也允许其记录在案.
+If CokeShow.CheckUserLogined()=True And isNumeric(Session("id")) And Len(Session("username"))>=10 Then
+	Dim sql_chinesedishinformationIIS,rs_chinesedishinformationIIS
+	sql_chinesedishinformationIIS="Select top 1 * From [CXBG_product_IIS] where Account_LoginID='"& Session("username") &"' AND DateDiff(mi, adddate, GETDATE())<10 AND byvisit_product_ID="& RS("id") &""
+	Set rs_chinesedishinformationIIS=Server.CreateObject("Adodb.RecordSet")
+	rs_chinesedishinformationIIS.open sql_chinesedishinformationIIS,conn,2,2
+
+	If rs_chinesedishinformationIIS.Eof Then	'如果没记录.
+		'如果没有在10分钟内访问过该会员记录，则添加访问记录.
+		rs_chinesedishinformationIIS.addnew
+			
+			rs_chinesedishinformationIIS("Account_LoginID")		=Session("username")
+			rs_chinesedishinformationIIS("IPaddress")			=Request.ServerVariables("REMOTE_ADDR")
+			rs_chinesedishinformationIIS("HTTP_REFERER")		=Request.ServerVariables("HTTP_REFERER")
+			rs_chinesedishinformationIIS("HTTP_GetAllUrlII")	=CokeShow.GetAllUrlII
+			
+			rs_chinesedishinformationIIS("byvisit_product_ID")	=RS("id")
+			
+		rs_chinesedishinformationIIS.update
+	Else
+		'如果有记录，则表示刚刚访问过，不用加了.
+	End If
+	
+	rs_chinesedishinformationIIS.Close
+    set rs_chinesedishinformationIIS=Nothing
+End If
+%>

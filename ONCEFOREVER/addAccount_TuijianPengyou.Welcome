@@ -1,0 +1,219 @@
+﻿<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：推荐朋友对话框.
+'日期说明：2010-05-19
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+
+%>
+
+<%
+'初始化赋值.
+'变量定义.
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+Dim strGuide								'导航文字.
+
+Dim id
+
+'接收参数.
+id		=CokeShow.filtRequest(Request("id"))
+
+'接收参数.
+CurrentTableName 	="[CXBG_product]"		'此模块涉及的[表]名.
+CurrentPageNow 		="/ONCEFOREVER/addAccount_TuijianPengyou.Welcome"
+UnitName			="推荐"
+
+'response.Write CokeShow.AddCode_Num(6)
+
+'处理参数.
+'处理查询执行 控制变量
+If id="" Then
+	id=0
+Else
+	If isNumeric(id) Then id=CokeShow.CokeClng(id) Else id=0
+End If
+
+%>
+<%
+'主程序.Begin
+sql="SELECT TOP 1 * FROM "& CurrentTableName &" WHERE deleted=0 AND id="& id
+If Not IsObject(CONN) Then link_database
+Set RS=Server.CreateObject("Adodb.RecordSet")
+'	Response.Write "<br />"& sql
+'	Response.End 
+RS.Open sql,CONN,1,1
+
+If RS.Eof And RS.Bof Then
+	Response.Redirect "/err404.asp"
+	'该菜品已经下架.
+End If
+
+'主程序.End
+%>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<script type="text/javascript">
+		//dojo的ContentPane加载url时遇到重复注册控件问题.
+		//目前可以应对的方法，就是在load页面时判断该ID所对应的Widget是否存在，如果存在，就删除它.
+		////dijit.byId("FName").destroy();
+		////dijit.byId("FEmail").destroy();
+		
+	</script>
+	
+	
+	<style type="text/css">
+		.tuijianpengyouTable td {
+			height:30px;
+		}
+		
+	</style>
+</head>
+
+<body>
+
+    <form action="/ONCEFOREVER/Account.Services.Private.asp" method="post" name="tuijianpengyou" id="tuijianpengyou"
+    
+    
+    ><!--dojoType="dijit.form.Form"
+    execute="processForm('tuijianpengyou')"-->
+		<table width="100%" border="0" cellspacing="3" cellpadding="0" class="tuijianpengyouTable">
+           <tr>
+             <td valign="top">菜 名：</td>
+             <td colspan="3">
+                <img src="<% If RS("Photo")<>"" Then Response.Write RS("Photo") Else Response.Write "/images/NoPic.png" %>" width="110" height="110" />
+				<% =RS("ProductName") %>
+             </td>
+           </tr>
+           <tr>
+             <td valign="top">价 格：</td>
+             <td colspan="3">
+                <% =FormatCurrency(RS("UnitPrice_Market"),2) %>
+             </td>
+           </tr>
+           <tr>
+             <td valign="top">持会员卡价格：</td>
+             <td colspan="3">
+                <% =FormatCurrency(RS("UnitPrice"),2) %>
+             </td>
+           </tr>
+           <tr>
+             <td valign="top">您的朋友称呼：</td>
+             <td colspan="3">
+                <input type="text" id="FName" name="FName" size="8"
+                dojoType="dijit.form.ValidationTextBox"
+                required="true"
+                propercase="true"
+                invalidMessage="请填写您朋友的称呼，如:李先生或者Alice"
+                trim="true"
+                lowercase="true"
+                value=""
+                regExp=".{1,8}"
+                style="width:x200px;"
+                class="input_150"
+                />
+             </td>
+           </tr>
+           <tr>
+             <td valign="top">您的朋友Email：</td>
+             <td colspan="3">
+                <input type="text" id="FEmail" name="FEmail"
+                dojoType="dijit.form.ValidationTextBox"
+                required="true"
+                propercase="false"
+                promptMessage=""
+                invalidMessage="请填写正确的Email电子邮件格式，例如：yourname6179@qq.com"
+                trim="true"
+                lowercase="true"
+                value=""
+                regExp="^[0-9a-zA-Z]+([0-9a-zA-Z]|_|\.|-)+[0-9a-zA-Z]+@(([0-9a-zA-Z]+\.)|([0-9a-zA-Z]+-))+[0-9a-zA-Z]+$"
+                style="width:250px;"
+                class="input_200"
+                /> 
+             </td>
+           </tr>
+           <tr>
+             <td valign="top">验证码：</td>
+             <td colspan="3">
+                <img id="GetCode333" src="/public/code.asp" style="cursor:hand" onClick="this.src='/public/code.asp?c='+Math.random()" alt="点击更换验证码" />
+                <input type="text" id="CodeStr_TuiJianPengYou" name="CodeStr" size="4"
+                dojoType="dijit.form.ValidationTextBox"
+                required="true"
+                propercase="false"
+                invalidMessage="请填写4位数字！"
+                trim="true"
+                lowercase="false"
+                value=""
+                regExp="\d{4}"
+                style="width:80px;"
+                class="input_150"
+                maxlength="4"
+                />
+                &nbsp;
+                <a href="javascript:return false;" onClick="dojo.byId('GetCode333').src='/public/code.asp?c='+Math.random()" class="fontgreen">重新刷新验证码</a>
+             </td>
+           </tr>
+           <tr>
+             <td valign="top">当前日期：</td>
+             <td colspan="3">
+                <% =Now() %>
+             </td>
+           </tr>
+           
+           <tr>
+             <td colspan="4" style="text-align:center;">
+                <button type="button" id="submit886"
+                dojoType="dijit.form.Button"
+                 onClick="processFormAjax_addAccount_TuijianPengyou();"
+                >
+                &nbsp;发送推荐信&nbsp;
+                </button>
+                <br />
+                <span id="responseDialog" style="color:#F30;"><img src=/images/ico/small/coins_add.png /> 感谢您对痴心不改的大力支持，推荐朋友餐厅将送上3积分哦</span>
+             </td>
+           </tr>
+           
+       </table>
+       
+       
+        <input type="hidden" name="id" value="<% =id %>" />
+        <input type="hidden" name="PName" value="<% =RS("ProductName") %>" />
+        <input type="hidden" name="PPrice" value="<% =RS("UnitPrice_Market") %>" />
+        <input type="hidden" name="HPrice" value="<% =RS("UnitPrice") %>" />
+        <input type="hidden" name="ServicesAction" value="addAccount_TuijianPengyou" />
+        
+    </form>
+
+</body>
+</html>

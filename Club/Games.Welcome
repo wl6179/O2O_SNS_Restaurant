@@ -1,0 +1,676 @@
+<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：会员游戏列表.
+'日期说明：2010-05-23
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+<!--#include virtual="/system/foreground_ToBrowseRecordsClass.asp"-->
+
+<%'!--#include virtual="/CokeCart/Shoppingcart.Class.asp"--%>
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+
+'购物车类实例化
+'Dim CokeCart
+'Set CokeCart = New ShoppingcartClass
+%>
+
+<%
+'初始化赋值.
+'变量定义.
+Dim maxPerPage					'设置当前模块分页设置.
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+Dim totalPut,totalPages,currentPage			'分页用的控制变量.
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+Dim strFileName								'构建查询字符串用的控制变量.
+Dim ExecuteSearch,Keyword,TypeSearch,Action	'构建查询字符串以及流程控制用的控制变量.
+Dim strGuide								'导航文字.
+
+Dim classid,sql_product_class_id,sql_product_class_id_extend,strSQL_classAll
+Dim product_brand_id,sql_product_brand_id,strSQL_brandAll
+Dim product_PriceArea,sql_product_PriceArea,strSQL_PriceAreaAll
+Dim product_businessUSE_id,sql_product_businessUSE_id,sql_product_businessUSE_id_extend,strSQL_businessUSEAll
+Dim product_activityUSE_id,sql_product_activityUSE_id,sql_product_activityUSE_id_extend,strSQL_activityUSEAll
+Dim product_welfareUSE_id,sql_product_welfareUSE_id,sql_product_welfareUSE_id_extend,strSQL_welfareUSEAll
+
+Dim ListWay,OrderBy,strSQLOrderBy
+
+
+'接收参数.
+classid					=CokeShow.filtRequest(Request("classid"))
+product_brand_id		=CokeShow.filtRequest(Request("product_brand_id"))
+product_PriceArea		=CokeShow.filtRequest(Request("product_PriceArea"))
+product_businessUSE_id	=CokeShow.filtRequest(Request("product_businessUSE_id"))
+product_activityUSE_id	=CokeShow.filtRequest(Request("product_activityUSE_id"))
+product_welfareUSE_id	=CokeShow.filtRequest(Request("product_welfareUSE_id"))
+
+
+
+'接收参数.
+maxPerPage			=20
+CurrentTableName 	="[CXBG_Game]"		'此模块涉及的[表]名.
+CurrentPageNow 		="/Club/Games.Welcome"
+UnitName			="会员游戏"
+currentPage		=CokeShow.filtRequest(Request("Page"))
+ExecuteSearch	=CokeShow.filtRequest(Request("ExecuteSearch"))
+Keyword			=CokeShow.filtRequest(Request("Keyword"))
+TypeSearch		=CokeShow.filtRequest(Request("TypeSearch"))
+Action			=CokeShow.filtRequest(Request("Action"))
+
+ListWay				=CokeShow.filtRequest(Request("ListWay"))	'列表显示方式.
+OrderBy				=CokeShow.filtRequest(Request("OrderBy"))	'排序.
+
+'处理参数.
+'处理查询执行 控制变量.
+If ExecuteSearch="" Then
+	ExecuteSearch=0
+Else
+	If isNumeric(ExecuteSearch) Then ExecuteSearch=CokeShow.CokeClng(ExecuteSearch) Else ExecuteSearch=0
+End If
+'构造查询字符串.
+strFileName=CurrentPageNow &"?ExecuteSearch="& ExecuteSearch
+If Keyword<>"" Then
+	strFileName=strFileName&"&Keyword="& Keyword
+End If
+If TypeSearch<>"" Then
+	strFileName=strFileName&"&TypeSearch="& TypeSearch
+End If
+If ListWay<>"" Then
+	strFileName=strFileName&"&ListWay="& ListWay
+End If
+If OrderBy<>"" Then
+	strFileName=strFileName&"&OrderBy="& OrderBy
+	If OrderBy="TimeAsc" Then strSQLOrderBy=" adddate ASC," Else strSQLOrderBy=" adddate DESC,"
+Else
+	strSQLOrderBy=""
+End If
+'response.Write OrderBy
+
+
+'处理当前页码的控制变量，默认为第一页.
+If currentPage<>"" Then
+    If isNumeric(currentPage) Then currentPage=CokeShow.CokeClng(currentPage) Else currentPage=1
+Else
+	currentPage=1
+End If
+
+
+
+'当前分类的classid.
+If classid="" Then
+	classid=1	'WL
+	sql_product_class_id		=""
+	sql_product_class_id_extend	=""
+	strSQL_classAll				=""
+Else
+	If isNumeric(classid) Then
+		classid=CokeShow.CokeClng(classid)
+		'构造正分类的sql语句.
+		sql_product_class_id		=" (   product_class_id="& classid &" OR product_class_id IN (  SELECT id From [CXBG_product_class] WHERE isShow=1 AND RootID=(SELECT RootID FROM [CXBG_product_class] WHERE isShow=1 AND classid="& classid &") AND Depth>(SELECT Depth FROM [CXBG_product_class] WHERE isShow=1 AND classid="& classid &") AND ParentPath LIKE '"& CokeShow.otherField("[CXBG_product_class]",classid,"classid","ParentPath",True,100) &","& CokeShow.otherField("[CXBG_product_class]",classid,"classid","id",True,100) &"%'  )   ) "
+'Response.Write "SELECT TOP 500 * FROM "& CurrentTableName &" WHERE deleted=0 AND isOnsale=1 "& sql_product_class_id & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" ORDER BY id DESC"
+		
+		'构造扩展分类的sql语句.
+		Dim rsTmp000101,sqlTmp000101,i000101
+		Dim strID
+		'获取当前classid下的 子分类记录集(之classid集合rs(0)).
+		sqlTmp000101="SELECT classid,ParentPath FROM [CXBG_product_class] WHERE RootID="& CokeShow.otherField("[CXBG_product_class]",classid,"classid","RootID",True,0) &" AND Depth>"& CokeShow.otherField("[CXBG_product_class]",classid,"classid","Depth",True,0) &" AND ParentPath LIKE '"& CokeShow.otherField("[CXBG_product_class]",classid,"classid","ParentPath",True,100) &","& CokeShow.otherField("[CXBG_product_class]",classid,"classid","id",True,100) &"%'"
+'response.Write sqlTmp000101
+		Set rsTmp000101=CONN.Execute( sqlTmp000101 )
+		If Not rsTmp000101.Eof Then
+			'如果有子分类，那么查出所有子分类的classid，并加工成8位数字，然后去挨个对照扩展字段的值！(生成其挨个对照的sql语句)
+			sql_product_class_id_extend	=" ( product_class_id_extend LIKE '%"& CokeShow.AdditionZero( classid, 8 ) &"%' "
+			'判断当前的所有子分类中，是否直系关系的依据. WL
+			strID=","& CokeShow.otherField("[CXBG_product_class]",classid,"classid","id",True,0) &","
+'response.Write strID
+			'数组列出查询到的classid集合.
+			Do While Not rsTmp000101.Eof
+				'判断当前的所有子分类中，是否直系关系！如果是直系那么构造sql，如果不是直系那么无动作. WL
+				If Instr(","& rsTmp000101(1) &",", strID)>0 Then
+					sql_product_class_id_extend=sql_product_class_id_extend &" OR product_class_id_extend LIKE '%"& CokeShow.AdditionZero( rsTmp000101(0), 8 ) &"%' "
+				End If
+				
+				rsTmp000101.MoveNext
+			Loop
+			'链接sql字符串结束.
+			sql_product_class_id_extend=sql_product_class_id_extend &" ) "
+			
+'response.Write sql_product_class_id_extend
+		Else
+			'如果没有子分类，就只查询匹配是否有当前分类即可.
+			sql_product_class_id_extend	=" ( product_class_id_extend LIKE '%"& CokeShow.AdditionZero( classid, 8 ) &"%' ) "
+			
+		End If
+		rsTmp000101.Close
+		Set rsTmp000101=Nothing
+		
+		'组合.
+		strSQL_classAll = " AND ("& sql_product_class_id &" OR "& sql_product_class_id_extend &") "
+		
+	Else
+		classid=1	'WL
+		sql_product_class_id		=""
+		sql_product_class_id_extend	=""
+		strSQL_classAll				=""
+	End If
+End If
+
+'当前品牌筛选的classid [product_brand_id].
+If product_brand_id="" Then
+	product_brand_id=0
+	sql_product_brand_id		=""
+'	sql_product_class_id_extend	=""
+	strSQL_brandAll				=""
+Else
+	If isNumeric(product_brand_id) Then
+		product_brand_id=CokeShow.CokeClng(product_brand_id)
+		'构造sql语句.
+		sql_product_brand_id		=" (   product_brand_id="& product_brand_id &"   ) "
+		
+		
+		'组合.
+		strSQL_brandAll = " AND ("& sql_product_brand_id &") "
+		
+	Else
+		product_brand_id=0
+		sql_product_brand_id		=""
+'		sql_product_class_id_extend	=""
+		strSQL_brandAll				=""
+	End If
+End If
+
+'价格区间筛选 [product_PriceArea].
+If product_PriceArea="" Then
+	product_PriceArea=""
+	sql_product_PriceArea		=""
+	strSQL_PriceAreaAll			=""
+Else
+	If Len(product_PriceArea)>0 And Instr(product_PriceArea, "$$")>0 Then
+		product_PriceArea=Trim(product_PriceArea)
+		'构造sql语句.
+		If isNumeric(Split(product_PriceArea, "$$")(0)) And isNumeric(Split(product_PriceArea, "$$")(1)) Then
+			sql_product_PriceArea		=" (   UnitPrice BETWEEN "& Split(product_PriceArea, "$$")(0) &" AND "& Split(product_PriceArea, "$$")(1) &"   ) "
+			
+			'组合.
+			strSQL_PriceAreaAll 		=" AND ("& sql_product_PriceArea &") "
+		Else
+			sql_product_PriceArea		=""
+			strSQL_PriceAreaAll			=""
+		End If
+	Else
+		sql_product_PriceArea		=""
+		strSQL_PriceAreaAll			=""
+	End If
+End If
+'response.Write strSQL_PriceAreaAll 
+'response.End()
+
+'当前所属菜系筛选的classid [product_businessUSE_id].
+If product_businessUSE_id="" Then
+	product_businessUSE_id=0
+	sql_product_businessUSE_id			=""
+	sql_product_businessUSE_id_extend	=""
+	strSQL_businessUSEAll				=""
+Else
+	If isNumeric(product_businessUSE_id) Then
+		product_businessUSE_id=CokeShow.CokeClng(product_businessUSE_id)
+		'构造正分类的sql语句.
+		sql_product_businessUSE_id		=" (   product_businessUSE_id="& product_businessUSE_id &"   ) "
+		
+		'构造扩展分类的sql语句.
+		'如果没有子分类，就只查询匹配是否有当前分类即可.
+		sql_product_businessUSE_id_extend	=" ( product_businessUSE_id_extend LIKE '%"& CokeShow.AdditionZero( product_businessUSE_id, 8 ) &"%' ) "
+		
+		
+		'组合.
+		strSQL_businessUSEAll = " AND ("& sql_product_businessUSE_id &" OR "& sql_product_businessUSE_id_extend &") "
+		
+	Else
+		product_businessUSE_id=0
+		sql_product_businessUSE_id			=""
+		sql_product_businessUSE_id_extend	=""
+		strSQL_businessUSEAll				=""
+	End If
+End If
+
+'当前所属口味筛选的classid [product_activityUSE_id].
+If product_activityUSE_id="" Then
+	product_activityUSE_id=0
+	sql_product_activityUSE_id			=""
+	sql_product_activityUSE_id_extend	=""
+	strSQL_activityUSEAll				=""
+Else
+	If isNumeric(product_activityUSE_id) Then
+		product_activityUSE_id=CokeShow.CokeClng(product_activityUSE_id)
+		'构造正分类的sql语句.
+		sql_product_activityUSE_id		=" (   product_activityUSE_id="& product_activityUSE_id &"   ) "
+		
+		'构造扩展分类的sql语句.
+		'如果没有子分类，就只查询匹配是否有当前分类即可.
+		sql_product_activityUSE_id_extend	=" ( product_activityUSE_id_extend LIKE '%"& CokeShow.AdditionZero( product_activityUSE_id, 8 ) &"%' ) "
+		
+		
+		'组合.
+		strSQL_activityUSEAll = " AND ("& sql_product_activityUSE_id &" OR "& sql_product_activityUSE_id_extend &") "
+		
+	Else
+		product_activityUSE_id=0
+		sql_product_activityUSE_id			=""
+		sql_product_activityUSE_id_extend	=""
+		strSQL_activityUSEAll				=""
+	End If
+End If
+
+'当前福利用途筛选的classid [product_welfareUSE_id].
+If product_welfareUSE_id="" Then
+	product_welfareUSE_id=0
+	sql_product_welfareUSE_id			=""
+	sql_product_welfareUSE_id_extend	=""
+	strSQL_welfareUSEAll				=""
+Else
+	If isNumeric(product_welfareUSE_id) Then
+		product_welfareUSE_id=CokeShow.CokeClng(product_welfareUSE_id)
+		'构造正分类的sql语句.
+		sql_product_welfareUSE_id		=" (   product_welfareUSE_id="& product_welfareUSE_id &"   ) "
+		
+		'构造扩展分类的sql语句.
+		'如果没有子分类，就只查询匹配是否有当前分类即可.
+		sql_product_welfareUSE_id_extend	=" ( product_welfareUSE_id_extend LIKE '%"& CokeShow.AdditionZero( product_welfareUSE_id, 8 ) &"%' ) "
+		
+		
+		'组合.
+		strSQL_welfareUSEAll = " AND ("& sql_product_welfareUSE_id &" OR "& sql_product_welfareUSE_id_extend &") "
+		
+	Else
+		product_welfareUSE_id=0
+		sql_product_welfareUSE_id			=""
+		sql_product_welfareUSE_id_extend	=""
+		strSQL_welfareUSEAll				=""
+	End If
+End If
+
+
+'继续处理传参!
+classid=CokeShow.filtRequest(Request("classid"))
+If isNumeric(classid) Then
+	If CokeShow.CokeClng(classid)=0 Then
+		classid=0
+		strSQL_classAll=""
+	Else
+		classid=CokeShow.CokeClng(classid)
+		strSQL_classAll=" and details_class_id="& classid &" "
+	End If
+Else
+	classid=0
+	strSQL_classAll=""
+End If
+
+'携带参数classid.
+If classid>0 Then
+	'strFileName=strFileName&"&classid="& CokeShow.filtRequest(Request("classid"))
+End If
+''携带参数product_brand_id.
+'If product_brand_id>0 Then
+'	strFileName=strFileName&"&product_brand_id="& CokeShow.filtRequest(Request("product_brand_id"))
+'End If
+''携带参数product_brand_id.
+'If product_PriceArea<>"" Then
+'	strFileName=strFileName&"&product_PriceArea="& CokeShow.filtRequest(Request("product_PriceArea"))
+'End If
+''携带参数product_businessUSE_id.
+'If product_businessUSE_id<>"" Then
+'	strFileName=strFileName&"&product_businessUSE_id="& CokeShow.filtRequest(Request("product_businessUSE_id"))
+'End If
+''携带参数product_activityUSE_id.
+'If product_activityUSE_id<>"" Then
+'	strFileName=strFileName&"&product_activityUSE_id="& CokeShow.filtRequest(Request("product_activityUSE_id"))
+'End If
+''携带参数product_welfareUSE_id.
+'If product_welfareUSE_id<>"" Then
+'	strFileName=strFileName&"&product_welfareUSE_id="& CokeShow.filtRequest(Request("product_welfareUSE_id"))
+'End If
+'
+''携带参数StarRating.
+'If REQUEST("StarRating")<>"" Then
+'	strFileName=strFileName&"&StarRating="& CokeShow.filtRequest(REQUEST("StarRating"))
+'End If
+''携带参数RoomService.
+'If REQUEST("RoomService")<>"" Then
+'	strFileName=strFileName&"&RoomService="& CokeShow.filtRequest(REQUEST("RoomService"))
+'End If
+
+
+
+
+
+'定义当前分类（菜品分类）的classid.专门用于控制是否显示首页高亮显示.[当大导航上的某个分类被浏览时，依然可以高亮显示该分类导航！]
+Dim intCurrentClassid
+intCurrentClassid = classid
+'intCurrentClassid = 99999		'如果等于99999，则表示无论如何，大导航都不会有高亮显示！
+%>
+
+<%
+Dim strControlSQL
+strControlSQL=""
+
+'主体控制部分 Begin
+Select Case ExecuteSearch
+	Case 0
+		'普通的按注册顺序排序.(不要显示具体会员生日给公众)
+		sql="SELECT TOP 500 * FROM [CXBG_Game] Where deleted=0 AND isOnpublic=1 ORDER BY details_orderid DESC,id desc"
+		strGuide=strGuide & ""
+'Response.Write sql
+'	Case 1	'积分明星排序.
+'		sql="SELECT TOP 500 *,(select distinct sum(Jifen) over(partition by Account_LoginID) as sumJifen from [CXBG_account_JifenSystem] where deleted=0 and JifenWhichOperationRule='+' and Account_LoginID=[CXBG_account].username) as sumJifen_Now,DATEDIFF(day,GETDATE(),dateadd(year,year(GETDATE())-year(Birthday),Birthday)) AS now_day_num,(select distinct count(id) over(partition by Account_LoginID) as countRemarkOnTotal from [CXBG_account_RemarkOn] where deleted=0 and Account_LoginID=[CXBG_account].username) as countRemarkOnTotal_Now,(select distinct count(id) over(partition by Account_LoginID) as countRemarkOnStarRating from [CXBG_account_RemarkOn] where deleted=0 and Account_LoginID=[CXBG_account].username and theStarRatingForChineseDishInformation>0) as countRemarkOnStarRating_Now FROM [CXBG_account] Where deleted=0 ORDER BY sumJifen_Now DESC,id desc"
+'		strGuide=strGuide & "最热门的信息"
+'	Case 2	'最新动态
+'		sql="SELECT TOP 500 * FROM "& CurrentTableName &" WHERE deleted=0 AND isOnpublic=1 "& strSQL_classAll &" ORDER BY id DESC"
+'		strGuide=strGuide & "最新发布的信息"
+		
+	
+'	Case 10
+'		If Keyword="" Then
+'			sql="SELECT TOP 500 * FROM "& CurrentTableName &" WHERE deleted=0 AND isOnsale=1 "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" ORDER BY "& strSQLOrderBy &"id DESC"
+'			strControlSQL = "SELECT TOP 500 * FROM "& CurrentTableName &" WHERE deleted=0 AND isOnsale=1 "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" "
+'			strGuide=strGuide & "搜索所有"& UnitName
+'		Else
+'			Select Case TypeSearch
+'				Case "Brand"
+'					If IsNumeric(Keyword)=False Then
+'						FoundErr=True
+'						ErrMsg=ErrMsg &"<br /><li>"& UnitName &"您必须选择一个品牌！</li>"
+'					Else
+'						sql="select TOP 500 * from "& CurrentTableName &" where deleted=0 AND isOnsale=1 and product_brand_id="& CokeShow.CokeClng(Keyword) &" "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" order by "& strSQLOrderBy &"id desc"
+'						strControlSQL = "select TOP 500 * from "& CurrentTableName &" where deleted=0 AND isOnsale=1 and product_brand_id="& CokeShow.CokeClng(Keyword) &" "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" "
+'						strGuide=strGuide & UnitName &"品牌为:<font color=red> " & CokeShow.otherField("[CXBG_product_brand]",CokeShow.CokeClng(Keyword),"classid","classname",True,0) & " </font>的"& UnitName
+'					End If
+'					
+'				Case "ProductName"
+'					sql="select TOP 500 * from "& CurrentTableName &" where deleted=0 AND isOnsale=1 and (ProductName like '%"& Keyword &"%' OR product_keywords like '%"& Keyword &"%') "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" order by "& strSQLOrderBy &"id desc"
+'					strControlSQL = "select TOP 500 * from "& CurrentTableName &" where deleted=0 AND isOnsale=1 and (ProductName like '%"& Keyword &"%' OR product_keywords like '%"& Keyword &"%') "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" "
+'					strGuide=strGuide & "菜品中含有“ <font color=red>" & Keyword & "</font> ”的"& UnitName
+''response.Write Keyword
+'				Case "Price"
+'					If Len(Keyword)>0 And Instr(Keyword, "$$")>0 Then
+'						Keyword=Trim(Keyword)
+'						'构造sql语句.
+'						Dim sql_Keyword
+'						If isNumeric(Split(Keyword, "$$")(0)) And isNumeric(Split(Keyword, "$$")(1)) Then
+'							sql_Keyword=" AND (   UnitPrice BETWEEN "& Split(Keyword, "$$")(0) &" AND "& Split(Keyword, "$$")(1) &"   ) "
+'						Else
+'							FoundErr=True
+'							ErrMsg=ErrMsg & "<br /><li>错误的价格筛选参数！</li>"
+'						End If
+'					Else
+'						FoundErr=True
+'						ErrMsg=ErrMsg & "<br /><li>错误的价格筛选参数！</li>"
+'					End If
+'					
+'					sql="select TOP 500 * from "& CurrentTableName &" where deleted=0 AND isOnsale=1 "& sql_Keyword &" "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" order by "& strSQLOrderBy &"id desc"
+'					strControlSQL = "select TOP 500 * from "& CurrentTableName &" where deleted=0 AND isOnsale=1 "& sql_Keyword &" "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" "
+'					strGuide=strGuide & "菜品中价格在“ <font color=red>" & Split(Keyword, "$$")(0) &"至"& Split(Keyword, "$$")(1) & "</font> ”的"& UnitName
+'			
+'				Case "keywords"
+'					sql="select TOP 500 * from "& CurrentTableName &" where deleted=0 AND isOnsale=1 and product_keywords like '%"& Keyword &"%' "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" order by "& strSQLOrderBy &"id desc"
+'					strControlSQL = "select TOP 500 * from "& CurrentTableName &" where deleted=0 AND isOnsale=1 and product_keywords like '%"& Keyword &"%' "& strSQL_classAll & strSQL_brandAll & strSQL_PriceAreaAll & strSQL_businessUSEAll & strSQL_activityUSEAll & strSQL_welfareUSEAll &" "
+'					'strGuide=strGuide & "专题活动代号为“ <font color=red>" & Keyword & "</font> ”的"& UnitName
+'					strGuide=strGuide & "痴心不改餐厅专题活动"&" &gt; "& CokeShow.delNumberStr(Keyword)
+'					
+'			End Select
+'			
+'		End If
+		
+		
+	Case Else
+		FoundErr=True
+		ErrMsg=ErrMsg & "<br /><li>错误的参数！</li>"
+	
+End Select
+
+'拦截错误.
+If FoundErr=True Then
+	'Response.Clear()
+	Err.Raise vbObjectError + 6666, "列表查询出现异常", "如下异常："& ErrMsg
+	Response.End()
+End If
+
+If Not IsObject(CONN) Then link_database
+Set RS=Server.CreateObject("Adodb.RecordSet")
+'	Response.Write "<br />"& sql
+'	Response.End 
+RS.Open sql,CONN,1,1
+
+
+'主体控制部分 End
+%>
+<%
+'定义当前导航项.
+Dim ShowNavigationNo
+ShowNavigationNo=6
+
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="痴心不改会员俱乐部会员游戏列表-<% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_keyword",True,0) %>" />
+	<meta http-equiv="Description" content="痴心不改会员俱乐部会员游戏列表-<% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_description",True,0) %>" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+    <%
+	'定义当前页的标题文字.
+	Dim PageTitleWords
+	PageTitleWords = "痴心不改会员俱乐部会员游戏列表 -- 会员Club俱乐部 -- 痴心不改餐厅(北京)"
+	%>
+	<title><% =PageTitleWords %></title>
+	
+    
+    <link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+	<link href="/css/club_index.css" type="text/css" rel="stylesheet" />
+	
+    <!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+	</style>
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		//dojo.require("dojo.parser");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		//dojo.require("dijit.Dialog");
+		
+		dojo.addOnLoad(function(){
+			
+		});
+	</script>
+    <script type="text/javascript" src="/script/public.js"></script>
+    
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgclubbody">
+
+<div id="cxbgbg_clubimg">
+ <div id="cxbgbg_clubimgmid">
+ <!--header start-->
+  <div id="cxbgclub_headbg">
+    <!--header start-->
+	<!--#include virtual="/_include/_include_PublicHeadSearch_Code.asp"-->
+	<!--header end-->
+  </div>
+ <!--header end-->
+ <!--middle start-->
+<div class="listmidbgclub">
+    <div class="hylist_ymbg">
+      <div id="hyzs_club"><span class="fontred lfdisplay">欢迎光临，抢座预订请拨打：</span><span class="font25 fontred lfdisplay">6493 0888</span>， 6493 7666<span class="rtdisplay font14">评菜推荐赢积分·快乐兑换礼品券！</span></div>
+     <div id="hyzswztbg">
+	   <span class="font12fff">您现在的位置：</span><a href="/" class="f00012">首页</a><span class="font12000">-</span> <a class="f00014" href="/Club/">会员Club</a><span class="font12000">-</span> <a href="/Club/Games.Welcome" target="_self" class="f00014">会员游戏列表</a><span class="font12000" style="display:none;">:</span> <%' ="<span style=""color:red;"">"& strGuide &"</span>" %>
+	 </div>	
+     
+<!--控制列表 Begin-->
+<%
+'主体需要控制的部分.
+If RS.Eof And RS.Bof Then
+	strGuide=strGuide & " &#187; 共找到 <font color=red>0</font> 个"& UnitName
+	Call showMain
+Else
+	totalPut=RS.RecordCount		'记录总数.
+	strGuide=strGuide & " &#187; 共找到 <font color=red>" & totalPut & "</font> 个"& UnitName
+	
+	
+	'处理页码
+	If currentPage<1 Then
+		currentPage=1
+	End If
+	'如果传递过来的Page当前页值很大，超过了应有的页数时，进行处理.
+	If (currentPage-1) * maxPerPage > totalPut Then
+		If (totalPut Mod maxPerPage)=0 Then
+			'如果整好够页数，赋予当前页最大页.
+			currentPage= totalPut \ maxPerPage
+		Else
+			'如果不整好，最有一页只有零散几条记录（不丰满的多余页），赋予当前页最大页.（不能整除情况下计算）
+			currentPage= totalPut \ maxPerPage + 1
+		End If
+
+	End If
+	If currentPage=1 Then
+		
+		Call showMain
+		
+	Else
+		'如果传递过来的Page当前页值不大，在应有的页数范围之内时，理应(currentPage-1) * maxPerPage < totalPut，此时进行一些处理.
+		if (currentPage-1) * maxPerPage < totalPut then
+			'指针指到(currentPage-1)页（前一页）的最后一个记录处.
+			RS.Move  (currentPage-1) * maxPerPage
+			'RS.BookMark？
+			Dim bookMark
+			bookMark = RS.BookMark
+			
+			Call showMain
+			
+		else
+		'如果传递过来的Page当前页值很大，超过了应有的页数时.打开第一页.
+			currentPage=1
+			
+			Call showMain
+			
+		end if
+	End If
+End If
+'主体需要控制的部分.
+
+%>
+<!--控制列表 End-->
+  
+	</div>
+	<div class="clear"></div>
+  </div>
+<!--middle end-->
+  <div class="left_line03"></div>
+  <div class="footer_club">
+    <!--底部-->
+	<!--#include virtual="/_include/_include_PublicFootCopyright_Code.asp"-->
+    <!--底部-->
+  </div>
+  <div class="footerclub_bom"></div>
+ </div>
+</div>
+</body>
+</html>
+<%
+'新闻列表输出.
+'针对性的列表内容部分.
+Sub showMain()
+   	Dim i
+    i=0
+%>
+	 
+     <div class="hylistli">
+     
+	   <table width="100%" border="0" cellspacing="1" cellpadding="0">
+	    <thead>
+         <tr>
+           <td width="80%">游戏预览</td>
+           <td width="20%">点击玩游戏</td>
+         </tr>
+		</thead>
+		<tbody>
+		<%
+        If RS.EOF Then
+        %>
+            <tr class="trfff">
+              <td align="left" colspan="2">对不起，没有记录...</td>
+            </tr>
+        <%
+        End If
+        %>
+        <%
+        Dim rsTmp_Product__Photos,strTmp_Product__Photos
+        strTmp_Product__Photos=""
+        
+        Do While Not RS.EOF
+        %>
+         <tr class="<% If i Mod 2=0 Then Response.Write "trfff" Else Response.Write "trgoy" %>">
+           <td style="padding:18px;">
+               <a href="/Club/GamesInformation.Welcome?CokeMark=<% =CokeShow.AddCode_Num( RS("id") ) %>" target="_blank"><img src="<% If RS("photo")<>"" Then Response.Write RS("photo") Else Response.Write "/images/NoPic.png" %>" width="385" height="148" /><p><% =RS("topic") %></p></a>
+           </td>
+           <td><a class="fontred_a" href="/Club/GamesInformation.Welcome?CokeMark=<% =CokeShow.AddCode_Num( RS("id") ) %>" target="_blank">开始玩游戏</a></td>
+         </tr>
+        <%
+            i=i+1
+            If i >= maxPerPage Then Exit Do
+            RS.MoveNext
+        Loop
+        %>
+		</tbody>
+       </table>
+	 </div>
+     
+<!--翻页-->
+     <div class="hylistfy">
+	    <%
+		Response.Write Coke.ShowPage(strFileName,totalPut,maxPerPage,True,True,"个"& UnitName)
+		%>
+     </div>
+<!--翻页-->
+	
+<%
+End Sub
+%>

@@ -1,0 +1,49 @@
+
+#howdy {
+	COLOR: #f8e7db; FONT-SIZE: 17px
+}
+#howdy SPAN#heading {
+	COLOR: #fff; FONT-SIZE: 14px; FONT-WEIGHT: bold
+}
+#howdy SMALL {
+	COLOR: #f8e7db; FONT-SIZE: 12px
+}
+#howdy A {
+	COLOR: #fff
+}
+#howdy A:link {
+	COLOR: #fff
+}
+#howdy A:visited {
+	COLOR: #fff
+}
+#howdy A:hover {
+	
+}
+#howdy A:unknown {
+	
+}
+.howdydo-style {
+	BORDER-BOTTOM: #999 0px solid; TEXT-ALIGN: center; BACKGROUND-COLOR: #ED1E79; -moz-box-shadow: 0px 3px 5px #999; -webkit-box-shadow: 0px 3px 5px #999; box-shadow: 0px 3px 5px #999
+}
+#howdydo-wrapper {
+	Z-INDEX: 1000; POSITION: fixed; PADDING-BOTTOM: 0px; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; OVERFLOW: visible; PADDING-TOP: 0px
+}
+.howdydo-box {
+	Z-INDEX: 9999; PADDING-BOTTOM: 15px; PADDING-LEFT: 0px; WIDTH: 100%; PADDING-RIGHT: 0px; DISPLAY: none; PADDING-TOP: 10px
+}
+#howdydo-close {
+	POSITION: absolute; BOTTOM: 510px; RIGHT: 50px
+}
+#howdydo-open {
+	POSITION: absolute; PADDING-BOTTOM: 10px; PADDING-LEFT: 10px; PADDING-RIGHT: 10px; TOP: 0px; RIGHT: 20px; PADDING-TOP: 10px
+}
+.howdydo-hover {
+	POSITION: absolute; TOP: 0px; LEFT: 0px
+}
+.howdydo-scroll {
+	POSITION: fixed; TOP: 0px; LEFT: 0px
+}
+.howdydo-push {
+	POSITION: relative; MARGIN-BOTTOM: 1px; FLOAT: left; CLEAR: both
+}

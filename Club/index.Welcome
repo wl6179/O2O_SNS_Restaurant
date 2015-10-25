@@ -1,0 +1,243 @@
+﻿<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：首页.
+'日期说明：2010-05-21
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+%>
+
+<%
+'变量定义区.
+Dim CurrentPageNow
+CurrentPageNow 	= "/Club/index.Welcome"			'当前页.
+
+
+Dim language,classid
+language=CokeShow.filtRequest(Request("language"))
+classid=CokeShow.filtRequest(Request("classid"))
+'处理语言，默认为cn.
+If language="" Then
+	language="cn"
+Else
+	language=Trim(language)
+End If
+
+'处理查询执行 控制变量
+If classid="" Then
+	classid=0
+Else
+	If isNumeric(classid) Then classid=CokeShow.CokeClng(classid) Else classid=0
+End If
+
+
+'定义当前分类（菜品分类）的classid.专门用于控制是否显示首页高亮显示.[当大导航上的某个分类被浏览时，依然可以高亮显示该分类导航！]
+Dim intCurrentClassid
+intCurrentClassid = classid
+'intCurrentClassid = 99999		'如果等于99999，则表示无论如何，大导航都不会有高亮显示！
+%>
+<%
+'定义当前导航项.
+Dim ShowNavigationNo
+ShowNavigationNo=6
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="<% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_keyword",True,0) %>" />
+	<meta http-equiv="Description" content="<% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_description",True,0) %>" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+    <%
+	'定义当前页的标题文字.
+	Dim PageTitleWords
+	PageTitleWords = "会员Club俱乐部 -- 痴心不改餐厅(北京)"
+	%>
+	<title><% =PageTitleWords %></title>
+	
+	
+	<!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+		
+		@import "/style/UpdateStyle3.css";
+	</style>
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		dojo.require("dojo.parser");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		dojo.require("dijit.Dialog");
+		dojo.require("dijit.form.Button");
+		dojo.require("dijit.form.Form");
+		dojo.require("dijit.form.CheckBox");
+		dojo.addOnLoad(function(){
+			
+		});
+	</script>
+    <script type="text/javascript" src="/script/public.js"></script>
+    
+    <link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+    <link href="/css/club_index.css" type="text/css" rel="stylesheet" />
+    <SCRIPT src="/js/changimages.js" type="text/javascript"></SCRIPT>
+    
+    <link href="/style/StarRating.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/script/ONCEFOREVER/StarRating.js"></script>
+
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgclubbody">
+<div id="cxbgbg_clubimg">
+ <div id="cxbgbg_clubimgmid">
+ <!--header start-->
+  <div id="cxbgclub_headbg">
+	<!--header start-->
+	<!--#include virtual="/_include/_include_PublicHeadSearch_Code.asp"-->
+	<!--header end-->
+  </div>
+ <!--header end-->
+ <!--middle start-->
+<div class="cxbgmidbgclub">
+    <div class="cxbg_left">
+      <div id="cxbgfuctbg_club"><span class="fontred lfdisplay">欢迎光临，抢座预订请拨打：</span><span class="font25 fontred lfdisplay">6493 0888</span>， 6493 7666<span class="rtdisplay font14">评菜推荐赢积分·快乐兑换礼品券！</span></div>
+	  <div class="left_clubtop">
+	   <div class="leftclub_cp">
+	    <div class="club_bt01"><span class="font16fff">欢迎</span> <span class="font14000">俱乐部新会员</span><a class="more_01" href="/Club/Members.Welcome"></a></div>
+		  <ul class="hyhy">
+		    <!--欢迎俱乐部新会员-->
+		    <!--#include virtual="/_include/Club/_include_MemberNew_Code.asp"-->
+            <!--欢迎俱乐部新会员-->
+		  </ul>
+	    <div class="club_bt"><span class="font16fff">积分</span> <span class="font14000">明星</span><a class="more_01" href="/Club/Members.Welcome?ExecuteSearch=1"></a></div>
+		  <ul class="hyhy">
+		    <!--积分明星-->
+		    <!--#include virtual="/_include/Club/_include_MemberJifenStar_Code.asp"-->
+            <!--积分明星-->
+		  </ul>
+	   </div>
+	   <div class="rightclub_cp">
+         <div class="club_btgood"><span class="font16fff">最新</span> <span class="font14000">Party</span><a class="more_01" href="/Details/Details.Welcome?classid=11&isHot=1"></a></div>
+		 <ul class="club_xjctj">
+		  <!--最新Party-->
+		  <!--#include virtual="/_include/Club/_include_NewPartyArea_Code.asp"-->
+          <% '/_include/Club/_include_HighPointStarRatingDishArea_Code.asp 好评菜 %>
+          <!--最新Party-->
+		 </ul>
+         <div class="club_bt03"><span class="font16fff">娱乐</span> <span class="font14000">秀</span><a class="more_01" href="/Details/Details.Welcome?classid=25&isHot=1"></a></div>
+		 <ul class="club_xjctj">
+		  <!--娱乐秀-->
+		  <!--#include virtual="/_include/Club/_include_YuLeXiuArea_Code.asp"-->
+          <% '/_include/Club/_include_MiddleendStarRatingDishArea_Code.asp 中评菜 %>
+          <!--娱乐秀-->
+		 </ul>
+         <div class="club_btbid"><span class="font16fff">会员自评</span> <span class="font14000">星级菜</span><a class="more_01" href="/ChineseDish/ChineseDish.Welcome?StarRating=True"></a></div>
+		 <ul class="club_xjctj">
+		  <!--星级菜-->
+		  <!--#include virtual="/_include/Club/_include_HighPointStarRatingDishArea_Code.asp"-->
+          <% '/_include/Club/_include_LowendStarRatingDishArea_Code.asp 差评菜 %>
+          <!--星级菜-->
+		 </ul>
+	   </div>
+	  </div>
+	  <div class="left_line01"></div>
+	  <div class="left_pldh">
+	   <div class="left_dhq">
+	     <div class="club_bt04"><span class="font16fff">会员乐享礼品券</span> <span class="font14000">积分兑换区</span><a class="more_01" href="/Club/GiftCertificateds.Welcome"></a></div>
+		 <ul class="left_dhq_txt">
+		   <!--礼品券-->
+		   <!--#include virtual="/_include/Club/_include_JifenExchangeGiftCertificatedArea_Code.asp"-->
+           <!--礼品券-->
+		 </ul>
+	   </div>
+	   <div class="left_hypl">
+	     <div class="club_bt05"><span class="font16fff">会员</span> <span class="font14000">点评</span><a class="more_01" href="/Club/RemarkOns.Welcome"></a></div>
+		 <ul class="left_hypl_txt">
+		   <!--会员评论-->
+		   <!--#include virtual="/_include/Club/_include_MemberCommentsArea_Code.asp"-->
+           <!--会员评论-->
+		 </ul>
+	   </div>
+	  </div>
+	</div>
+	<div class="club_right">
+      <div class="club_imgfl">
+	  <ul>
+        <div id=imgADPlayer></div>
+      <script> 
+				<!--俱乐部广告-->
+			    <!--#include virtual="/_include/Club/_include_ClubAdvertisement_Code.asp"-->
+			    <!--俱乐部广告-->
+		PImgPlayer.init( "imgADPlayer", 204, 125 );   
+	</script>
+	   </ul>
+	  </div>
+	  <ul class="club_jrsx">
+	    <li class="jrsx_bt"></li>
+		<!--今日寿星-->
+		<!--#include virtual="/_include/Club/_include_MemberBirthday_Code.asp"-->
+        <!--今日寿星-->
+	  </ul>
+	  <div class="jrsx_bom"></div>
+      <div class="index_rightbt"><span class="fontredbt14">餐厅</span><span class="font16000">游戏</span><a class="more_02" href="/Club/Games.Welcome"></a></div>
+	  <ul class="club_zxcxlist">
+	    <img src="/images/ctyx_img.jpg" width="206" height="104" />
+	    <!--餐厅游戏-->
+		<!--#include virtual="/_include/Club/_include_Games_Code.asp"-->
+        <!--餐厅游戏-->
+	  </ul>
+      <div class="index_rightbt"><span class="fontredbt14">社区</span><span class="font16000">调查问卷</span><!--<a class="more_02" href=""></a>--></div>
+        <!--调查问卷-->
+        <!--#include virtual="/_include/Club/_include_ClubQuestionnaires_Code.asp"-->
+        <!--调查问卷-->
+	</div>
+    <div class="clear"></div>
+  </div>
+<!--middle end-->
+  <div class="left_line03"></div>
+  <div class="footer_club">
+	<!--底部-->
+	<!--#include virtual="/_include/_include_PublicFootCopyright_Code.asp"-->
+    <!--底部-->
+    </div>
+  <div class="footerclub_bom"></div>
+ </div>
+</div>
+</body>
+</html>

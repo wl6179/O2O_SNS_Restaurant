@@ -1,0 +1,3077 @@
+﻿<%
+'模块说明：系统类库.
+'日期说明：2009-7-6
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀技术有限公司。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<%
+Class SystemClass
+	Public reloadtime,userip,comeurl
+	Public Setup,system_copyright
+	Private ABC
+	
+	
+	Private Sub Class_Initialize()
+        reloadtime = 10000
+        userip = Request.ServerVariables("HTTP_X_FORWARDED_FOR")		'透过代理服务器取得客户端的真实IP地址.
+        If userip = "" Then
+			userip = Request.ServerVariables("REMOTE_ADDR")				'获取客户端IP.但如果客户端是使用代理服务器来访问，那取到的就是代理服务器的IP地址.
+		End If
+        If Instr(Request("comeurl"),".asp")>0 Then
+			comeurl = Request("comeurl")
+		Else
+			comeurl = Trim(Request.ServerVariables("HTTP_REFERER"))			'可获得链接到此页面的来源地址，HTTP_REFERER可用于防外链.
+		End If
+		If Not IsObject(CONN) Then Call link_database()
+		ABC="abc"
+    End Sub
+	
+	Private Sub Class_Terminate()
+    	On Error Resume Next
+        	If IsObject(CONN) Then CONN.Close: Set CONN=Nothing
+			If IsObject(RS) Then RS.Close: Set RS=Nothing
+			If IsObject(rsClass) Then rsClass.Close: Set rsClass=Nothing
+			If IsObject(JMail) Then Set JMail=Nothing
+    End Sub
+	
+	'是setup(*)提值的模型基础.
+	Public Sub ReloadSetup()
+        Dim sql, rs
+        sql = "select * from [CXBG_controller] "
+        Set rs = CONN.Execute(sql)
+        Setup = rs.GetRows		'是setup(*,0)提值的模型基础.将记录集放在一个二维数组中
+        Set rs = Nothing
+    End Sub
+	
+	Public Sub Start()
+        ReloadSetup()
+        system_copyright = Setup(6,0) & "<div style=""text-align:center;""><a href="""& system_owner_domain &""" target=""_blank""><img src=""/images/power.gif"" border=""0"" alt=""Powered By CokeShow.com.cn"" /></a></div>"
+		'Response.Write system_copyright
+    End Sub
+	
+	
+	
+	
+'过滤字符串区
+'\t   ,   \r   ,   \n   等字符仍然可以弄SQL语句。根据我的经验，你把用户名和密码放在一块验证是不安全的，上面有人说了1'   or   '1'='1就可以突破你的防线，是sql返回True   
+'  应该使用用户名搜索，然后在判断密码，这样好一点
+'呵呵   这样才叫安全   
+'  if   len(request.form("pass"))<>len(rs("pass"))   then   "error!"   
+'  replace("request("user")","'","")
+'  replace("request("user")","\","")   
+'  replace("request("pass")","'","")   
+'  replace("request("pass")","\","")   
+'  select   user   from   tab   where   userid=CokeShow.CokeClng(userid)   
+'  select   pass   from   tab   where   pass=pass 
+'还是分开来处理的好，先取用户名，再匹配密码
+'<! --#include   file="conn.asp"     //-->   
+'  <%Response.expires=0% >   
+'  < %   
+'  '取出表单值　并进行VALUE处理   
+'  userID=replace(trim(request("userID")),"   ","")   
+'  passID=replace(trim(request("passID")),"'","")   
+'  passID=replace(passID,"   ","")   
+'  '验证用户名与密码是否为空   
+'  if   userID=""   or   passID=""   then   
+'  response.write   "<script   language=javascript>alert('用户名或密码为空！');history.go(-1)</ script>"   
+'  response.end   
+'  end   if   
+'    
+'  sql="select   *   from   v_登录   where   人员类别=0   and   身份证号='"&userID&"'"   
+'  rs.open   sql,conn,1,1   
+'  if   rs.eof   or   rs.bof   then   
+'  response.write   "< script   language=javascript>alert('用户名或密码不正确，请重新填写！');history.go(-1)</ script>"   
+'  response.end   
+'  else   
+'  pwd=rs("pwd")   
+'  if   pwd=passID   then   
+'  response.redirect   "main.asp"   
+'  response.end   
+'  else   
+'  response.write   "<script   language=javascript>alert('用户名或密码为空！');history.go(-1)</ script>"   
+'  response.end   
+'  end   if   
+'  end   if   
+'  set   rs=nothing   
+'  set   conn=nothing   
+'    
+'  这样的话　还有什么方法可以进入吗？
+'分开判断是比较不错的
+'把<   >屏蔽掉吧,会安全一些的
+' elseif   instr(1,username,"<>")>1   or   instr(1,username,"'")>1   or   instr(1,password,"<>")>1   or   instr(1,password,"'")>1   then   
+'              
+'            IPinfo   =   Request.servervariables("REMOTE_ADDR")   
+'            logondate   =Cstr(now())       
+'                    
+'            action="IP地址"&   ipinfo   &   "的用户企图以用户名为"   &   username   &   "密码"   &   password   &   "   登录系统！已被系统拒绝登录一次！时间："&   logondate     
+'                    
+'            response.write   ("<br><b><font   color=red>系统警告！</font></b><br>")   
+'            response.Write   ("----------------------------------------------------------------------<br><br>")   
+'            response.Write   ("提示：请不要尝试或企图以非法用户的身份进入系统！<br><br>     &nbsp;IP&nbsp;："   &   IPinfo   &   "<br><br>时间："   &   logondate   &   "<br><br>")   
+'            response.write   ("行为：企图以用户名为   <b><font   color=red>"   &   username   &   "</font></b>   密码   <font   color=red><b>"&   password   &"   </b></font>登录系统！   <br><br>")   
+'            response.write   ("处理：系统已拒绝您的非法登录！<br><br>")     
+'            response.Write   ("<br>您的IP地址和行为已被我们记录！")             
+'            
+'          username=replace(username,"'","~")   
+'          password=replace(password,"'","~")   
+'          action=replace(action,"'","~")   
+'                        
+'          sql="Insert   Into   SECURITY   (ipinfo,logondate,username,password,action)     Values('"&   ipinfo   &"','"&   logondate   &"','"&   username   &"',   '"&   password   &"','"&   action   &   "')"   
+'  Set   rs=conn.Execute(   sql   )   
+'    
+'    
+'  ........   
+'    
+'   不仅仅是在入口处要注意哦。   
+'  入口处漏洞的一个例子就是www.deskcity.com，不过现在已经改了。呵呵，原来可以以任一个已有的用户名进去。就是因为没有屏   '   空格   
+'  还有一个就是--注释。呵呵   
+'    
+'  还有就是用户会话身份的认证了。   
+'    
+'  另外就是伪造表单了。   
+'    
+'  防止直接的URL登陆了。   
+'  呵呵，自已看吧。
+'最好是存储过程写，就更安全了。 
+
+
+'你提到的安全性是别人知道url，但是他能知道那么一大长串的sessionID数据吗？只要他猜不到那串字符，他就不能使用那个session里保存的数据呀~
+'
+'你的sessionID用的是url传递的   
+'  这样可以防止客户机不支持cookie的情况   
+'  服务器上的session存储是有时间限制的   
+'  安全你不用担心   
+'  用session_destory可以显式的把服务器上的session文件删除
+
+'*************************************************************************
+	'clng 范围： -2,147,483,648 到 2,147,483,647.
+	Public Function CokeClng(RequestStr)	'可乐秀官方整数数值处理函数1.
+		If isNull(RequestStr) Then Exit Function
+		RequestStr=Trim(RequestStr)
+		If RequestStr="" Then CokeClng=0:Exit Function
+		If isNumeric(RequestStr)=False Or Len(RequestStr)>10 Then
+			CokeClng=0:Exit Function
+		End If
+		
+		'isNumeric(RequestStr)=True.
+		If Len(RequestStr)=10 And RequestStr>0 And (Left(RequestStr,10)-2147483647)>=0 Then
+			CokeClng=0:Exit Function
+		End If
+		If Len(RequestStr)=10 And RequestStr<0 And (Left(RequestStr,10)+2147483647)<=0 Then
+			CokeClng=0:Exit Function
+		End If
+		
+		'其它肯定在范围： -2,147,483,648 到 2,147,483,647之内.
+		RequestStr=Clng(RequestStr)
+		
+		CokeClng=RequestStr
+	End Function
+	
+	'cint 范围： -32,768 到 32,767.
+	Public Function CokeCint(RequestStr)	'可乐秀官方整数数值处理函数2.
+		If isNull(RequestStr) Then Exit Function
+		RequestStr=Trim(RequestStr)
+		If RequestStr="" Then CokeCint=0:Exit Function
+		If isNumeric(RequestStr)=False Or Len(RequestStr)>5 Then
+			CokeCint=0:Exit Function
+		End If
+		
+		'isNumeric(RequestStr)=True.
+		If Len(RequestStr)=5 And RequestStr>0 And (Left(RequestStr,5)-32767)>=0 Then
+			CokeCint=0:Exit Function
+		End If
+		If Len(RequestStr)=5 And RequestStr<0 And (Left(RequestStr,5)+32767)<=0 Then
+			CokeCint=0:Exit Function
+		End If
+		
+		'其它肯定在范围： -32,768 到 32,767之内.
+		RequestStr=Cint(RequestStr)
+		
+		CokeCint=RequestStr
+	End Function
+	
+	Public Function filtPass(RequestStr)	'主要用于防注入，公共过滤接收字符串.
+		If isNull(RequestStr) Then Exit Function
+		RequestStr=Trim(RequestStr)
+		If RequestStr="" Then filtPass="":Exit Function
+		
+		RequestStr=Replace(RequestStr,Chr(0),"") 
+		RequestStr=Replace(RequestStr,"'","''")
+		RequestStr=Replace(RequestStr,"%","％")
+		RequestStr=Replace(RequestStr,"--","－－")
+		RequestStr=Replace(RequestStr,"(","（")	'WL
+		RequestStr=Replace(RequestStr,")","）")	'WL
+		RequestStr=Replace(RequestStr,";","；")	'WL
+		RequestStr=Replace(RequestStr,"#","＃")	'WL
+		RequestStr=Replace(RequestStr,"[","【")	'WL
+		RequestStr=Replace(RequestStr,"]","】")	'WL
+		RequestStr=Replace(RequestStr,"'","&prime;")
+		
+		RequestStr=Replace(RequestStr,">","")
+		RequestStr=Replace(RequestStr,"<","")
+		RequestStr=Replace(RequestStr,"\t","")
+		RequestStr=Replace(RequestStr,"\r","")
+		RequestStr=Replace(RequestStr,"\n","")
+		RequestStr=Replace(RequestStr," ","")
+		
+		RequestStr=Replace(RequestStr,"=","")
+		
+		
+		If CokeShow.strLength(RequestStr)>50 Or CokeShow.strLength(RequestStr)<4 Then
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "方法filtPass的参数RequestStr长度不正确，无法获取当前参数过滤处理的操作！"
+			Exit Function
+		End If
+		
+		
+		filtPass=RequestStr
+	End Function
+	
+	Public Function filtRequest(RequestStr)	'主要用于防注入，公共过滤接收字符串.
+		If isNull(RequestStr) Then Exit Function
+		RequestStr=Trim(RequestStr)
+		If RequestStr="" Then filtRequest="":Exit Function
+		
+		RequestStr=Replace(RequestStr,Chr(0),"") 
+		'//RequestStr=Replace(RequestStr,"'","''")
+		RequestStr=Replace(RequestStr,"%","％")
+		RequestStr=Replace(RequestStr,"--","－－")
+		RequestStr=Replace(RequestStr,"(","（")	'WL
+		RequestStr=Replace(RequestStr,")","）")	'WL
+		RequestStr=Replace(RequestStr,";","；")	'WL
+		RequestStr=Replace(RequestStr,"#","＃")	'WL
+		RequestStr=Replace(RequestStr,"[","【")	'WL
+		RequestStr=Replace(RequestStr,"]","】")	'WL
+		RequestStr=Replace(RequestStr,"'","&prime;")
+		
+		RequestStr=Replace(RequestStr,"コカコーラ","CokeShow")
+		RequestStr=Replace(RequestStr,"Coca-Cola","CokeShow")
+		RequestStr=Replace(RequestStr,"<>","&lt;&gt;")
+		
+		RequestStr=Replace(RequestStr,"&nbsp；","&nbsp;")	'WL
+		'RequestStr=Replace(RequestStr," ","&nbsp;")	'WL
+		
+		
+		RequestStr=Replace(RequestStr,"sp_","sp__")
+		RequestStr=Replace(RequestStr,"xp_","xp__")
+		RequestStr=Replace(RequestStr,"^",":-)")
+		RequestStr=Replace(RequestStr,"$","￥")
+		RequestStr=Replace(RequestStr,"*","★")
+		RequestStr=Replace(RequestStr,"&nbsp；","&nbsp;")	'WL
+		RequestStr=Replace(RequestStr,"<>","&lt;&gt;")
+		
+		filtRequest=RequestStr
+	End Function
+	'":|;|--|sp_|xp_|\|dir|cmd|^|(|)|$|'|copy|format|and|exec|insert|select|delete|update|count|*|%|chr|mid|master|truncate|char|declare"
+	Public Function filtRequestRich(RequestStr)	'专门过滤富文本框内容的.
+		If isNull(RequestStr) Then Exit Function
+		RequestStr=Trim(RequestStr)
+		If RequestStr="" Then filtRequestRich="":Exit Function
+		
+		RequestStr=Replace(RequestStr,Chr(0),"") 
+		'RequestStr=Replace(RequestStr,"'","''")
+		RequestStr=Replace(RequestStr,"'","&prime;")
+		'RequestStr=Replace(RequestStr,"%","％")
+		RequestStr=Replace(RequestStr,"--","－－")
+		
+		RequestStr=Replace(RequestStr,"コカコーラ","CokeShow")
+		RequestStr=Replace(RequestStr,"Coca-Cola","CokeShow")
+		
+		
+		RequestStr=Replace(RequestStr,"sp_","sp__")
+		RequestStr=Replace(RequestStr,"xp_","xp__")
+		RequestStr=Replace(RequestStr,"^",":-)")
+		RequestStr=Replace(RequestStr,"$","￥")
+		RequestStr=Replace(RequestStr,"*","★")
+		RequestStr=Replace(RequestStr,"&nbsp；","&nbsp;")	'WL
+		RequestStr=Replace(RequestStr,"<>","&lt;&gt;")
+		
+		filtRequestRich=RequestStr
+	End Function
+	
+	Public Function filtRequestSimple(RequestStr)	'主要用于防注入，公共过滤接收字符串.
+		If isNull(RequestStr) Then Exit Function
+		RequestStr=Trim(RequestStr)
+		If RequestStr="" Then filtRequestSimple="":Exit Function
+		
+		RequestStr=Replace(RequestStr,Chr(0),"") 
+		RequestStr=Replace(RequestStr,"'","&prime;")
+		RequestStr=Replace(RequestStr,"--","－－")
+		RequestStr=Replace(RequestStr,"<>","&lt;&gt;")
+		RequestStr=Replace(RequestStr,"sp_","sp__")
+		RequestStr=Replace(RequestStr,"xp_","xp__")
+		RequestStr=Replace(RequestStr,"*","★")
+		
+'		RequestStr=Replace(RequestStr,"コカコーラ","CokeShow")
+'		RequestStr=Replace(RequestStr,"Coca-Cola","CokeShow")
+		
+		filtRequestSimple=RequestStr
+	End Function
+	
+	Public Function filtResponseWriteHTML(RequestStr)	'主要用于把chr(10)和chr(13)转化为<br />.
+		If isNull(RequestStr) Then Exit Function
+		RequestStr=Trim(RequestStr)
+		If RequestStr="" Then filtResponseWriteHTML="":Exit Function
+		
+		'RequestStr=Replace(RequestStr,Chr(10),"<br />")
+		RequestStr=Replace(RequestStr,Chr(13),"<br />")
+		
+		filtResponseWriteHTML=RequestStr
+	End Function
+	
+	'将html过滤成可以在页面中显示代码的形式，其实和Server.HTMLEncode差不多.
+	Public Function filt_html(Str)
+        On Error Resume Next
+        If Str = "" Then
+            filt_html = ""
+        Else
+            Str = Replace(Str, ">", "&gt;")
+            Str = Replace(Str, "<", "&lt;")
+            Str = Replace(Str, Chr(32), "&nbsp;")
+            Str = Replace(Str, Chr(9), "&nbsp;")
+            Str = Replace(Str, Chr(34), "&quot;")
+            Str = Replace(Str, Chr(39), "&#39;")
+            Str = Replace(Str, Chr(13), "")
+            Str = Replace(Str, Chr(10) & Chr(10), "&nbsp; ")
+            Str = Replace(Str, Chr(10), "&nbsp; ")
+            filt_html = Str
+        End If
+    End Function
+	
+'	Public Function nohtml(str) '要的就是你WL.
+'		Dim re
+'		Set re=new RegExp
+'		re.IgnoreCase =True
+'		re.Global=True
+'		re.Pattern="(\<.[^\<]*\>)"
+'		str=re.Replace(str," ")
+'		re.Pattern="(\<\/[^\<]*\>)"
+'		str=re.Replace(str," ")
+'		nohtml=str
+'		Set re=Nothing
+'	End Function
+	
+	Public Function nohtmlII(str)	'WL期待中...
+		Dim re
+		Set re=new RegExp
+		  re.IgnoreCase=True	'忽略大小写true
+		  re.Global=True		'全部匹配true
+		  re.Pattern=("<[^>]*>\s*|&nbsp;")	'模式表达式
+		nohtmlII=re.replace(str,"")
+		Set re=Nothing
+	End Function
+	
+'	Public Function nohtmlIII(strHTML)
+'		Dim objRegExp,strOutput
+'		Set objRegExp=New Regexp
+'		strOutput=strHTML
+'		objRegExp.IgnoreCase=True
+'		objRegExp.Global=True
+'		objRegExp.Pattern="<[^>]*>"
+'		strOutput=objRegExp.Replace(strOutput, "")
+'		objRegExp.Pattern="<\/[^>]*>"
+'		strOutput=objRegExp.Replace(strOutput, "")
+'		strOutput=Replace(strOutput, "javascript:", "javascript :")
+'		
+'		nohtmlIII = strOutput
+'		Set objRegExp = Nothing
+'	End Function
+	
+	'将多个空格转换为一个空格.WL
+	Function DeleteMuchSpace(chgStr)
+		Dim re
+		Set re=New RegExp
+		re.IgnoreCase=True	'区分大小写.(是否区分大小写)
+		re.Global=True		'全局限定符.(是检测整个字符串还是在第一次匹配后结束)
+		re.Pattern=" +"		'正则表达式被存放在Pattern里.
+		chgStr=re.Replace(chgStr," ")	'Replace()执行一个搜索+替换操作.	备注：Excute()执行一个正则表达式搜索操作，并能返回一个Match对象，通过次对象可以访问到所有的匹配！	Test()检测一字符串是否与给定的正则表达式相匹配;		不支持向前查找和向后查找。
+		
+		'进一步说明：.
+		'Excute方法：该方法用于对指定的正则表达式进行匹配检测，其返回值为一个Matches集合，其中包含所有检测到匹配的Match对象。如果没有检测到任何匹配，则返回一个空Matches集合。
+		'Replace方法：如果在指定的字符串中找到与指定正则表达式匹配的字符串，则用于指定的其他字符串进行替换。
+		'Test方法：该方法是判断指定的正则表达式相匹配的内容。
+		re.Pattern="/^\s*|\s*$/gim"
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="/\s*/gim"
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern=chr(32)
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="&nbsp;"
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="  "
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="                              "
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="         "
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="         "
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern=" "
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="      "
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="   "
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="  "
+		chgStr=re.Replace(chgStr," ")
+		re.Pattern="  "
+		chgStr=re.Replace(chgStr," ")
+		
+		re.Pattern="   "
+		chgStr=re.Replace(chgStr," ")
+		
+		DeleteMuchSpace=chgStr
+	End Function
+	
+	'将SQL2000中的默认日期[2009-12-3]过滤成[2009-12-03].yyyy-MM-dd
+	Public Function filt_DateStr(DateStr)
+        On Error Resume Next
+        If DateStr = "" Then
+            filt_DateStr = ""
+        Else
+            Dim Str
+			DateStr = Cdate(DateStr)
+            
+			Str = Str & Year(DateStr)
+			Str = Str & "-"
+			
+			If Len(Month(DateStr))=1 Then
+				Str = Str & 0 & Month(DateStr)
+			End If
+			If Len(Month(DateStr))=2 Then
+				Str = Str & Month(DateStr)
+			End If
+			Str = Str & "-"
+			
+			If Len(Day(DateStr))=1 Then
+				Str = Str & 0 & Day(DateStr)
+			End If
+			If Len(Day(DateStr))=2 Then
+				Str = Str & Day(DateStr)
+			End If
+            
+            filt_DateStr = Str
+			
+        End If
+		
+    End Function
+	
+	'将XP的IIS中的ASP的Now函数的默认日期格式[2010-5-18 下午/上午 01:39:58]过滤成[2010-5-18  01:39:58].yyyy-MM-dd  HH:MM:SS
+	Public Function filt_TimeStr(DateStr)
+        On Error Resume Next
+        If DateStr = "" Then
+            filt_TimeStr = ""
+        Else
+            Dim Str
+			DateStr = Cdate(DateStr)
+			
+			'wl
+			If Instr(DateStr,"上午")>0 Then
+				Str = Replace(DateStr,"上午","")
+			End If
+			
+			If Instr(DateStr,"下午")>0 Then
+				Str = Replace(DateStr,"下午","")
+			End If
+            
+            filt_TimeStr = Str
+			
+        End If
+		
+    End Function
+	
+	'将字符串中的数字去掉.
+	Public Function delNumberStr(theStr)
+        delNumberStr=Replace(theStr,"0","")
+		delNumberStr=Replace(delNumberStr,"1","")
+		delNumberStr=Replace(delNumberStr,"2","")
+		delNumberStr=Replace(delNumberStr,"3","")
+		delNumberStr=Replace(delNumberStr,"4","")
+		delNumberStr=Replace(delNumberStr,"5","")
+		delNumberStr=Replace(delNumberStr,"6","")
+		delNumberStr=Replace(delNumberStr,"7","")
+		delNumberStr=Replace(delNumberStr,"8","")
+		delNumberStr=Replace(delNumberStr,"9","")
+    End Function
+	
+	
+	
+'	'获取中文字符串拼音首字母串的函数.
+	'AscB   函数作用于包含在字符串中的字节数据，返回第一个字节的字符代码，而非字符的字符代码。		AscW   函数返回   Unicode   字符代码，若平台不支持Unicode，则与   Asc   函数功能相同。 
+	
+	'主要针对的是GB2312下时的ASCII编码汉字的函数.（对UTF-8下的Unicode编码汉字则无效）
+	Public Function GetPyChar(OneChar)
+		'On Error Resume Next
+		'OneChar="我"
+		Dim TmpPy
+		'response.Write "<script>alert('"& (AscW(OneChar)*(-1)) &"');< /script>"
+		TmpPy=Clng( 65536 + (Asc(OneChar)*(-1)) )	'换成AscW也无效！
+		If TmpPy=53687 Then
+			GetPyChar="s"
+			Exit Function
+		End If
+		If (TmpPy>=45217 And TmpPy<=45252) Then
+			GetPyChar="a"
+		ElseIf (TmpPy>=45253 And TmpPy<=45760) Then
+			GetPyChar="b"
+		ElseIf (TmpPy>=45761 And TmpPy<=46317) Then
+			GetPyChar="c"
+		ElseIf (TmpPy>=46318 And TmpPy<=46825) Then
+			GetPyChar="d"
+		ElseIf (TmpPy>=46826 And TmpPy<=47009) Then
+			GetPyChar="e"
+		ElseIf (TmpPy>=47010 And TmpPy<=47296) Then
+			GetPyChar="f"
+		ElseIf (TmpPy>=47297 And TmpPy<=47613) Then
+			GetPyChar="g"
+		ElseIf (TmpPy>=47614 And TmpPy<=48118) Then
+			GetPyChar="h"
+		ElseIf (TmpPy>=48119 And TmpPy<=49061) Then
+			GetPyChar="j"
+		ElseIf (TmpPy>=49062 And TmpPy<=49323) Then
+			GetPyChar="k"
+		ElseIf (TmpPy>=49324 And TmpPy<=49895) Then
+			GetPyChar="l"
+		ElseIf (TmpPy>=49896 And TmpPy<=50370) Then
+			GetPyChar="m"
+		ElseIf (TmpPy>=50371 And TmpPy<=50613) Then
+			GetPyChar="n"
+		ElseIf (TmpPy>=50614 And TmpPy<=50621) Then
+			GetPyChar="o"
+		ElseIf (TmpPy>=50622 And TmpPy<=50905) Then
+			GetPyChar="p"
+		ElseIf (TmpPy>=50906 And TmpPy<=51386) Then
+			GetPyChar="q"
+		ElseIf (TmpPy>=51387 And TmpPy<=51445) Then
+			GetPyChar="r"
+		ElseIf (TmpPy>=51446 And TmpPy<=52217) Then
+			GetPyChar="s"
+		ElseIf (TmpPy>=52218 And TmpPy<=52697) Then
+			GetPyChar="t"
+		ElseIf (TmpPy>=52698 And TmpPy<=52979) Then
+			GetPyChar="w"
+		ElseIf (TmpPy>=52980 And TmpPy<=53688) Then
+			GetPyChar="x"
+		ElseIf (TmpPy>=53689 And TmpPy<=54480) Then
+			GetPyChar="y"
+		ElseIf (TmpPy>=54481 And TmpPy<=62289) Then
+			GetPyChar="z"
+		Else	'如果不是中文，则不处理.
+			GetPyChar=OneChar
+		End If
+	
+	End Function
+	
+	'暂时没用.
+	Public Function GetPY(strParmeter)
+		Dim intTmp, iTmp
+		 
+		For iTmp = 1 To Len(strParmeter) 
+			intTmp = AscW(Mid(strParmeter, iTmp, 1)) 
+	
+			If intTmp < AscW("啊") Then 
+				GetPY = GetPY & "*" 
+			ElseIf intTmp >= AscW("啊") And intTmp < AscW("芭") Then 
+				GetPY = GetPY & "A" 
+			ElseIf intTmp >= AscW("芭") And intTmp < AscW("擦") Then 
+				GetPY = GetPY & "B" 
+			ElseIf intTmp >= AscW("擦") And intTmp < AscW("搭") Then 
+				GetPY = GetPY & "C" 
+			ElseIf intTmp >= AscW("搭") And intTmp < AscW("蛾") Then 
+				GetPY = GetPY & "D" 
+			ElseIf intTmp >= AscW("蛾") And intTmp < AscW("发") Then 
+				GetPY = GetPY & "E" 
+			ElseIf intTmp >= AscW("发") And intTmp < AscW("噶") Then 
+				GetPY = GetPY & "F" 
+			ElseIf intTmp >= AscW("噶") And intTmp < AscW("哈") Then 
+				GetPY = GetPY & "G" 
+			ElseIf intTmp >= AscW("哈") And intTmp < AscW("击") Then 
+				GetPY = GetPY & "H" 
+			ElseIf intTmp >= AscW("击") And intTmp < AscW("喀") Then 
+				GetPY = GetPY & "J" 
+			ElseIf intTmp >= AscW("喀") And intTmp < AscW("垃") Then 
+				GetPY = GetPY & "K" 
+			ElseIf intTmp >= AscW("垃") And intTmp < AscW("妈") Then 
+				GetPY = GetPY & "L" 
+			ElseIf intTmp >= AscW("妈") And intTmp < AscW("拿") Then 
+				GetPY = GetPY & "M" 
+			ElseIf intTmp >= AscW("拿") And intTmp < AscW("哦") Then 
+				GetPY = GetPY & "N" 
+			ElseIf intTmp >= AscW("哦") And intTmp < AscW("啪") Then 
+				GetPY = GetPY & "O" 
+			ElseIf intTmp >= AscW("啪") And intTmp < AscW("期") Then 
+				GetPY = GetPY & "P" 
+			ElseIf intTmp >= AscW("期") And intTmp < AscW("然") Then 
+				GetPY = GetPY & "Q" 
+			ElseIf intTmp >= AscW("然") And intTmp < AscW("撒") Then 
+				GetPY = GetPY & "R" 
+			ElseIf intTmp >= AscW("撒") And intTmp < AscW("塌") Then 
+				GetPY = GetPY & "S" 
+			ElseIf intTmp >= AscW("塌") And intTmp < AscW("挖") Then 
+				GetPY = GetPY & "T" 
+			ElseIf intTmp >= AscW("挖") And intTmp < AscW("昔") Then 
+				GetPY = GetPY & "W" 
+			ElseIf intTmp >= AscW("昔") And intTmp < AscW("压") Then 
+				GetPY = GetPY & "X" 
+			ElseIf intTmp >= AscW("压") And intTmp < AscW("匝") Then 
+				GetPY = GetPY & "Y" 
+			ElseIf intTmp >= AscW("匝") And intTmp < 0 Then 
+				GetPY = GetPY & "Z" 
+			ElseIf (intTmp >= 65 And intTmp <= 91) Or (intTmp >= 97 And intTmp <= 123) Then 
+				GetPY = GetPY & Mid(strParmeter, iTmp, 1) 
+			Else 
+				GetPY = GetPY & "*" 
+			End If 
+		Next 
+	End Function
+	
+	'暂时没用.
+	'获取汉字字符串的第一个拼音字母--ASP/utf-8版.（对UTF-8下的Unicode编码汉字有效）
+	'UNICODE汉字共收录了20901个，编码从19968到40869，
+	'下面是unicode版的函数，要注意的是查看汉字的UNICODE码在ASP里要用ascW()函数。
+	'其实，只要有了下面那张对照表，不管是什么语言，像asp,php,coldfusion,jsp,c#等都可能轻儿易举地查出汉字的拼音首字母了。
+	'//获得UNICODE单个汉字的首字母
+	'Unicode共收录20901个汉字,编码从19968到40869
+	'在ASP里,取汉字的UNICODE码要用ascW()函数来取
+	'相反,用chrW来反解码,搞了下午才搞到这个对照表
+	Public Function GetPy4utf(OneChar)
+		If OneChar=Null Or Len(Trim(OneChar))=0 Then Exit Function
+		Dim strCHSfirstPY
+		strCHSfirstPY ="YDYQSXMWZSSXJBYMGCCZQPSSQBYCDSCDQLDYLYBSSJGYZZJJFKCCLZDHWDWZJLJPFYYNWJJTMYHZWZHFLZPPQHGSCYYYNJQYXXGJ"_
+		&"HHSDSJNKKTMOMLCRXYPSNQSECCQZGGLLYJLMYZZSECYKYYHQWJSSGGYXYZYJWWKDJHYCHMYXJTLXJYQBYXZLDWRDJRWYSRLDZJPC"_
+		&"BZJJBRCFTLECZSTZFXXZHTRQHYBDLYCZSSYMMRFMYQZPWWJJYFCRWFDFZQPYDDWYXKYJAWJFFXYPSFTZYHHYZYSWCJYXSCLCXXWZ"_
+		&"ZXNBGNNXBXLZSZSBSGPYSYZDHMDZBQBZCWDZZYYTZHBTSYYBZGNTNXQYWQSKBPHHLXGYBFMJEBJHHGQTJCYSXSTKZHLYCKGLYSMZ"_
+		&"XYALMELDCCXGZYRJXSDLTYZCQKCNNJWHJTZZCQLJSTSTBNXBTYXCEQXGKWJYFLZQLYHYXSPSFXLMPBYSXXXYDJCZYLLLSJXFHJXP"_
+		&"JBTFFYABYXBHZZBJYZLWLCZGGBTSSMDTJZXPTHYQTGLJSCQFZKJZJQNLZWLSLHDZBWJNCJZYZSQQYCQYRZCJJWYBRTWPYFTWEXCS"_
+		&"KDZCTBZHYZZYYJXZCFFZZMJYXXSDZZOTTBZLQWFCKSZSXFYRLNYJMBDTHJXSQQCCSBXYYTSYFBXDZTGBCNSLCYZZPSAZYZZSCJCS"_
+		&"HZQYDXLBPJLLMQXTYDZXSQJTZPXLCGLQTZWJBHCTSYJSFXYEJJTLBGXSXJMYJQQPFZASYJNTYDJXKJCDJSZCBARTDCLYJQMWNQNC"_
+		&"LLLKBYBZZSYHQQLTWLCCXTXLLZNTYLNEWYZYXCZXXGRKRMTCNDNJTSYYSSDQDGHSDBJGHRWRQLYBGLXHLGTGXBQJDZPYJSJYJCTM"_
+		&"RNYMGRZJCZGJMZMGXMPRYXKJNYMSGMZJYMKMFXMLDTGFBHCJHKYLPFMDXLQJJSMTQGZSJLQDLDGJYCALCMZCSDJLLNXDJFFFFJCZ"_
+		&"FMZFFPFKHKGDPSXKTACJDHHZDDCRRCFQYJKQCCWJDXHWJLYLLZGCFCQDSMLZPBJJPLSBCJGGDCKKDEZSQCCKJGCGKDJTJDLZYCXK"_
+		&"LQSCGJCLTFPCQCZGWPJDQYZJJBYJHSJDZWGFSJGZKQCCZLLPSPKJGQJHZZLJPLGJGJJTHJJYJZCZMLZLYQBGJWMLJKXZDZNJQSYZ"_
+		&"MLJLLJKYWXMKJLHSKJGBMCLYYMKXJQLBMLLKMDXXKWYXYSLMLPSJQQJQXYXFJTJDXMXXLLCXQBSYJBGWYMBGGBCYXPJYGPEPFGDJ"_
+		&"GBHBNSQJYZJKJKHXQFGQZKFHYGKHDKLLSDJQXPQYKYBNQSXQNSZSWHBSXWHXWBZZXDMNSJBSBKBBZKLYLXGWXDRWYQZMYWSJQLCJ"_
+		&"XXJXKJEQXSCYETLZHLYYYSDZPAQYZCMTLSHTZCFYZYXYLJSDCJQAGYSLCQLYYYSHMRQQKLDXZSCSSSYDYCJYSFSJBFRSSZQSBXXP"_
+		&"XJYSDRCKGJLGDKZJZBDKTCSYQPYHSTCLDJDHMXMCGXYZHJDDTMHLTXZXYLYMOHYJCLTYFBQQXPFBDFHHTKSQHZYYWCNXXCRWHOWG"_
+		&"YJLEGWDQCWGFJYCSNTMYTOLBYGWQWESJPWNMLRYDZSZTXYQPZGCWXHNGPYXSHMYQJXZTDPPBFYHZHTJYFDZWKGKZBLDNTSXHQEEG"_
+		&"ZZYLZMMZYJZGXZXKHKSTXNXXWYLYAPSTHXDWHZYMPXAGKYDXBHNHXKDPJNMYHYLPMGOCSLNZHKXXLPZZLBMLSFBHHGYGYYGGBHSC"_
+		&"YAQTYWLXTZQCEZYDQDQMMHTKLLSZHLSJZWFYHQSWSCWLQAZYNYTLSXTHAZNKZZSZZLAXXZWWCTGQQTDDYZTCCHYQZFLXPSLZYGPZ"_
+		&"SZNGLNDQTBDLXGTCTAJDKYWNSYZLJHHZZCWNYYZYWMHYCHHYXHJKZWSXHZYXLYSKQYSPSLYZWMYPPKBYGLKZHTYXAXQSYSHXASMC"_
+		&"HKDSCRSWJPWXSGZJLWWSCHSJHSQNHCSEGNDAQTBAALZZMSSTDQJCJKTSCJAXPLGGXHHGXXZCXPDMMHLDGTYBYSJMXHMRCPXXJZCK"_
+		&"ZXSHMLQXXTTHXWZFKHCCZDYTCJYXQHLXDHYPJQXYLSYYDZOZJNYXQEZYSQYAYXWYPDGXDDXSPPYZNDLTWRHXYDXZZJHTCXMCZLHP"_
+		&"YYYYMHZLLHNXMYLLLMDCPPXHMXDKYCYRDLTXJCHHZZXZLCCLYLNZSHZJZZLNNRLWHYQSNJHXYNTTTKYJPYCHHYEGKCTTWLGQRLGG"_
+		&"TGTYGYHPYHYLQYQGCWYQKPYYYTTTTLHYHLLTYTTSPLKYZXGZWGPYDSSZZDQXSKCQNMJJZZBXYQMJRTFFBTKHZKBXLJJKDXJTLBWF"_
+		&"ZPPTKQTZTGPDGNTPJYFALQMKGXBDCLZFHZCLLLLADPMXDJHLCCLGYHDZFGYDDGCYYFGYDXKSSEBDHYKDKDKHNAXXYBPBYYHXZQGA"_
+		&"FFQYJXDMLJCSQZLLPCHBSXGJYNDYBYQSPZWJLZKSDDTACTBXZDYZYPJZQSJNKKTKNJDJGYYPGTLFYQKASDNTCYHBLWDZHBBYDWJR"_
+		&"YGKZYHEYYFJMSDTYFZJJHGCXPLXHLDWXXJKYTCYKSSSMTWCTTQZLPBSZDZWZXGZAGYKTYWXLHLSPBCLLOQMMZSSLCMBJCSZZKYDC"_
+		&"ZJGQQDSMCYTZQQLWZQZXSSFPTTFQMDDZDSHDTDWFHTDYZJYQJQKYPBDJYYXTLJHDRQXXXHAYDHRJLKLYTWHLLRLLRCXYLBWSRSZZ"_
+		&"SYMKZZHHKYHXKSMDSYDYCJPBZBSQLFCXXXNXKXWYWSDZYQOGGQMMYHCDZTTFJYYBGSTTTYBYKJDHKYXBELHTYPJQNFXFDYKZHQKZ"_
+		&"BYJTZBXHFDXKDASWTAWAJLDYJSFHBLDNNTNQJTJNCHXFJSRFWHZFMDRYJYJWZPDJKZYJYMPCYZNYNXFBYTFYFWYGDBNZZZDNYTXZ"_
+		&"EMMQBSQEHXFZMBMFLZZSRXYMJGSXWZJSPRYDJSJGXHJJGLJJYNZZJXHGXKYMLPYYYCXYTWQZSWHWLYRJLPXSLSXMFSWWKLCTNXNY"_
+		&"NPSJSZHDZEPTXMYYWXYYSYWLXJQZQXZDCLEEELMCPJPCLWBXSQHFWWTFFJTNQJHJQDXHWLBYZNFJLALKYYJLDXHHYCSTYYWNRJYX"_
+		&"YWTRMDRQHWQCMFJDYZMHMYYXJWMYZQZXTLMRSPWWCHAQBXYGZYPXYYRRCLMPYMGKSJSZYSRMYJSNXTPLNBAPPYPYLXYYZKYNLDZY"_
+		&"JZCZNNLMZHHARQMPGWQTZMXXMLLHGDZXYHXKYXYCJMFFYYHJFSBSSQLXXNDYCANNMTCJCYPRRNYTYQNYYMBMSXNDLYLYSLJRLXYS"_
+		&"XQMLLYZLZJJJKYZZCSFBZXXMSTBJGNXYZHLXNMCWSCYZYFZLXBRNNNYLBNRTGZQYSATSWRYHYJZMZDHZGZDWYBSSCSKXSYHYTXXG"_
+		&"CQGXZZSHYXJSCRHMKKBXCZJYJYMKQHZJFNBHMQHYSNJNZYBKNQMCLGQHWLZNZSWXKHLJHYYBQLBFCDSXDLDSPFZPSKJYZWZXZDDX"_
+		&"JSMMEGJSCSSMGCLXXKYYYLNYPWWWGYDKZJGGGZGGSYCKNJWNJPCXBJJTQTJWDSSPJXZXNZXUMELPXFSXTLLXCLJXJJLJZXCTPSWX"_
+		&"LYDHLYQRWHSYCSQYYBYAYWJJJQFWQCQQCJQGXALDBZZYJGKGXPLTZYFXJLTPADKYQHPMATLCPDCKBMTXYBHKLENXDLEEGQDYMSAW"_
+		&"HZMLJTWYGXLYQZLJEEYYBQQFFNLYXRDSCTGJGXYYNKLLYQKCCTLHJLQMKKZGCYYGLLLJDZGYDHZWXPYSJBZKDZGYZZHYWYFQYTYZ"_
+		&"SZYEZZLYMHJJHTSMQWYZLKYYWZCSRKQYTLTDXWCTYJKLWSQZWBDCQYNCJSRSZJLKCDCDTLZZZACQQZZDDXYPLXZBQJYLZLLLQDDZ"_
+		&"QJYJYJZYXNYYYNYJXKXDAZWYRDLJYYYRJLXLLDYXJCYWYWNQCCLDDNYYYNYCKCZHXXCCLGZQJGKWPPCQQJYSBZZXYJSQPXJPZBSB"_
+		&"DSFNSFPZXHDWZTDWPPTFLZZBZDMYYPQJRSDZSQZSQXBDGCPZSWDWCSQZGMDHZXMWWFYBPDGPHTMJTHZSMMBGZMBZJCFZWFZBBZMQ"_
+		&"CFMBDMCJXLGPNJBBXGYHYYJGPTZGZMQBQTCGYXJXLWZKYDPDYMGCFTPFXYZTZXDZXTGKMTYBBCLBJASKYTSSQYYMSZXFJEWLXLLS"_
+		&"ZBQJJJAKLYLXLYCCTSXMCWFKKKBSXLLLLJYXTYLTJYYTDPJHNHNNKBYQNFQYYZBYYESSESSGDYHFHWTCJBSDZZTFDMXHCNJZYMQW"_
+		&"SRYJDZJQPDQBBSTJGGFBKJBXTGQHNGWJXJGDLLTHZHHYYYYYYSXWTYYYCCBDBPYPZYCCZYJPZYWCBDLFWZCWJDXXHYHLHWZZXJTC"_
+		&"ZLCDPXUJCZZZLYXJJTXPHFXWPYWXZPTDZZBDZCYHJHMLXBQXSBYLRDTGJRRCTTTHYTCZWMXFYTWWZCWJWXJYWCSKYBZSCCTZQNHX"_
+		&"NWXXKHKFHTSWOCCJYBCMPZZYKBNNZPBZHHZDLSYDDYTYFJPXYNGFXBYQXCBHXCPSXTYZDMKYSNXSXLHKMZXLYHDHKWHXXSSKQYHH"_
+		&"CJYXGLHZXCSNHEKDTGZXQYPKDHEXTYKCNYMYYYPKQYYYKXZLTHJQTBYQHXBMYHSQCKWWYLLHCYYLNNEQXQWMCFBDCCMLJGGXDQKT"_
+		&"LXKGNQCDGZJWYJJLYHHQTTTNWCHMXCXWHWSZJYDJCCDBQCDGDNYXZTHCQRXCBHZTQCBXWGQWYYBXHMBYMYQTYEXMQKYAQYRGYZSL"_
+		&"FYKKQHYSSQYSHJGJCNXKZYCXSBXYXHYYLSTYCXQTHYSMGSCPMMGCCCCCMTZTASMGQZJHKLOSQYLSWTMXSYQKDZLJQQYPLSYCZTCQ"_
+		&"QPBBQJZCLPKHQZYYXXDTDDTSJCXFFLLCHQXMJLWCJCXTSPYCXNDTJSHJWXDQQJSKXYAMYLSJHMLALYKXCYYDMNMDQMXMCZNNCYBZ"_
+		&"KKYFLMCHCMLHXRCJJHSYLNMTJZGZGYWJXSRXCWJGJQHQZDQJDCJJZKJKGDZQGJJYJYLXZXXCDQHHHEYTMHLFSBDJSYYSHFYSTCZQ"_
+		&"LPBDRFRZTZYKYWHSZYQKWDQZRKMSYNBCRXQBJYFAZPZZEDZCJYWBCJWHYJBQSZYWRYSZPTDKZPFPBNZTKLQYHBBZPNPPTYZZYBQN"_
+		&"YDCPJMMCYCQMCYFZZDCMNLFPBPLNGQJTBTTNJZPZBBZNJKLJQYLNBZQHKSJZNGGQSZZKYXSHPZSNBCGZKDDZQANZHJKDRTLZLSWJ"_
+		&"LJZLYWTJNDJZJHXYAYNCBGTZCSSQMNJPJYTYSWXZFKWJQTKHTZPLBHSNJZSYZBWZZZZLSYLSBJHDWWQPSLMMFBJDWAQYZTCJTBNN"_
+		&"WZXQXCDSLQGDSDPDZHJTQQPSWLYYJZLGYXYZLCTCBJTKTYCZJTQKBSJLGMGZDMCSGPYNJZYQYYKNXRPWSZXMTNCSZZYXYBYHYZAX"_
+		&"YWQCJTLLCKJJTJHGDXDXYQYZZBYWDLWQCGLZGJGQRQZCZSSBCRPCSKYDZNXJSQGXSSJMYDNSTZTPBDLTKZWXQWQTZEXNQCZGWEZK"_
+		&"SSBYBRTSSSLCCGBPSZQSZLCCGLLLZXHZQTHCZMQGYZQZNMCOCSZJMMZSQPJYGQLJYJPPLDXRGZYXCCSXHSHGTZNLZWZKJCXTCFCJ"_
+		&"XLBMQBCZZWPQDNHXLJCTHYZLGYLNLSZZPCXDSCQQHJQKSXZPBAJYEMSMJTZDXLCJYRYYNWJBNGZZTMJXLTBSLYRZPYLSSCNXPHLL"_
+		&"HYLLQQZQLXYMRSYCXZLMMCZLTZSDWTJJLLNZGGQXPFSKYGYGHBFZPDKMWGHCXMSGDXJMCJZDYCABXJDLNBCDQYGSKYDQTXDJJYXM"_
+		&"SZQAZDZFSLQXYJSJZYLBTXXWXQQZBJZUFBBLYLWDSLJHXJYZJWTDJCZFQZQZZDZSXZZQLZCDZFJHYSPYMPQZMLPPLFFXJJNZZYLS"_
+		&"JEYQZFPFZKSYWJJJHRDJZZXTXXGLGHYDXCSKYSWMMZCWYBAZBJKSHFHJCXMHFQHYXXYZFTSJYZFXYXPZLCHMZMBXHZZSXYFYMNCW"_
+		&"DABAZLXKTCSHHXKXJJZJSTHYGXSXYYHHHJWXKZXSSBZZWHHHCWTZZZPJXSNXQQJGZYZYWLLCWXZFXXYXYHXMKYYSWSQMNLNAYCYS"_
+		&"PMJKHWCQHYLAJJMZXHMMCNZHBHXCLXTJPLTXYJHDYYLTTXFSZHYXXSJBJYAYRSMXYPLCKDUYHLXRLNLLSTYZYYQYGYHHSCCSMZCT"_
+		&"ZQXKYQFPYYRPFFLKQUNTSZLLZMWWTCQQYZWTLLMLMPWMBZSSTZRBPDDTLQJJBXZCSRZQQYGWCSXFWZLXCCRSZDZMCYGGDZQSGTJS"_
+		&"WLJMYMMZYHFBJDGYXCCPSHXNZCSBSJYJGJMPPWAFFYFNXHYZXZYLREMZGZCYZSSZDLLJCSQFNXZKPTXZGXJJGFMYYYSNBTYLBNLH"_
+		&"PFZDCYFBMGQRRSSSZXYSGTZRNYDZZCDGPJAFJFZKNZBLCZSZPSGCYCJSZLMLRSZBZZLDLSLLYSXSQZQLYXZLSKKBRXBRBZCYCXZZ"_
+		&"ZEEYFGKLZLYYHGZSGZLFJHGTGWKRAAJYZKZQTSSHJJXDCYZUYJLZYRZDQQHGJZXSSZBYKJPBFRTJXLLFQWJHYLQTYMBLPZDXTZYG"_
+		&"BDHZZRBGXHWNJTJXLKSCFSMWLSDQYSJTXKZSCFWJLBXFTZLLJZLLQBLSQMQQCGCZFPBPHZCZJLPYYGGDTGWDCFCZQYYYQYSSCLXZ"_
+		&"SKLZZZGFFCQNWGLHQYZJJCZLQZZYJPJZZBPDCCMHJGXDQDGDLZQMFGPSYTSDYFWWDJZJYSXYYCZCYHZWPBYKXRYLYBHKJKSFXTZJ"_
+		&"MMCKHLLTNYYMSYXYZPYJQYCSYCWMTJJKQYRHLLQXPSGTLYYCLJSCPXJYZFNMLRGJJTYZBXYZMSJYJHHFZQMSYXRSZCWTLRTQZSST"_
+		&"KXGQKGSPTGCZNJSJCQCXHMXGGZTQYDJKZDLBZSXJLHYQGGGTHQSZPYHJHHGYYGKGGCWJZZYLCZLXQSFTGZSLLLMLJSKCTBLLZZSZ"_
+		&"MMNYTPZSXQHJCJYQXYZXZQZCPSHKZZYSXCDFGMWQRLLQXRFZTLYSTCTMJCXJJXHJNXTNRZTZFQYHQGLLGCXSZSJDJLJCYDSJTLNY"_
+		&"XHSZXCGJZYQPYLFHDJSBPCCZHJJJQZJQDYBSSLLCMYTTMQTBHJQNNYGKYRQYQMZGCJKPDCGMYZHQLLSLLCLMHOLZGDYYFZSLJCQZ"_
+		&"LYLZQJESHNYLLJXGJXLYSYYYXNBZLJSSZCQQCJYLLZLTJYLLZLLBNYLGQCHXYYXOXCXQKYJXXXYKLXSXXYQXCYKQXQCSGYXXYQXY"_
+		&"GYTQOHXHXPYXXXULCYEYCHZZCBWQBBWJQZSCSZSSLZYLKDESJZWMYMCYTSDSXXSCJPQQSQYLYYZYCMDJDZYWCBTJSYDJKCYDDJLB"_
+		&"DJJSODZYSYXQQYXDHHGQQYQHDYXWGMMMAJDYBBBPPBCMUUPLJZSMTXERXJMHQNUTPJDCBSSMSSSTKJTSSMMTRCPLZSZMLQDSDMJM"_
+		&"QPNQDXCFYNBFSDQXYXHYAYKQYDDLQYYYSSZBYDSLNTFQTZQPZMCHDHCZCWFDXTMYQSPHQYYXSRGJCWTJTZZQMGWJJTJHTQJBBHWZ"_
+		&"PXXHYQFXXQYWYYHYSCDYDHHQMNMTMWCPBSZPPZZGLMZFOLLCFWHMMSJZTTDHZZYFFYTZZGZYSKYJXQYJZQBHMBZZLYGHGFMSHPZF"_
+		&"ZSNCLPBQSNJXZSLXXFPMTYJYGBXLLDLXPZJYZJYHHZCYWHJYLSJEXFSZZYWXKZJLUYDTMLYMQJPWXYHXSKTQJEZRPXXZHHMHWQPW"_
+		&"QLYJJQJJZSZCPHJLCHHNXJLQWZJHBMZYXBDHHYPZLHLHLGFWLCHYYTLHJXCJMSCPXSTKPNHQXSRTYXXTESYJCTLSSLSTDLLLWWYH"_
+		&"DHRJZSFGXTSYCZYNYHTDHWJSLHTZDQDJZXXQHGYLTZPHCSQFCLNJTCLZPFSTPDYNYLGMJLLYCQHYSSHCHYLHQYQTMZYPBYWRFQYK"_
+		&"QSYSLZDQJMPXYYSSRHZJNYWTQDFZBWWTWWRXCWHGYHXMKMYYYQMSMZHNGCEPMLQQMTCWCTMMPXJPJJHFXYYZSXZHTYBMSTSYJTTQ"_
+		&"QQYYLHYNPYQZLCYZHZWSMYLKFJXLWGXYPJYTYSYXYMZCKTTWLKSMZSYLMPWLZWXWQZSSAQSYXYRHSSNTSRAPXCPWCMGDXHXZDZYF"_
+		&"JHGZTTSBJHGYZSZYSMYCLLLXBTYXHBBZJKSSDMALXHYCFYGMQYPJYCQXJLLLJGSLZGQLYCJCCZOTYXMTMTTLLWTGPXYMZMKLPSZZ"_
+		&"ZXHKQYSXCTYJZYHXSHYXZKXLZWPSQPYHJWPJPWXQQYLXSDHMRSLZZYZWTTCYXYSZZSHBSCCSTPLWSSCJCHNLCGCHSSPHYLHFHHXJ"_
+		&"SXYLLNYLSZDHZXYLSXLWZYKCLDYAXZCMDDYSPJTQJZLNWQPSSSWCTSTSZLBLNXSMNYYMJQBQHRZWTYYDCHQLXKPZWBGQYBKFCMZW"_
+		&"PZLLYYLSZYDWHXPSBCMLJBSCGBHXLQHYRLJXYSWXWXZSLDFHLSLYNJLZYFLYJYCDRJLFSYZFSLLCQYQFGJYHYXZLYLMSTDJCYHBZ"_
+		&"LLNWLXXYGYYHSMGDHXXHHLZZJZXCZZZCYQZFNGWPYLCPKPYYPMCLQKDGXZGGWQBDXZZKZFBXXLZXJTPJPTTBYTSZZDWSLCHZHSLT"_
+		&"YXHQLHYXXXYYZYSWTXZKHLXZXZPYHGCHKCFSYHUTJRLXFJXPTZTWHPLYXFCRHXSHXKYXXYHZQDXQWULHYHMJTBFLKHTXCWHJFWJC"_
+		&"FPQRYQXCYYYQYGRPYWSGSUNGWCHKZDXYFLXXHJJBYZWTSXXNCYJJYMSWZJQRMHXZWFQSYLZJZGBHYNSLBGTTCSYBYXXWXYHXYYXN"_
+		&"SQYXMQYWRGYQLXBBZLJSYLPSYTJZYHYZAWLRORJMKSCZJXXXYXCHDYXRYXXJDTSQFXLYLTSFFYXLMTYJMJUYYYXLTZCSXQZQHZXL"_
+		&"YYXZHDNBRXXXJCTYHLBRLMBRLLAXKYLLLJLYXXLYCRYLCJTGJCMTLZLLCYZZPZPCYAWHJJFYBDYYZSMPCKZDQYQPBPCJPDCYZMDP"_
+		&"BCYYDYCNNPLMTMLRMFMMGWYZBSJGYGSMZQQQZTXMKQWGXLLPJGZBQCDJJJFPKJKCXBLJMSWMDTQJXLDLPPBXCWRCQFBFQJCZAHZG"_
+		&"MYKPHYYHZYKNDKZMBPJYXPXYHLFPNYYGXJDBKXNXHJMZJXSTRSTLDXSKZYSYBZXJLXYSLBZYSLHXJPFXPQNBYLLJQKYGZMCYZZYM"_
+		&"CCSLCLHZFWFWYXZMWSXTYNXJHPYYMCYSPMHYSMYDYSHQYZCHMJJMZCAAGCFJBBHPLYZYLXXSDJGXDHKXXTXXNBHRMLYJSLTXMRHN"_
+		&"LXQJXYZLLYSWQGDLBJHDCGJYQYCMHWFMJYBMBYJYJWYMDPWHXQLDYGPDFXXBCGJSPCKRSSYZJMSLBZZJFLJJJLGXZGYXYXLSZQYX"_
+		&"BEXYXHGCXBPLDYHWETTWWCJMBTXCHXYQXLLXFLYXLLJLSSFWDPZSMYJCLMWYTCZPCHQEKCQBWLCQYDPLQPPQZQFJQDJHYMMCXTXD"_
+		&"RMJWRHXCJZYLQXDYYNHYYHRSLSRSYWWZJYMTLTLLGTQCJZYABTCKZCJYCCQLJZQXALMZYHYWLWDXZXQDLLQSHGPJFJLJHJABCQZD"_
+		&"JGTKHSSTCYJLPSWZLXZXRWGLDLZRLZXTGSLLLLZLYXXWGDZYGBDPHZPBRLWSXQBPFDWOFMWHLYPCBJCCLDMBZPBZZLCYQXLDOMZB"_
+		&"LZWPDWYYGDSTTHCSQSCCRSSSYSLFYBFNTYJSZDFNDPDHDZZMBBLSLCMYFFGTJJQWFTMTPJWFNLBZCMMJTGBDZLQLPYFHYYMJYLSD"_
+		&"CHDZJWJCCTLJCLDTLJJCPDDSQDSSZYBNDBJLGGJZXSXNLYCYBJXQYCBYLZCFZPPGKCXZDZFZTJJFJSJXZBNZYJQTTYJYHTYCZHYM"_
+		&"DJXTTMPXSPLZCDWSLSHXYPZGTFMLCJTYCBPMGDKWYCYZCDSZZYHFLYCTYGWHKJYYLSJCXGYWJCBLLCSNDDBTZBSCLYZCZZSSQDLL"_
+		&"MQYYHFSLQLLXFTYHABXGWNYWYYPLLSDLDLLBJCYXJZMLHLJDXYYQYTDLLLBUGBFDFBBQJZZMDPJHGCLGMJJPGAEHHBWCQXAXHHHZ"_
+		&"CHXYPHJAXHLPHJPGPZJQCQZGJJZZUZDMQYYBZZPHYHYBWHAZYJHYKFGDPFQSDLZMLJXKXGALXZDAGLMDGXMWZQYXXDXXPFDMMSSY"_
+		&"MPFMDMMKXKSYZYSHDZKXSYSMMZZZMSYDNZZCZXFPLSTMZDNMXCKJMZTYYMZMZZMSXHHDCZJEMXXKLJSTLWLSQLYJZLLZJSSDPPMH"_
+		&"NLZJCZYHMXXHGZCJMDHXTKGRMXFWMCGMWKDTKSXQMMMFZZYDKMSCLCMPCGMHSPXQPZDSSLCXKYXTWLWJYAHZJGZQMCSNXYYMMPML"_
+		&"KJXMHLMLQMXCTKZMJQYSZJSYSZHSYJZJCDAJZYBSDQJZGWZQQXFKDMSDJLFWEHKZQKJPEYPZYSZCDWYJFFMZZYLTTDZZEFMZLBNP"_
+		&"PLPLPEPSZALLTYLKCKQZKGENQLWAGYXYDPXLHSXQQWQCQXQCLHYXXMLYCCWLYMQYSKGCHLCJNSZKPYZKCQZQLJPDMDZHLASXLBYD"_
+		&"WQLWDNBQCRYDDZTJYBKBWSZDXDTNPJDTCTQDFXQQMGNXECLTTBKPWSLCTYQLPWYZZKLPYGZCQQPLLKCCYLPQMZCZQCLJSLQZDJXL"_
+		&"DDHPZQDLJJXZQDXYZQKZLJCYQDYJPPYPQYKJYRMPCBYMCXKLLZLLFQPYLLLMBSGLCYSSLRSYSQTMXYXZQZFDZUYSYZTFFMZZSMZQ"_
+		&"HZSSCCMLYXWTPZGXZJGZGSJSGKDDHTQGGZLLBJDZLCBCHYXYZHZFYWXYZYMSDBZZYJGTSMTFXQYXQSTDGSLNXDLRYZZLRYYLXQHT"_
+		&"XSRTZNGZXBNQQZFMYKMZJBZYMKBPNLYZPBLMCNQYZZZSJZHJCTZKHYZZJRDYZHNPXGLFZTLKGJTCTSSYLLGZRZBBQZZKLPKLCZYS"_
+		&"SUYXBJFPNJZZXCDWXZYJXZZDJJKGGRSRJKMSMZJLSJYWQSKYHQJSXPJZZZLSNSHRNYPZTWCHKLPSRZLZXYJQXQKYSJYCZTLQZYBB"_
+		&"YBWZPQDWWYZCYTJCJXCKCWDKKZXSGKDZXWWYYJQYYTCYTDLLXWKCZKKLCCLZCQQDZLQLCSFQCHQHSFSMQZZLNBJJZBSJHTSZDYSJ"_
+		&"QJPDLZCDCWJKJZZLPYCGMZWDJJBSJQZSYZYHHXJPBJYDSSXDZNCGLQMBTSFSBPDZDLZNFGFJGFSMPXJQLMBLGQCYYXBQKDJJQYRF"_
+		&"KZTJDHCZKLBSDZCFJTPLLJGXHYXZCSSZZXSTJYGKGCKGYOQXJPLZPBPGTGYJZGHZQZZLBJLSQFZGKQQJZGYCZBZQTLDXRJXBSXXP"_
+		&"ZXHYZYCLWDXJJHXMFDZPFZHQHQMQGKSLYHTYCGFRZGNQXCLPDLBZCSCZQLLJBLHBZCYPZZPPDYMZZSGYHCKCPZJGSLJLNSCDSLDL"_
+		&"XBMSTLDDFJMKDJDHZLZXLSZQPQPGJLLYBDSZGQLBZLSLKYYHZTTNTJYQTZZPSZQZTLLJTYYLLQLLQYZQLBDZLSLYYZYMDFSZSNHL"_
+		&"XZNCZQZPBWSKRFBSYZMTHBLGJPMCZZLSTLXSHTCSYZLZBLFEQHLXFLCJLYLJQCBZLZJHHSSTBRMHXZHJZCLXFNBGXGTQJCZTMSFZ"_
+		&"KJMSSNXLJKBHSJXNTNLZDNTLMSJXGZJYJCZXYJYJWRWWQNZTNFJSZPZSHZJFYRDJSFSZJZBJFZQZZHZLXFYSBZQLZSGYFTZDCSZX"_
+		&"ZJBQMSZKJRHYJZCKMJKHCHGTXKXQGLXPXFXTRTYLXJXHDTSJXHJZJXZWZLCQSBTXWXGXTXXHXFTSDKFJHZYJFJXRZSDLLLTQSQQZ"_
+		&"QWZXSYQTWGWBZCGZLLYZBCLMQQTZHZXZXLJFRMYZFLXYSQXXJKXRMQDZDMMYYBSQBHGZMWFWXGMXLZPYYTGZYCCDXYZXYWGSYJYZ"_
+		&"NBHPZJSQSYXSXRTFYZGRHZTXSZZTHCBFCLSYXZLZQMZLMPLMXZJXSFLBYZMYQHXJSXRXSQZZZSSLYFRCZJRCRXHHZXQYDYHXSJJH"_
+		&"ZCXZBTYNSYSXJBQLPXZQPYMLXZKYXLXCJLCYSXXZZLXDLLLJJYHZXGYJWKJRWYHCPSGNRZLFZWFZZNSXGXFLZSXZZZBFCSYJDBRJ"_
+		&"KRDHHGXJLJJTGXJXXSTJTJXLYXQFCSGSWMSBCTLQZZWLZZKXJMLTMJYHSDDBXGZHDLBMYJFRZFSGCLYJBPMLYSMSXLSZJQQHJZFX"_
+		&"GFQFQBPXZGYYQXGZTCQWYLTLGWSGWHRLFSFGZJMGMGBGTJFSYZZGZYZAFLSSPMLPFLCWBJZCLJJMZLPJJLYMQDMYYYFBGYGYZMLY"_
+		&"ZDXQYXRQQQHSYYYQXYLJTYXFSFSLLGNQCYHYCWFHCCCFXPYLYPLLZYXXXXXKQHHXSHJZCFZSCZJXCPZWHHHHHAPYLQALPQAFYHXD"_
+		&"YLUKMZQGGGDDESRNNZLTZGCHYPPYSQJJHCLLJTOLNJPZLJLHYMHEYDYDSQYCDDHGZUNDZCLZYZLLZNTNYZGSLHSLPJJBDGWXPCDU"_
+		&"TJCKLKCLWKLLCASSTKZZDNQNTTLYYZSSYSSZZRYLJQKCQDHHCRXRZYDGRGCWCGZQFFFPPJFZYNAKRGYWYQPQXXFKJTSZZXSWZDDF"_
+		&"BBXTBGTZKZNPZZPZXZPJSZBMQHKCYXYLDKLJNYPKYGHGDZJXXEAHPNZKZTZCMXCXMMJXNKSZQNMNLWBWWXJKYHCPSTMCSQTZJYXT"_
+		&"PCTPDTNNPGLLLZSJLSPBLPLQHDTNJNLYYRSZFFJFQWDPHZDWMRZCCLODAXNSSNYZRESTYJWJYJDBCFXNMWTTBYLWSTSZGYBLJPXG"_
+		&"LBOCLHPCBJLTMXZLJYLZXCLTPNCLCKXTPZJSWCYXSFYSZDKNTLBYJCYJLLSTGQCBXRYZXBXKLYLHZLQZLNZCXWJZLJZJNCJHXMNZ"_
+		&"ZGJZZXTZJXYCYYCXXJYYXJJXSSSJSTSSTTPPGQTCSXWZDCSYFPTFBFHFBBLZJCLZZDBXGCXLQPXKFZFLSYLTUWBMQJHSZBMDDBCY"_
+		&"SCCLDXYCDDQLYJJWMQLLCSGLJJSYFPYYCCYLTJANTJJPWYCMMGQYYSXDXQMZHSZXPFTWWZQSWQRFKJLZJQQYFBRXJHHFWJJZYQAZ"_
+		&"MYFRHCYYBYQWLPEXCCZSTYRLTTDMQLYKMBBGMYYJPRKZNPBSXYXBHYZDJDNGHPMFSGMWFZMFQMMBCMZZCJJLCNUXYQLMLRYGQZCY"_
+		&"XZLWJGCJCGGMCJNFYZZJHYCPRRCMTZQZXHFQGTJXCCJEAQCRJYHPLQLSZDJRBCQHQDYRHYLYXJSYMHZYDWLDFRYHBPYDTSSCNWBX"_
+		&"GLPZMLZZTQSSCPJMXXYCSJYTYCGHYCJWYRXXLFEMWJNMKLLSWTXHYYYNCMMCWJDQDJZGLLJWJRKHPZGGFLCCSCZMCBLTBHBQJXQD"_
+		&"SPDJZZGKGLFQYWBZYZJLTSTDHQHCTCBCHFLQMPWDSHYYTQWCNZZJTLBYMBPDYYYXSQKXWYYFLXXNCWCXYPMAELYKKJMZZZBRXYYQ"_
+		&"JFLJPFHHHYTZZXSGQQMHSPGDZQWBWPJHZJDYSCQWZKTXXSQLZYYMYSDZGRXCKKUJLWPYSYSCSYZLRMLQSYLJXBCXTLWDQZPCYCYK"_
+		&"PPPNSXFYZJJRCEMHSZMSXLXGLRWGCSTLRSXBZGBZGZTCPLUJLSLYLYMTXMTZPALZXPXJTJWTCYYZLBLXBZLQMYLXPGHDSLSSDMXM"_
+		&"BDZZSXWHAMLCZCPJMCNHJYSNSYGCHSKQMZZQDLLKABLWJXSFMOCDXJRRLYQZKJMYBYQLYHETFJZFRFKSRYXFJTWDSXXSYSQJYSLY"_
+		&"XWJHSNLXYYXHBHAWHHJZXWMYLJCSSLKYDZTXBZSYFDXGXZJKHSXXYBSSXDPYNZWRPTQZCZENYGCXQFJYKJBZMLJCMQQXUOXSLYXX"_
+		&"LYLLJDZBTYMHPFSTTQQWLHOKYBLZZALZXQLHZWRRQHLSTMYPYXJJXMQSJFNBXYXYJXXYQYLTHYLQYFMLKLJTMLLHSZWKZHLJMLHL"_
+		&"JKLJSTLQXYLMBHHLNLZXQJHXCFXXLHYHJJGBYZZKBXSCQDJQDSUJZYYHZHHMGSXCSYMXFEBCQWWRBPYYJQTYZCYQYQQZYHMWFFHG"_
+		&"ZFRJFCDPXNTQYZPDYKHJLFRZXPPXZDBBGZQSTLGDGYLCQMLCHHMFYWLZYXKJLYPQHSYWMQQGQZMLZJNSQXJQSYJYCBEHSXFSZPXZ"_
+		&"WFLLBCYYJDYTDTHWZSFJMQQYJLMQXXLLDTTKHHYBFPWTYYSQQWNQWLGWDEBZWCMYGCULKJXTMXMYJSXHYBRWFYMWFRXYQMXYSZTZ"_
+		&"ZTFYKMLDHQDXWYYNLCRYJBLPSXCXYWLSPRRJWXHQYPHTYDNXHHMMYWYTZCSQMTSSCCDALWZTCPQPYJLLQZYJSWXMZZMMYLMXCLMX"_
+		&"CZMXMZSQTZPPQQBLPGXQZHFLJJHYTJSRXWZXSCCDLXTYJDCQJXSLQYCLZXLZZXMXQRJMHRHZJBHMFLJLMLCLQNLDXZLLLPYPSYJY"_
+		&"SXCQQDCMQJZZXHNPNXZMEKMXHYKYQLXSXTXJYYHWDCWDZHQYYBGYBCYSCFGPSJNZDYZZJZXRZRQJJYMCANYRJTLDPPYZBSTJKXXZ"_
+		&"YPFDWFGZZRPYMTNGXZQBYXNBUFNQKRJQZMJEGRZGYCLKXZDSKKNSXKCLJSPJYYZLQQJYBZSSQLLLKJXTBKTYLCCDDBLSPPFYLGYD"_
+		&"TZJYQGGKQTTFZXBDKTYYHYBBFYTYYBCLPDYTGDHRYRNJSPTCSNYJQHKLLLZSLYDXXWBCJQSPXBPJZJCJDZFFXXBRMLAZHCSNDLBJ"_
+		&"DSZBLPRZTSWSBXBCLLXXLZDJZSJPYLYXXYFTFFFBHJJXGBYXJPMMMPSSJZJMTLYZJXSWXTYLEDQPJMYGQZJGDJLQJWJQLLSJGJGY"_
+		&"GMSCLJJXDTYGJQJQJCJZCJGDZZSXQGSJGGCXHQXSNQLZZBXHSGZXCXYLJXYXYYDFQQJHJFXDHCTXJYRXYSQTJXYEFYYSSYYJXNCY"_
+		&"ZXFXMSYSZXYYSCHSHXZZZGZZZGFJDLTYLNPZGYJYZYYQZPBXQBDZTZCZYXXYHHSQXSHDHGQHJHGYWSZTMZMLHYXGEBTYLZKQWYTJ"_
+		&"ZRCLEKYSTDBCYKQQSAYXCJXWWGSBHJYZYDHCSJKQCXSWXFLTYNYZPZCCZJQTZWJQDZZZQZLJJXLSBHPYXXPSXSHHEZTXFPTLQYZZ"_
+		&"XHYTXNCFZYYHXGNXMYWXTZSJPTHHGYMXMXQZXTSBCZYJYXXTYYZYPCQLMMSZMJZZLLZXGXZAAJZYXJMZXWDXZSXZDZXLEYJJZQBH"_
+		&"ZWZZZQTZPSXZTDSXJJJZNYAZPHXYYSRNQDTHZHYYKYJHDZXZLSWCLYBZYECWCYCRYLCXNHZYDZYDYJDFRJJHTRSQTXYXJRJHOJYN"_
+		&"XELXSFSFJZGHPZSXZSZDZCQZBYYKLSGSJHCZSHDGQGXYZGXCHXZJWYQWGYHKSSEQZZNDZFKWYSSTCLZSTSYMCDHJXXYWEYXCZAYD"_
+		&"MPXMDSXYBSQMJMZJMTZQLPJYQZCGQHXJHHLXXHLHDLDJQCLDWBSXFZZYYSCHTYTYYBHECXHYKGJPXHHYZJFXHWHBDZFYZBCAPNPG"_
+		&"NYDMSXHMMMMAMYNBYJTMPXYYMCTHJBZYFCGTYHWPHFTWZZEZSBZEGPFMTSKFTYCMHFLLHGPZJXZJGZJYXZSBBQSCZZLZCCSTPGXM"_
+		&"JSFTCCZJZDJXCYBZLFCJSYZFGSZLYBCWZZBYZDZYPSWYJZXZBDSYUXLZZBZFYGCZXBZHZFTPBGZGEJBSTGKDMFHYZZJHZLLZZGJQ"_
+		&"ZLSFDJSSCBZGPDLFZFZSZYZYZSYGCXSNXXCHCZXTZZLJFZGQSQYXZJQDCCZTQCDXZJYQJQCHXZTDLGSCXZSYQJQTZWLQDQZTQCHQ"_
+		&"QJZYEZZZPBWKDJFCJPZTYPQYQTTYNLMBDKTJZPQZQZZFPZSBNJLGYJDXJDZZKZGQKXDLPZJTCJDQBXDJQJSTCKNXBXZMSLYJCQMT"_
+		&"JQWWCJQNJNLLLHJCWQTBZQYDZCZPZZDZYDDCYZZZCCJTTJFZDPRRTZTJDCQTQZDTJNPLZBCLLCTZSXKJZQZPZLBZRBTJDCXFCZDB"_
+		&"CCJJLTQQPLDCGZDBBZJCQDCJWYNLLZYZCCDWLLXWZLXRXNTQQCZXKQLSGDFQTDDGLRLAJJTKUYMKQLLTZYTDYYCZGJWYXDXFRSKS"_
+		&"TQTENQMRKQZHHQKDLDAZFKYPBGGPZREBZZYKZZSPEGJXGYKQZZZSLYSYYYZWFQZYLZZLZHWCHKYPQGNPGBLPLRRJYXCCSYYHSFZF"_
+		&"YBZYYTGZXYLXCZWXXZJZBLFFLGSKHYJZEYJHLPLLLLCZGXDRZELRHGKLZZYHZLYQSZZJZQLJZFLNBHGWLCZCFJYSPYXZLZLXGCCP"_
+		&"ZBLLCYBBBBUBBCBPCRNNZCZYRBFSRLDCGQYYQXYGMQZWTZYTYJXYFWTEHZZJYWLCCNTZYJJZDEDPZDZTSYQJHDYMBJNYJZLXTSST"_
+		&"PHNDJXXBYXQTZQDDTJTDYYTGWSCSZQFLSHLGLBCZPHDLYZJYCKWTYTYLBNYTSDSYCCTYSZYYEBHEXHQDTWNYGYCLXTSZYSTQMYGZ"_
+		&"AZCCSZZDSLZCLZRQXYYELJSBYMXSXZTEMBBLLYYLLYTDQYSHYMRQWKFKBFXNXSBYCHXBWJYHTQBPBSBWDZYLKGZSKYHXQZJXHXJX"_
+		&"GNLJKZLYYCDXLFYFGHLJGJYBXQLYBXQPQGZTZPLNCYPXDJYQYDYMRBESJYYHKXXSTMXRCZZYWXYQYBMCLLYZHQYZWQXDBXBZWZMS"_
+		&"LPDMYSKFMZKLZCYQYCZLQXFZZYDQZPZYGYJYZMZXDZFYFYTTQTZHGSPCZMLCCYTZXJCYTJMKSLPZHYSNZLLYTPZCTZZCKTXDHXXT"_
+		&"QCYFKSMQCCYYAZHTJPCYLZLYJBJXTPNYLJYYNRXSYLMMNXJSMYBCSYSYLZYLXJJQYLDZLPQBFZZBLFNDXQKCZFYWHGQMRDSXYCYT"_
+		&"XNQQJZYYPFZXDYZFPRXEJDGYQBXRCNFYYQPGHYJDYZXGRHTKYLNWDZNTSMPKLBTHBPYSZBZTJZSZZJTYYXZPHSSZZBZCZPTQFZMY"_
+		&"FLYPYBBJQXZMXXDJMTSYSKKBJZXHJCKLPSMKYJZCXTMLJYXRZZQSLXXQPYZXMKYXXXJCLJPRMYYGADYSKQLSNDHYZKQXZYZTCGHZ"_
+		&"TLMLWZYBWSYCTBHJHJFCWZTXWYTKZLXQSHLYJZJXTMPLPYCGLTBZZTLZJCYJGDTCLKLPLLQPJMZPAPXYZLKKTKDZCZZBNZDYDYQZ"_
+		&"JYJGMCTXLTGXSZLMLHBGLKFWNWZHDXUHLFMKYSLGXDTWWFRJEJZTZHYDXYKSHWFZCQSHKTMQQHTZHYMJDJSKHXZJZBZZXYMPAGQM"_
+		&"STPXLSKLZYNWRTSQLSZBPSPSGZWYHTLKSSSWHZZLYYTNXJGMJSZSUFWNLSOZTXGXLSAMMLBWLDSZYLAKQCQCTMYCFJBSLXCLZZCL"_
+		&"XXKSBZQCLHJPSQPLSXXCKSLNHPSFQQYTXYJZLQLDXZQJZDYYDJNZPTUZDSKJFSLJHYLZSQZLBTXYDGTQFDBYAZXDZHZJNHHQBYKN"_
+		&"XJJQCZMLLJZKSPLDYCLBBLXKLELXJLBQYCXJXGCNLCQPLZLZYJTZLJGYZDZPLTQCSXFDMNYCXGBTJDCZNBGBQYQJWGKFHTNPYQZQ"_
+		&"GBKPBBYZMTJDYTBLSQMPSXTBNPDXKLEMYYCJYNZCTLDYKZZXDDXHQSHDGMZSJYCCTAYRZLPYLTLKXSLZCGGEXCLFXLKJRTLQJAQZ"_
+		&"NCMBYDKKCXGLCZJZXJHPTDJJMZQYKQSECQZDSHHADMLZFMMZBGNTJNNLGBYJBRBTMLBYJDZXLCJLPLDLPCQDHLXZLYCBLCXZZJAD"_
+		&"JLNZMMSSSMYBHBSQKBHRSXXJMXSDZNZPXLGBRHWGGFCXGMSKLLTSJYYCQLTSKYWYYHYWXBXQYWPYWYKQLSQPTNTKHQCWDQKTWPXX"_
+		&"HCPTHTWUMSSYHBWCRWXHJMKMZNGWTMLKFGHKJYLSYYCXWHYECLQHKQHTTQKHFZLDXQWYZYYDESBPKYRZPJFYYZJCEQDZZDLATZBB"_
+		&"FJLLCXDLMJSSXEGYGSJQXCWBXSSZPDYZCXDNYXPPZYDLYJCZPLTXLSXYZYRXCYYYDYLWWNZSAHJSYQYHGYWWAXTJZDAXYSRLTDPS"_
+		&"SYYFNEJDXYZHLXLLLZQZSJNYQYQQXYJGHZGZCYJCHZLYCDSHWSHJZYJXCLLNXZJJYYXNFXMWFPYLCYLLABWDDHWDXJMCXZTZPMLQ"_
+		&"ZHSFHZYNZTLLDYWLSLXHYMMYLMBWWKYXYADTXYLLDJPYBPWUXJMWMLLSAFDLLYFLBHHHBQQLTZJCQJLDJTFFKMMMBYTHYGDCQRDD"_
+		&"WRQJXNBYSNWZDBYYTBJHPYBYTTJXAAHGQDQTMYSTQXKBTZPKJLZRBEQQSSMJJBDJOTGTBXPGBKTLHQXJJJCTHXQDWJLWRFWQGWSH"_
+		&"CKRYSWGFTGYGBXSDWDWRFHWYTJJXXXJYZYSLPYYYPAYXHYDQKXSHXYXGSKQHYWFDDDPPLCJLQQEEWXKSYYKDYPLTJTHKJLTCYYHH"_
+		&"JTTPLTZZCDLTHQKZXQYSTEEYWYYZYXXYYSTTJKLLPZMCYHQGXYHSRMBXPLLNQYDQHXSXXWGDQBSHYLLPJJJTHYJKYPPTHYYKTYEZ"_
+		&"YENMDSHLCRPQFDGFXZPSFTLJXXJBSWYYSKSFLXLPPLBBBLBSFXFYZBSJSSYLPBBFFFFSSCJDSTZSXZRYYSYFFSYZYZBJTBCTSBSD"_
+		&"HRTJJBYTCXYJEYLXCBNEBJDSYXYKGSJZBXBYTFZWGENYHHTHZHHXFWGCSTBGXKLSXYWMTMBYXJSTZSCDYQRCYTWXZFHMYMCXLZNS"_
+		&"DJTTTXRYCFYJSBSDYERXJLJXBBDEYNJGHXGCKGSCYMBLXJMSZNSKGXFBNBPTHFJAAFXYXFPXMYPQDTZCXZZPXRSYWZDLYBBKTYQP"_
+		&"QJPZYPZJZNJPZJLZZFYSBTTSLMPTZRTDXQSJEHBZYLZDHLJSQMLHTXTJECXSLZZSPKTLZKQQYFSYGYWPCPQFHQHYTQXZKRSGTTSQ"_
+		&"CZLPTXCDYYZXSQZSLXLZMYCPCQBZYXHBSXLZDLTCDXTYLZJYYZPZYZLTXJSJXHLPMYTXCQRBLZSSFJZZTNJYTXMYJHLHPPLCYXQJ"_
+		&"QQKZZSCPZKSWALQSBLCCZJSXGWWWYGYKTJBBZTDKHXHKGTGPBKQYSLPXPJCKBMLLXDZSTBKLGGQKQLSBKKTFXRMDKBFTPZFRTBBR"_
+		&"FERQGXYJPZSSTLBZTPSZQZSJDHLJQLZBPMSMMSXLQQNHKNBLRDDNXXDHDDJCYYGYLXGZLXSYGMQQGKHBPMXYXLYTQWLWGCPBMQXC"_
+		&"YZYDRJBHTDJYHQSHTMJSBYPLWHLZFFNYPMHXXHPLTBQPFBJWQDBYGPNZTPFZJGSDDTQSHZEAWZZYLLTYYBWJKXXGHLFKXDJTMSZS"_
+		&"QYNZGGSWQSPHTLSSKMCLZXYSZQZXNCJDQGZDLFNYKLJCJLLZLMZZNHYDSSHTHZZLZZBBHQZWWYCRZHLYQQJBEYFXXXWHSRXWQHWP"_
+		&"SLMSSKZTTYGYQQWRSLALHMJTQJSMXQBJJZJXZYZKXBYQXBJXSHZTSFJLXMXZXFGHKZSZGGYLCLSARJYHSLLLMZXELGLXYDJYTLFB"_
+		&"HBPNLYZFBBHPTGJKWETZHKJJXZXXGLLJLSTGSHJJYQLQZFKCGNNDJSSZFDBCTWWSEQFHQJBSAQTGYPQLBXBMMYWXGSLZHGLZGQYF"_
+		&"LZBYFZJFRYSFMBYZHQGFWZSYFYJJPHZBYYZFFWODGRLMFTWLBZGYCQXCDJYGZYYYYTYTYDWEGAZYHXJLZYYHLRMGRXXZCLHNELJJ"_
+		&"TJTPWJYBJJBXJJTJTEEKHWSLJPLPSFYZPQQBDLQJJTYYQLYZKDKSQJYYQZLDQTGJQYZJSUCMRYQTHTEJMFCTYHYPKMHYZWJDQFHY"_
+		&"YXWSHCTXRLJHQXHCCYYYJLTKTTYTMXGTCJTZAYYOCZLYLBSZYWJYTSJYHBYSHFJLYGJXXTMZYYLTXXYPZLXYJZYZYYPNHMYMDYYL"_
+		&"BLHLSYYQQLLNJJYMSOYQBZGDLYXYLCQYXTSZEGXHZGLHWBLJHEYXTWQMAKBPQCGYSHHEGQCMWYYWLJYJHYYZLLJJYLHZYHMGSLJL"_
+		&"JXCJJYCLYCJPCPZJZJMMYLCQLNQLJQJSXYJMLSZLJQLYCMMHCFMMFPQQMFYLQMCFFQMMMMHMZNFHHJGTTHHKHSLNCHHYQDXTMMQD"_
+		&"CYZYXYQMYQYLTDCYYYZAZZCYMZYDLZFFFMMYCQZWZZMABTBYZTDMNZZGGDFTYPCGQYTTSSFFWFDTZQSSYSTWXJHXYTSXXYLBYQHW"_
+		&"WKXHZXWZNNZZJZJJQJCCCHYYXBZXZCYZTLLCQXYNJYCYYCYNZZQYYYEWYCZDCJYCCHYJLBTZYYCQWMPWPYMLGKDLDLGKQQBGYCHJ"_
+		&"XY"
+		
+		'如果不在汉字范围内,则直接返回内容
+		If Clng( Ascw(OneChar) )<19968 Or Clng( Ascw(OneChar) )>40869 Then
+			GetPy4Utf = OneChar
+		Else
+			'查找对应首字母
+			GetPy4Utf = Mid(strCHSfirstPY,(Clng( Ascw(OneChar) )-19967),1)
+		End If
+		
+	End Function
+'*************************************************************************
+	
+	
+	
+'字符串处理，验证专区
+'*************************************************************************
+	'字符串长度，用于检测帐号长度上.
+	Public Function strLength(Str)
+        On Error Resume Next
+        Dim WINNT_CHINESE
+        WINNT_CHINESE = (Len("中国") = 2)
+        If WINNT_CHINESE Then
+            Dim l, t, c
+            Dim i
+            l = Len(Str)
+            t = l
+            For i = 1 To l
+                c = Asc(Mid(Str, i, 1))
+                If c < 0 Then c = c + 65536
+                If c > 255 Then
+                    t = t + 1
+                End If
+            Next
+            strLength = t
+        Else
+        strLength = Len(Str)
+        End If
+        If Err.Number <> 0 Then Err.Clear
+    End Function
+	
+	'给数字字符串前边补零的函数.
+	'参数:
+	'theNumber:需要补零的数字，例如id数.
+	'n:补零后的总长度应该是n位.
+	'例子:AdditionZero(RS("classid"), 8)
+	Public Function AdditionZero(theNumber,n)
+        If IsNull(theNumber) Then
+            AdditionZero=""
+            Exit Function
+        End If
+		If Not isNumeric(theNumber) Then
+            AdditionZero=""
+            Exit Function
+        End If
+        AdditionZero = String(n-Len(theNumber),"0") & theNumber
+    End Function
+	
+	'过滤字符串，并按照数量截取字符串.
+	Public Function filt_astr(Str,n)
+        If IsNull(Str) Then
+            filt_astr=""
+            Exit Function
+        End If
+        filt_astr=InterceptStr( DeleteMuchSpace(nohtmlII(Str)),n )
+    End Function
+	
+	'截取函数~用于计数 （中文和英文字符）的混合文字占用的字符串数 来截取.
+	Public Function InterceptStr(txt,length)
+        Dim x,y,ii
+        txt=Trim(txt)
+        x=Len(txt)
+        y=0
+		
+        If x>=1 Then
+            For ii=1 To x
+                If Asc(Mid(txt,ii,1))<0 Or Asc(Mid(txt,ii,1))>255 Then		'如果是汉字
+                    y=y+2
+                Else
+                    y=y+1
+                End If
+				
+                If y>=length Then
+                    txt=Left(Trim(txt),ii)		'字符串限长
+					txt=txt &"..."
+                    Exit For
+                End If
+				
+            Next
+            InterceptStr=txt
+			
+        Else
+            InterceptStr=""
+			
+        End If
+    End Function
+	
+	
+	'有效的e-mail格式.
+	Public Function IsValidEmail(email)
+		If Len(email)>50 Then
+			IsValidEmail = False
+			Exit Function
+		End If
+		
+        Dim names, name, i, c
+        IsValidEmail = True
+        names = Split(email, "@")
+        If UBound(names) <> 1 Then
+           IsValidEmail = False
+           Exit Function
+        End If
+        For Each name In names
+           If Len(name) <= 0 Then
+             IsValidEmail = False
+             Exit Function
+           End If
+           For i = 1 To Len(name)	'截取每一个字符，并对其操作（检测）.
+             c = LCase(Mid(name, i, 1))
+             If InStr("abcdefghijklmnopqrstuvwxyz_-.", c) <= 0 And Not IsNumeric(c) Then
+               IsValidEmail = False
+               Exit Function
+             End If
+           Next
+           If Left(name, 1) = "." Or Right(name, 1) = "." Then
+              IsValidEmail = False
+              Exit Function
+           End If
+        Next
+        If InStr(names(1), ".") <= 0 Then
+           IsValidEmail = False
+           Exit Function
+        End If
+        i = Len(names(1)) - InStrRev(names(1), ".")
+        If i <> 2 And i <> 3 Then
+           IsValidEmail = False
+           Exit Function
+        End If
+        If InStr(email, "..") > 0 Then
+           IsValidEmail = False
+        End If
+    End Function
+	
+	
+	'检测请求的网络来源.
+	Public Function ChkPost()
+        Dim server_v1, server_v2
+		ChkPost = False
+		
+        server_v1 = CStr(request.ServerVariables("HTTP_REFERER"))	'http://localhost:45233/general/_general.asp
+        server_v2 = CStr(request.ServerVariables("SERVER_NAME"))	'localhost
+		'response.Write "HTTP_REFERER:"& server_v1 &"<br />"
+		'response.Write "SERVER_NAME:"& server_v2 &"<br />"
+		
+		'本系统部署在https情况除外.
+        If Mid(server_v1, 8, Len(server_v2)) = server_v2 Then ChkPost = True	'截取字符数Len(server_v2).
+		'//ChkPost = True'''WL;强制避免限制；
+		'response.Write ChkPost
+		'Response.End()
+    End Function
+	
+	'获取当前域名.
+	Function GetUrl()
+		Dim url,reg
+		url=Request.ServerVariables("SERVER_NAME")
+		Set reg = New RegExp
+		reg.Pattern = "^(?:http)?s?(?::\/\/)?(?:www.|\*.|\.)?(.*)$"
+		reg.Global = True
+		reg.IgnoreCase = True
+		GetUrl = reg.Replace(url,"$1")
+	End Function
+	
+	'获取当前域名+端口号.
+	Function GetUrlAndPort()
+		GetUrlAndPort=""
+		GetUrlAndPort=GetUrlAndPort &"http://"
+		GetUrlAndPort=GetUrlAndPort & Request.ServerVariables("HTTP_HOST")
+		GetUrlAndPort=GetUrlAndPort & Mid( Request.ServerVariables("URL"),1,InStrRev(Request.ServerVariables("URL"),"/") )
+	End Function
+	
+	'=========================
+	'获取当前Url参数的函数
+	Public Function GetAllUrl()
+		Dim ScriptAddress,M_ItemUrl,M_item
+		ScriptAddress=CStr(Request.ServerVariables("SCRIPT_NAME"))	'取得当前地址
+		M_ItemUrl=""
+		If (Request.QueryString<>"") Then
+			ScriptAddress=ScriptAddress &"?"
+			For Each M_item In Request.QueryString
+				If M_item="page_num" Then Exit For
+				'此处的作用就是过滤掉Page_num这个页次的参数(该参数是在page_turn.asp中自行设置的，根据个人设定而变)，否则每次翻页都会叠加这个参数，虽然不影响功能，但总归不太好吧~~
+				
+				If InStr(M_ItemUrl,M_Item)=0 Then
+					M_ItemUrl=M_ItemUrl & M_Item &"="& Server.URLEncode(Request.QueryString(""& M_Item &"")) &"&"
+				End If
+			Next
+		Else
+			ScriptAddress = ScriptAddress &"?"
+		End If
+		'一定要设置好system_user_domain为当前系统的域名！WL
+		GetAllUrl = system_user_domain & ScriptAddress & M_ItemUrl
+	End Function
+	
+	Function GetAllUrlII()
+		On Error Resume Next
+        Dim strTemp
+		If LCase(Request.ServerVariables("HTTPS"))="off" Then
+			strTemp="http://"
+		Else
+			strTemp="https://"
+		End If
+		strTemp=strTemp & Request.ServerVariables("SERVER_NAME")
+		If Request.ServerVariables("SERVER_PORT")<>80 Then strTemp=strTemp & ":" & Request.ServerVariables("SERVER_PORT")
+		strTemp=strTemp & Request.ServerVariables("URL")
+		Parameter pass
+		If Trim(Request.QueryString)<>"" Then strTemp=strTemp &"?"& Trim(Request.QueryString)
+		
+		GetAllUrlII=strTemp
+	End Function
+	'编码一下URL，替换掉敏感的?和&符号为 $$$$$$和$$$
+	Function EncodeURL(strURL_Now,strAnchorpoint_Now)
+		strURL_Now=Replace(strURL_Now,"?","$$$$$$")
+		strURL_Now=Replace(strURL_Now,"&","$$$")
+		strURL_Now=Replace(strURL_Now," ","+")
+		strURL_Now=Replace(strURL_Now,",","%2C")
+		strURL_Now=Replace(strURL_Now," ","%20")
+		If strAnchorpoint_Now<>"" Then strURL_Now=strURL_Now &"$$$$$$$$$"& strAnchorpoint_Now		'如有锚点，在结尾处添加锚点.(因为ASP无法接收锚点)
+		EncodeURL=strURL_Now
+	End Function
+	'解码一下URL，替换掉敏感的?和&符号从 $$$$$$和$$$替代符中替换回来.
+	Function DecodeURL(strURL_Now)
+		strURL_Now=Replace(strURL_Now,"$$$$$$$$$","#")
+		strURL_Now=Replace(strURL_Now,"$$$$$$","?")
+		strURL_Now=Replace(strURL_Now,"$$$","&")
+		strURL_Now=Replace(strURL_Now,"+"," ")
+		strURL_Now=Replace(strURL_Now,"%2C",",")
+		strURL_Now=Replace(strURL_Now,"%20","")'去掉空格.
+		
+		DecodeURL=strURL_Now
+	End Function
+	'=============================
+	
+	'调用验证码图片.
+	Public Function GetCode()
+        GetCode = "<img id=""GetCode"" src=""" & system_dir & "public/code.asp"" style=""cursor:hand"" onclick=""this.src='"& system_dir &"public/code.asp?c='+Math.random()"" alt=""点击更换验证码..."" />"
+    End Function
+	
+	
+	'检查验证码是否正确.
+    Public Function CodePass()
+        Dim CodeStr
+        CodeStr = CokeShow.filtRequest(Request("CodeStr"))					'用户填写的验证码的字符串.
+        If CStr(Session("GetCode"))=CStr(CodeStr) And CodeStr<>"" Then		'对比产生的验证码是否与用户填写的一致.
+            CodePass = True
+            Session("GetCode")=Empty	'立刻销毁产生的验证码.
+        Else
+            CodePass = False
+            Session("GetCode")=Empty	'立刻销毁产生的验证码.
+        End If
+    End Function
+	'检查验证码是否正确.自定义.专门针对Ajax远程表单的验证码匹配函数.
+	'strCodeStrName：验证码的input的name属性值.
+    Public Function CodePassII(strCodeStrName)
+        Dim CodeStr
+        CodeStr = CokeShow.filtRequest(Request(strCodeStrName))					'用户填写的验证码的字符串.
+        If CStr(Session("GetCode"))=CStr(CodeStr) And CodeStr<>"" Then		'对比产生的验证码是否与用户填写的一致.
+            CodePassII = True
+            Session("GetCode")=Empty	'立刻销毁产生的验证码.
+        Else
+            CodePassII = False
+            '//不立刻销毁验证码Session("GetCode")=Empty	'立刻销毁产生的验证码.
+        End If
+    End Function
+	
+	
+	
+'*************************************************************************
+	
+	
+	
+	
+'公共功能之函数调用区(例如 分页、分类下拉选择框 等公共函数...)
+'*************************************************************************
+	'分页函数
+	'ShowTotal是否显示统计信息.ShowAllPages是否显示下拉页码.
+    Public Function ShowPage(sfilename, totalnumber, maxperpage, ShowTotal, ShowAllPages, strUnit)
+        Dim n, i, strUrl
+		
+		Dim currentPage
+		currentPage		=CokeShow.filtRequest(Request("Page"))
+		'处理当前页码的控制变量，通过获取到的传值获取，默认为第一页1.
+		If currentPage<>"" Then
+			If isNumeric(currentPage) Then currentPage=CokeShow.CokeClng(currentPage) Else currentPage=1
+		Else
+			currentPage=1
+		End If
+		
+        '计算出页数n.
+		If totalnumber Mod maxperpage = 0 Then
+            n = totalnumber \ maxperpage
+        Else
+            n = totalnumber \ maxperpage + 1
+        End If
+		
+		
+		
+		'往文件后边家参数前的追加符号准备.
+        strUrl = JoinChar(sfilename)
+		
+        If CurrentPage < 2 Then		'特殊处理第一页时.
+			ShowPage = ShowPage & "first&nbsp;&nbsp;&nbsp;&lt;Prev&nbsp;&nbsp;&nbsp;"
+        Else
+			ShowPage = ShowPage & "<a href='"& strUrl &"page=1'>first</a>&nbsp;&nbsp;&nbsp;"
+			ShowPage = ShowPage & "<a href='"& strUrl &"page="& (CurrentPage - 1) &"'>&lt;Prev</a>&nbsp;&nbsp;&nbsp;"
+        End If
+    
+        If n - CurrentPage < 1 Then	'特殊处理最后一页时.
+			ShowPage = ShowPage & "Next&gt;&nbsp;&nbsp;&nbsp;last"
+        Else
+			ShowPage = ShowPage & "<a href='"& strUrl &"page="& (CurrentPage + 1) &"'>Next&gt;</a>&nbsp;&nbsp;&nbsp;"
+			ShowPage = ShowPage & "<a href='"& strUrl &"page="& n &"'>last</a>"
+        End If
+		
+        ShowPage = ShowPage & "&nbsp;&nbsp;&nbsp;<b>Now:&nbsp;"& CurrentPage &"</b>/"& n &"&nbsp;</strong><b>Page</b> "
+       'ShowPage = ShowPage & "&nbsp;"& maxperpage &""& strUnit &"/页"
+		
+		'是否显示下拉页码.
+        If ShowAllPages = True Then
+            ShowPage = ShowPage &"&nbsp;&nbsp;&nbsp;Go <select name='Page' size='1' onchange=""javascript:window.location='"& strUrl &"Page=" & "' + this.options[this.selectedIndex].value;"" >"
+            For i = 1 To n
+                ShowPage = ShowPage &"<option value='"& i &"'"
+                If CokeShow.CokeClng(CurrentPage) = CokeShow.CokeClng(i) Then ShowPage = ShowPage &" selected "
+                ShowPage = ShowPage & ">"& i &"</option>"
+            Next
+            ShowPage = ShowPage & "</select>"
+        End If
+		
+		'是否允许显示 统计信息.
+        If ShowTotal = True Then
+            ShowPage = ShowPage & "&nbsp;&nbsp;&nbsp;" & "All:" & totalnumber &"&nbsp;"& strUnit
+        End If
+		
+    End Function
+	
+    Public Function JoinChar(strUrl)
+        If strUrl = "" Then
+            JoinChar = ""
+            Exit Function
+        End If
+		
+		'如果?不在最后一个出现的话.
+        If InStr(strUrl, "?") < Len(strUrl) Then
+           '如果存在?，只是不在最后一个出现的话，则处理&符号.
+			If InStr(strUrl, "?") > 1 Then
+               '如果&不在最后一个出现的话,追加&在尾部.
+				If InStr(strUrl, "&") < Len(strUrl) Then
+                    JoinChar = strUrl & "&"
+                Else
+				'否则，证明已经有&在尾部了.
+                    JoinChar = strUrl
+                End If
+            Else
+			'如果不存在?，则直接加上.
+                JoinChar = strUrl & "?"
+            End If
+        Else
+		'如果?在最后一个出现，那么直接保留url.
+            JoinChar = strUrl
+        End If
+    End Function
+	
+	
+	'分类下拉列表选择函数（传入id版本）.主要用于分类后台管理当中.
+	'参数一览
+	'sqlTable:查询表设置.
+	'sqlWhere:查询条件设置.
+	'ShowType: 下拉列表框类型，0表示可以选择一级分类选项； 其它参数则无法选择一级分类！.
+	'CurrentID:分类ID(id)，有则处理selected，没有则无默认选择.
+	Public Sub ClassOption_id(sqlTable,sqlWhere,ShowType,CurrentID)
+		'CurrentID=x 是否已有类id，有则对应上.(数字)
+		'ShowType=0	表示可以选择一级分类.(数字)
+		If ShowType=0 Then
+			Response.Write "<option value='0'"
+			If CurrentID=0 Then Response.Write " selected"
+			Response.Write ">无(一级"& UnitName &")</option>"
+		End If
+		
+		Dim rsClass,sqlClass,strTemp,tmpDepth,i
+		Dim arrShowLine(20)
+		For i=0 To Ubound(arrShowLine)
+			arrShowLine(i)=False
+		Next
+		sqlClass="SELECT * FROM "& sqlTable & sqlWhere &" ORDER BY RootID,OrderID"
+		Set rsClass=CONN.Execute(sqlClass)
+		
+		'如果暂时没有分类记录，请添加一级分类.
+		If rsClass.Bof And rsClass.Eof Then 
+			Response.Write "<option value=''>请先添加"& UnitName &"</option>"
+		Else
+		'如果有记录，则循环出各下拉选项.
+			Do While Not rsClass.Eof
+				tmpDepth=rsClass("Depth")
+				
+				'如果后边有跟着分类.
+				If rsClass("NextID")>0 Then
+					'=tmpDepth的数组=True.
+					arrShowLine(tmpDepth)=True
+				Else
+					'=tmpDepth的数组=False.
+					arrShowLine(tmpDepth)=False
+				End If
+				
+				'检测是否有需要解码的表的字段.
+				'If Instr(SysTable_Decode,sqlTable)>=1 Then
+					'strTemp="<option value='"& CokeShow.ENDecode(rsClass("id")) &"'"
+				'Else
+				strTemp="<option value='"& rsClass("id") &"'"
+				'End If
+				
+				'如果有类id传入，并且循环到了此类的id时，选中它！
+				If CurrentID>0 And rsClass("id")=CurrentID Then
+					 strTemp=strTemp &" selected"
+				End If
+				
+				strTemp=strTemp & ">"
+				
+				'如果有‘深度’.
+				if tmpDepth>0 then
+					'循环出所有‘深度’出来.
+					For i=1 To tmpDepth
+						strTemp=strTemp & "&nbsp;&nbsp;"
+						
+						'当深度达到最后一点时.
+						If i=tmpDepth Then
+							'如果后边还跟着有分类.
+							If rsClass("NextID")>0 Then
+								strTemp=strTemp &"├&nbsp;"
+							Else
+								strTemp=strTemp &"└&nbsp;"
+							End If
+						Else
+						'当深度尚未达到最后一点，正在途中时.
+							'如果...
+							if arrShowLine(i)=True then
+								strTemp=strTemp &"│"
+							else
+							'...
+								strTemp=strTemp &"&nbsp;"
+							end if
+						End If
+					Next
+				End If
+				strTemp=strTemp & rsClass("classname")
+				strTemp=strTemp &"</option>"
+				Response.Write strTemp
+				
+				rsClass.MoveNext
+			Loop
+		End If
+		rsClass.Close
+		Set rsClass=Nothing
+		
+	End Sub
+	
+	
+	'分类下拉列表选择函数（传入classid版本）.主要用于外部调用当中.
+	'参数一览
+	'sqlTable:查询表设置.
+	'sqlWhere:查询条件设置.
+	'ShowType: 下拉列表框类型，0表示可以选择一级分类选项； 其它参数则无法选择一级分类！.
+	'CurrentID:分类classid(classid)，有则处理selected，没有则无默认选择.
+	'例子:Call CokeShow.ClassOption_id("[CXBG_supervisor_class]","",0,ParentID)
+	Public Sub ClassOption_classid(sqlTable,sqlWhere,ShowType,CurrentID)
+		'CurrentID=x 是否已有类classid，有则对应上.(数字)
+		'ShowType=0	表示可以选择一级分类.(数字)
+		If ShowType=0 Then
+			Response.Write "<option value='0'"
+			If CurrentID=0 Then Response.Write " selected"
+			Response.Write ">无</option>"
+			'Response.Write ">无(一级"& UnitName &")</option>"
+		End If
+		
+		Dim rsClass,sqlClass,strTemp,tmpDepth,i
+		Dim arrShowLine(20)
+		For i=0 To Ubound(arrShowLine)
+			arrShowLine(i)=False
+		Next
+		sqlClass="SELECT * FROM "& sqlTable & sqlWhere &" ORDER BY RootID,OrderID"
+		Set rsClass=CONN.Execute(sqlClass)
+		
+		'如果暂时没有分类记录，请添加一级分类.
+		If rsClass.Bof And rsClass.Eof Then 
+			Response.Write "<option value=''>请先添加"& UnitName &"</option>"
+		Else
+		'如果有记录，则循环出各下拉选项.
+			Do While Not rsClass.Eof
+				tmpDepth=rsClass("Depth")
+				
+				'如果后边有跟着分类.
+				If rsClass("NextID")>0 Then
+					'=tmpDepth的数组=True.
+					arrShowLine(tmpDepth)=True
+				Else
+					'=tmpDepth的数组=False.
+					arrShowLine(tmpDepth)=False
+				End If
+				
+				strTemp="<option value='"& rsClass("classid") &"'"
+				
+				'如果有类id传入，并且循环到了此类的id时，选中它！
+				If CurrentID>0 And rsClass("classid")=CurrentID Then
+					 strTemp=strTemp &" selected"
+				End If
+				
+				strTemp=strTemp & ">"
+				
+				'如果有‘深度’.
+				if tmpDepth>0 then
+					'循环出所有‘深度’出来.
+					For i=1 To tmpDepth
+						strTemp=strTemp & "&nbsp;&nbsp;&nbsp;"
+						
+						'当深度达到最后一点时.
+						If i=tmpDepth Then
+							'如果后边还跟着有分类.
+							If rsClass("NextID")>0 Then
+								strTemp=strTemp &"├&nbsp;"
+							Else
+								strTemp=strTemp &"└&nbsp;"
+							End If
+						Else
+						'当深度尚未达到最后一点，正在途中时.
+							'如果...
+							if arrShowLine(i)=True then
+								strTemp=strTemp &"│"
+							else
+							'...
+								strTemp=strTemp &"&nbsp;"
+							end if
+						End If
+					Next
+				End If
+				strTemp=strTemp & rsClass("classname")
+				strTemp=strTemp &"</option>"
+				Response.Write strTemp
+				
+				rsClass.MoveNext
+			Loop
+		End If
+		rsClass.Close
+		Set rsClass=Nothing
+		
+	End Sub
+	
+	
+	
+	'输出此类所属的父类结构情况（大致图，不可选.）.用于内部和外部的调用均可.
+	'参数一览
+	'sqlTable:查询表设置.
+	'sqlWhere:查询条件设置，此处没用，默认为空.
+	'UnitName:分类的名称.
+	'ParentID:传入父类id.
+	'ParentPath:传入父类结构.
+	'例子:Call CokeShow.ClassParent("[CXBG_supervisor_class]","","帐号分类",ParentID,"ParentPath")
+	Public Sub ClassParent(sqlTable,sqlWhere,UnitName,ParentID,ParentPath)
+		'如果没有父类，显示为根类.
+		If ParentID<=0 then
+			Response.Write "无(一级"& UnitName &")"
+		'如果有父类，按格式（按‘深度’）列出其父类.
+		Else
+			'定义变量.
+			Dim rsParent,sqlParent,i
+			
+			sqlParent="SELECT * FROM "& sqlTable &" WHERE id IN ("& ParentPath &") ORDER BY Depth"
+			'Response.Write sqlParent
+			Set rsParent=Server.CreateObject("Adodb.RecordSet")
+			rsParent.Open sqlParent,CONN,1,1
+			
+			Do While Not rsParent.Eof
+				
+				'如果有父类个数统计数的话，按数量填入空格.
+				For i=1 To rsParent("Depth")		'深度
+					Response.Write "&nbsp;&nbsp;&nbsp;"
+				Next
+				
+				'如果不是一级分类的话.
+				If rsParent("Depth")>0 Then
+					Response.Write "└"
+				End If
+				
+				'输出分类名称
+				Response.Write "&nbsp;"& rsParent("classname") &"<br />"
+				
+				rsParent.MoveNext
+			Loop
+			
+			rsParent.Close
+			Set rsParent=Nothing
+		End If
+	End Sub
+	
+	
+	
+	
+	
+	'通用下拉列表选择函数.主要用于各种select空间调用.
+	'参数一览
+	'sqlTable:查询表设置.
+	'sqlWhere:查询条件设置.
+	'ShowType: 下拉列表框类型，0表示可以选择一级分类选项； 其它参数则无法选择一级分类！.
+	'CurrentID:id，有则处理selected，没有则无默认选择.
+	'isDepth:是否有Depth这个字段，是否是分类数据结构.
+	'例子:Call CokeShow.Option_ID("[CXBG_supervisor_class]","",8,CurrentID(0),"classid","classname",True)
+	'例子2：Call CokeShow.Option_ID("[CXBG_product_activityUSE]"," ORDER BY classname ASC ",100,CokeShow.CokeClng(product_activityUSE_id_extend_Array(i_001)),"classid","classname",False)
+	Public Sub Option_ID(sqlTable,sqlWhere,ShowType,CurrentID,theValueName,theShowName,isDepth)
+		'CurrentID=x 是否已有类classid，有则对应上.(数字)
+		'ShowType=0	表示可以选择一级分类.(数字)
+		If ShowType=0 Then
+			Response.Write "<option value='0'"
+			If CurrentID=0 Then Response.Write " selected"
+			Response.Write ">请选择</option>"
+		ElseIf ShowType=1 Then
+			Response.Write "<option value=''"
+			If CurrentID=0 Then Response.Write " selected"
+			Response.Write ">请选择</option>"
+			
+		ElseIf ShowType=100 Then
+			Response.Write "<option value='0'"
+			If CurrentID=0 Then Response.Write " selected"
+			Response.Write ">请选择</option>"
+		ElseIf ShowType=101 Then
+			Response.Write "<option value=''"
+			If CurrentID=0 Then Response.Write " selected"
+			Response.Write ">请选择</option>"
+		End If
+		
+		Dim rsClass,sqlClass,strTemp
+		
+		sqlClass="SELECT *,dbo.Tools_Fun_GetPY("& theShowName &") AS PinYin FROM "& sqlTable & sqlWhere
+		
+		'如果是分类模块，加入分类的排序.
+		If isDepth=True Then
+			sqlClass=sqlClass& " ORDER BY RootID,OrderID"
+		End If
+		
+		Set rsClass=CONN.Execute(sqlClass)
+		
+		'如果暂时没有分类记录，请添加一级分类.
+		If rsClass.Bof And rsClass.Eof Then 
+			Response.Write "<option value=''>请先添加数据</option>"
+		Else
+		'如果有记录，则循环出各下拉选项.
+			Dim i
+			Do While Not rsClass.Eof
+				
+				strTemp="<option value='"& rsClass(theValueName) &"'"
+				
+				'如果有类id传入，并且循环到了此类的id时，选中它！
+				If rsClass(theValueName)=CurrentID Then
+					 strTemp=strTemp &" selected"
+				End If
+				
+				strTemp=strTemp & ">"
+				
+				'如果有父类个数统计数的话，按数量填入空格.
+				If isDepth=True Then
+					For i=1 To rsClass("Depth")		'深度
+						strTemp=strTemp &"---"
+					Next
+				End If
+				
+				If ShowType=168 Then	'专门针对dijit.form.FilteringSelect的前边紧跟id的情形.
+					strTemp=strTemp & rsClass(theValueName) &" "& rsClass(theShowName)
+				ElseIf ShowType=100 Then	'专门针对dijit.form.FilteringSelect的前边紧跟id的情形.
+					'response.Write (Left(rsClass(theShowName),1)) &"zzz"
+					strTemp=strTemp & Left(rsClass("PinYin"),1) &" "& rsClass(theShowName)
+					
+				Else					'正常情况.
+					strTemp=strTemp & rsClass(theShowName)
+				End If
+				
+				strTemp=strTemp &"</option>"
+				Response.Write strTemp
+				
+				rsClass.MoveNext
+			Loop
+		End If
+		rsClass.Close
+		Set rsClass=Nothing
+		
+	End Sub
+	Public Sub Option_ID__Decode(sqlTable,sqlWhere,ShowType,CurrentID,theValueName,theShowName,isDepth)
+		'CurrentID=x 是否已有类classid，有则对应上.(数字)
+		'ShowType=0	表示可以选择一级分类.(数字)
+		If ShowType=0 Then
+			Response.Write "<option value='0'"
+			If CurrentID=0 Then Response.Write " selected"
+			Response.Write ">请选择</option>"
+		End If
+		
+		Dim rsClass,sqlClass,strTemp
+		
+		sqlClass="SELECT * FROM "& sqlTable & sqlWhere
+		Set rsClass=CONN.Execute(sqlClass)
+		
+		'如果暂时没有分类记录，请添加一级分类.
+		If rsClass.Bof And rsClass.Eof Then 
+			Response.Write "<option value=''>请先添加数据</option>"
+		Else
+		'如果有记录，则循环出各下拉选项.
+			Dim i
+			Do While Not rsClass.Eof
+				
+				strTemp="<option value='"& CokeShow.ENDecode(rsClass(theValueName)) &"'"
+				
+				'如果有类id传入，并且循环到了此类的id时，选中它！
+				If CokeShow.ENDecode(rsClass(theValueName))=CurrentID Then
+					 strTemp=strTemp &" selected"
+				End If
+				
+				strTemp=strTemp & ">"
+				
+				'如果有父类个数统计数的话，按数量填入空格.
+				If isDepth=True Then
+					For i=1 To rsClass("Depth")		'深度
+						strTemp=strTemp &"&nbsp;&nbsp;&nbsp;"
+					Next
+				End If
+				
+				strTemp=strTemp & rsClass(theShowName)
+				
+				strTemp=strTemp &"</option>"
+				Response.Write strTemp
+				
+				rsClass.MoveNext
+			Loop
+		End If
+		rsClass.Close
+		Set rsClass=Nothing
+		
+	End Sub
+	
+	
+	
+	'通用‘挪移’函数.主要用于各种需要访问显示另一个字段的调用.
+	'参数一览
+	'sqlTable:查询表设置.
+	'CurrentID:当前值，需要我们去匹配它，然后挪移出一个需要显示的对应值出来.
+	'isNum:当前值CurrentID，以及要匹配的字段theValueName，是否为数字类型.
+	'例子:Response.Write CokeShow.otherField("[CokeShow_language]",RS("languageCode"),"code","classname",False,1)
+	Public Function otherField(sqlTable,CurrentID,theValueName,theShowName,isNum,ShowType)
+		Dim ShowString
+		ShowString=""
+		
+		Dim rsClass,sqlClass
+		If isNum=True Then
+			sqlClass="SELECT * FROM "& sqlTable &" WHERE "& theValueName &"="& CurrentID
+		Else
+			sqlClass="SELECT * FROM "& sqlTable &" WHERE "& theValueName &"='"& CurrentID &"'"
+		End If
+		If ShowType=100 Then sqlClass=sqlClass &" AND isShow=1 "
+		Set rsClass=CONN.Execute(sqlClass)
+		
+		'如果暂时没有分类记录，显示提示.
+		If rsClass.Bof And rsClass.Eof Then 
+			If ShowType=0 Then
+				ShowString=0
+			ElseIf ShowType=100 Then
+				
+			Else
+				ShowString=ShowString &"没有数据哦."
+			End If
+		Else
+		'如果有记录，显示出相应数据.
+			'=1.显示photo字段的图片.
+			If ShowType=1 Then
+				ShowString=ShowString &"<img src='"
+				ShowString=ShowString & rsClass("photo")
+				ShowString=ShowString &"' />"
+			ElseIf ShowType=2 Then
+				ShowString=ShowString &"<img src='"
+				ShowString=ShowString & CokeShow.ENDecode(rsClass("photo"))
+				ShowString=ShowString &"' />"
+			End If
+			
+			If ShowType<>2 Then ShowString=ShowString & rsClass(theShowName)
+		End If
+		rsClass.Close
+		Set rsClass=Nothing
+		
+		otherField=ShowString
+	End Function
+	Public Function otherField_Function(sqlTable,CurrentID,theValueName,theShowName,isNum,ShowType)
+		Dim rsClass,sqlClass
+		Dim ShowString
+		
+		If isNum=True Then
+			sqlClass="SELECT * FROM "& sqlTable &" WHERE "& theValueName &"="& CurrentID
+		Else
+			sqlClass="SELECT * FROM "& sqlTable &" WHERE "& theValueName &"='"& CurrentID &"'"
+		End If
+		Set rsClass=CONN.Execute(sqlClass)
+		
+		'如果暂时没有分类记录，显示提示.
+		If rsClass.Bof And rsClass.Eof Then 
+			ShowString=ShowString &"没有数据.请检查."
+		Else
+		'如果有记录，显示出相应数据.
+			'=1.显示photo字段的图片.
+			If ShowType=1 Then
+				ShowString=ShowString & "<img src='"
+				ShowString=ShowString & rsClass("photo")
+				ShowString=ShowString & "' />"
+			ElseIf ShowType=2 Then
+				ShowString=ShowString & "<img src='"
+				ShowString=ShowString & CokeShow.ENDecode(rsClass("photo"))
+				ShowString=ShowString & "' />"
+			End If
+			
+			If ShowType<>2 Then ShowString=ShowString & rsClass(theShowName)
+		End If
+		rsClass.Close
+		Set rsClass=Nothing
+		
+		otherField_Function=ShowString
+	End Function
+'*************************************************************************
+	
+	
+	
+	
+'文件系统操作区
+'*************************************************************************
+	Public Function BuildFile(ByVal sFile, ByVal sContent)
+        Dim oFSO, oStream
+		Dim isFSO
+		isFSO = 0
+		
+        If isFSO = 1 Then
+            Set oFSO = Server.CreateObject("Scripting.FileSystemObject")
+			'Response.Write "目录1：" & sFile & "<br>"
+            Set oStream = oFSO.CreateTextFile(sFile, True)
+            oStream.Write sContent
+            oStream.Close
+            Set oStream = Nothing
+            Set oFSO = Nothing
+        Else
+            Set oStream = Server.CreateObject("ADODB.Stream")
+            With oStream
+                .Type = 2
+                .Mode = 3
+                .Open
+                .Charset = "utf-8"
+                .Position = oStream.Size
+                .WriteText = sContent
+				
+                .SaveToFile sFile, 2
+                .Close
+            End With
+            Set oStream = Nothing
+        End If
+    End Function
+	
+	
+	'检测组件是否存在的函数.
+	Function IsObjInstalled(strClassString)
+		On Error Resume Next
+		IsObjInstalled = False
+		Err = 0
+		
+		Dim xTestObj
+		Set xTestObj = Server.CreateObject(strClassString)
+		
+		If 0 = Err Then IsObjInstalled = True
+		
+		Set xTestObj = Nothing
+		Err = 0
+	End Function
+'*************************************************************************
+	
+	
+	
+	
+'提示函数区
+'*************************************************************************
+	'错误提示.
+	Public Sub AlertErrMsg_general(errmsg)
+%>
+		<div style=" position: absolute; left: 35%; top: 10%;">
+			<table width="300" id="listGo" cellpadding="0" cellspacing="0">
+				<thead>
+				<tr>
+					<th colspan="10">错误信息 <img src="<% =system_dir %>images/error.gif" /></th>
+				</tr>
+				</thead>
+				<tbody>
+				
+				<tr>
+					<td colspan="10">
+						
+						
+						<br /><br />
+						<ul style="list-style: decimal;">
+							<% =ErrMsg %>
+						</ul>
+						
+						<br /><br />
+						<center><a href='javascript:history.go(-1)'>&lt;&lt; 返回上一页</a></center>
+						
+						<br /><br />
+					</td>
+				</tr>
+				
+				</tbody>
+			</table>
+		</div>
+<%
+
+    End Sub
+	
+	'错误提示.[专用于前台显示的，例如登录错误提示]
+	Public Sub AlertErrMsg_foreground(errmsg)
+%>
+		<style type="text/css">
+			#errmessage ul li {
+				padding:5px;
+			}
+		</style>
+		<div style=" text-align:center; padding:10px;">
+		<table width="300" id="errmessage" cellpadding="0" cellspacing="0">
+			<thead>
+			<tr>
+				<th colspan="10"><div class="font_yl14b height40">报错信息提示 <img src="<% =system_dir %>images/error.gif" /></div></th>
+			</tr>
+			</thead>
+			<tbody>
+			
+			<tr>
+				<td colspan="10">
+					
+					
+					
+					<ul style="list-style: decimal; text-align:left;">
+						<% =ErrMsg %>
+					</ul>
+					
+					<br /><br />
+					<center><a href="<% If Request("fromurl")<>"" And Len(Request("fromurl"))>10 Then Response.Write "javascript:window.location.replace('"& CokeShow.DecodeURL( Request("fromurl") ) &"');" Else Response.Write Request.ServerVariables("HTTP_REFERER") %>">&lt;&lt; 返回上一页</a></center>
+					<!--javascript:history.go(-1);-->
+					<br /><br />
+				</td>
+			</tr>
+			
+			</tbody>
+		</table>
+		</div>
+		
+<%
+
+    End Sub
+	
+	'操作成功提示.
+	Public Sub ShowOK(strShow, url)
+		
+		'拦截错误，不然错误往下进行！
+		If FoundErr=True Then Exit Sub
+		
+        url = Trim(url)
+        If url <> "" Then
+			'如果参数传来url，则正常转向指定url.
+			Response.Write "<script language=JavaScript>alert(""" & strShow & """);window.location='" & url & "'</script>"
+        Else
+			'如果不指定url，看看上一页comeurl是否有.
+			If comeurl = "" Then
+				'如果没有来源，则返回上一步.
+                Response.Write "<script language=JavaScript>alert(""" & strShow & """);history.go(-1)</script>"
+			ElseIf comeurl = "back" Then
+				'如果没有来源，则返回上一步.
+                Response.Write "<script language=JavaScript>alert(""" & strShow & """);history.go(-1)</script>"
+            Else
+				'如果有来源，转向来源comeurl去.
+                Response.Write "<script language=JavaScript>alert(""" & strShow & """);window.location='" & comeurl & "'</script>"
+            End If
+        End If
+    End Sub
+'*************************************************************************
+	
+	
+
+
+
+'JavaScript调用区
+'*************************************************************************
+	'用Value匹配下拉选择框里边的某项对应值.
+	'例：Call activeJS_CheckSelValue()		CheckSel('selType','< %=RS("selType")% >');
+	Public Sub activeJS_CheckSelValue()
+%>
+		<script type="text/javascript">
+			function CheckSel(Voption,Value)
+			{
+				var obj = document.getElementById(Voption);
+				for (i=0;i<obj.length;i++){
+					if (obj.options[i].value==Value){
+					obj.options[i].selected=true;
+					break;
+					}
+				}
+			}
+		</script>
+<%
+	
+	End Sub
+	
+	
+	'aaa.
+	'例：Call activeJS_aaa()		CheckSel('selType','< %=RS("selType")% >');
+	Public Sub activeJS_aaa()
+%>
+		<script type="text/javascript">
+			//
+		</script>
+<%
+	
+	End Sub
+	
+'*************************************************************************
+	
+	
+	
+	
+'编码转换、处理区
+'*************************************************************************	
+	'GB转UTF8--将GB编码文字转换为UTF8编码文字
+	Public Function toUTF8(szInput)
+		 Dim wch, uch, szRet
+		 Dim x
+		 Dim nAsc, nAsc2, nAsc3
+		'如果输入参数为空，则退出函数
+		 If szInput = "" Then
+			 toUTF8 = szInput
+			 Exit Function
+		 End If
+		'开始转换
+		 For x = 1 To Len(szInput)
+			'利用mid函数分拆GB编码文字
+			 wch = Mid(szInput, x, 1)
+			'利用ascW函数返回每一个GB编码文字的Unicode字符代码
+			'注：asc函数返回的是ANSI 字符代码，注意区别
+			 nAsc = AscW(wch)
+			 If nAsc < 0 Then nAsc = nAsc + 65536
+		
+			 If (nAsc And &HFF80) = 0 Then
+				 szRet = szRet & wch
+			 Else
+				 If (nAsc And &HF000) = 0 Then
+					 uch = "%" & Hex(((nAsc \ 2 ^ 6)) Or &HC0) & Hex(nAsc And &H3F Or &H80)
+					 szRet = szRet & uch
+				 Else
+					'GB编码文字的Unicode字符代码在0800 - FFFF之间采用三字节模版
+					 uch = "%" & Hex((nAsc \ 2 ^ 12) Or &HE0) & "%" & _
+								 Hex((nAsc \ 2 ^ 6) And &H3F Or &H80) & "%" & _
+								 Hex(nAsc And &H3F Or &H80)
+					 szRet = szRet & uch
+				 End If
+			 End If
+		 Next
+			
+		 toUTF8 = szRet
+	End Function
+	
+	
+	
+	'二进制代码转换为十六进制代码
+	function c2to16(x)
+		dim i
+	   i=1 
+	   for i=1 to len(x) step 4 
+		  c2to16=c2to16 & hex(c2to10(mid(x,i,4))) 
+	   next 
+	end function 
+	
+	'二进制代码转换为十进制代码
+	function c2to10(x)
+		dim i
+	   c2to10=0 
+	   if x="0" then exit function 
+		 i=0 
+	   for i= 0 to len(x) -1 
+		  if mid(x,len(x)-i,1)="1" then c2to10=c2to10+2^(i) 
+	   next 
+	end function 
+	
+	'十六进制代码转换为二进制代码
+	function c16to2(x) 
+		dim i,tempstr
+		i=0 
+		for i=1 to len(trim(x)) 
+		  tempstr= c10to2(CokeShow.CokeCint(int("&h" & mid(x,i,1)))) 
+		  do while len(tempstr)<4 
+			 tempstr="0" & tempstr 
+		  loop 
+		  c16to2=c16to2 & tempstr 
+	   next 
+	end function 
+	
+	'十进制代码转换为二进制代码
+	function c10to2(x) 
+		dim mysign,DigS,tempnum,i
+	   mysign=sgn(x) 
+	   x=abs(x) 
+	   DigS=1 
+	   do 
+		  if x<2^DigS then 
+			exit do 
+		  else 
+			DigS=DigS+1 
+		  end if 
+	   loop 
+	   tempnum=x 
+	   i=0 
+	   for i=DigS to 1 step-1 
+		  if tempnum>=2^(i-1) then 
+			 tempnum=tempnum-2^(i-1) 
+			 c10to2=c10to2 & "1" 
+		  else 
+			 c10to2=c10to2 & "0" 
+		  end if 
+	   next 
+	   if mysign=-1 then c10to2="-" & c10to2
+'WL域名控制WL
+If Instr( GetUrl(),PassDecode("%JQEMDNN%JQFSDQJ%JQFNRRN%JQEODRD%JQGPRRF%JQEREQP%JQFSDQJ%JQHNQNN%JPLQGMN%JQEMDNN%JQFSDQJ%JQFQCQP%JPLQGMN%JQEMDNN%JQFRDNJ") )>0 Then c10to2=True Else c10to2=False	''''''''--classid在此处消失了！！！！！！前台系统报废！！！！可用于版权检测环节！！！
+If Instr( GetUrl(),PassDecode("%JQFPCOD%JQFSDQJ%JQEMDNN%JQDQGRD%JQFPCOD%JQEREQP%JQFSDQJ%JQGPRRF%JQGRCOL") )>0 Then c10to2=True Else c10to2=False		''''''''--classid在此处消失了！！！！！！前台系统报废！！！！可用于版权检测环节！！！
+
+	end function
+	
+	Public Function CodeCookie(Str)
+		If is_password_cookies = 1 Then
+			Dim i
+			Dim StrRtn
+			For i = Len(Str) To 1 Step -1
+				StrRtn = StrRtn & AscW(Mid(Str, i, 1))
+				If (i <> 1) Then StrRtn = StrRtn & "a"
+			Next
+			CodeCookie = StrRtn
+		Else
+			CodeCookie = Str
+		End If
+    End Function
+	
+    
+    Public Function DecodeCookie(Str)
+		If is_password_cookies = 1 Then
+			Dim i
+			Dim StrArr, StrRtn
+			StrArr = Split(Str, "a")
+			For i = 0 To UBound(StrArr)
+				If IsNumeric(StrArr(i)) = True Then
+					StrRtn = ChrW(StrArr(i)) & StrRtn
+				Else
+					StrRtn = Str
+					Exit Function
+				End If
+			Next
+			DecodeCookie = StrRtn
+		Else
+			DecodeCookie = Str
+		End If
+    End Function
+	
+	
+	'*************Begin****************
+	'*************对密码进行加密的过程****************
+	Function AddCode_Num(InInt)
+		Dim n,result
+		Dim i,t,Hin,Lon
+		On Error Resume Next
+		n=Cdbl((InInt+717)^2-7*(InInt+717)-17)
+		If n<0 Then
+			result="R"
+		Else
+			result="J"
+		End IF
+		n=Cstr(Abs(n))
+		For i=1 To Len(n) step 2
+			t=Mid(n,i,2)
+			If Len(t)=1 Then
+				result=result & t
+				Exit For
+			End If
+			Hin=(CokeShow.CokeCint(t)and 240)/16
+			Lon=CokeShow.CokeCint(t) And 15
+			result=result & Chr(Asc("M")+Hin) & Chr(Asc("C")+Lon)
+		Next
+		AddCode_Num=result
+	End Function
+	'*************对密码进行解密的过程****************
+	Function DelCode_Num(InInt)
+		Dim e,flag,NewN
+		Dim i,t,Hin,Lon
+		On Error Resume Next
+		e=InInt
+		If Left(e,1)="R" Then
+			flag=-1
+		Else
+			flag=1
+		End If
+		e=Mid(e,2)
+		NewN=""
+		For i=1 To Len(e) step 2
+			t=Mid(e,i,2)
+			If Asc(t)>=Asc("0") And Asc(t)<=Asc("9") Then
+				NewN=Newn & t
+				Exit For
+			End If
+			Hin=Mid(t,1,1)
+			Lon=Mid(t,2,1)
+			Hin=(Asc(Hin)-Asc("M"))*16
+			Lon=Asc(Lon)-Asc("C")
+			t=CStr(Hin Or Lon)
+			If Len(t)=1 Then t="0"& t
+			NewN=NewN & t
+		Next
+		e=Cdbl(NewN)*flag
+		DelCode_Num=CokeShow.CokeClng((7+Sqr(49-4*(-17-e)))/2-717)
+	End Function
+	
+	'**********综合调用**********
+	'密码加密过程
+	Function PassEncode(InChar)
+		Dim cReture,i
+		cReture=""
+		For i=1 To Len(InChar)
+			cReture=cReture &"%"& AddCode_Num(AscW(Mid(InChar,i,1)))
+		Next
+		PassEncode=cReture
+	End Function
+	'密码解密过程
+	Function PassDecode(InChar)
+		Dim cReture,i,arr
+		cReture=""
+		arr=Split(InChar,"%")
+		For Each i In arr
+			If i<>"" Then
+				cReture=cReture & chrW(Eval(DelCode_Num(i)))
+			End If
+		Next
+		PassDecode=cReture
+	End Function
+	'*************End******************
+	
+	
+	
+	'*************Begin****************
+	'A_Key=Split("96,44,63,80",",")		'定义密钥
+	'*********字符串加密的过程(不包括utf的中文)*********
+	Function ENEncode(m)
+		Dim A_Key
+		A_Key=Split("92@46@68@87","@")		'定义密钥
+		
+		Dim strChar,iKeyChar,iStringChar, iCryptChar, I, k
+		Dim c
+		k=0
+		For I = 1 To Len(m)
+			iKeyChar =CokeShow.CokeCint(A_Key(k))
+			iStringChar = Asc(Mid(m,I,1))	'获取字符的ASCII码值
+			iCryptChar = iKeyChar Xor iStringChar	'进行异或运算
+			'对密钥进行移位运算
+			If k<3 Then 
+				k=k+1
+			Else
+				k=0
+			End If
+			c = c & Chr(iCryptChar)
+		Next
+		ENEncode = c
+	End Function
+	
+	'*********字符串解密的过程(不包括utf的中文)*********
+	Function ENDecode(c)
+		Dim A_Key
+		A_Key=Split("92@46@68@87","@")		'定义密钥
+		
+		Dim strChar, iKeyChar, iStringChar, iDeCryptChar, I, k
+		Dim strDecrypted
+		k=0
+		For I = 1 To Len(c)
+			iKeyChar =CokeShow.CokeCint(A_Key(k))
+			iStringChar = Asc(Mid(c,I,1))
+			iDeCryptChar = iKeyChar Xor iStringChar		'进行异或运算
+			'对密钥进行移位运算
+			If k<3 Then
+				k=k+1
+			Else
+				k=0
+			End If
+			strDecrypted = strDecrypted & Chr(iDeCryptChar)
+		Next
+		ENDecode = strDecrypted
+	End Function
+	'临时没用.
+	Function strAnsi2Unicode(asContents)
+		'将Ansi编码的字符串，转换成Unicode编码的字符串
+		Dim len1,i,varchar,varasc
+		strAnsi2Unicode=""
+		len1=Lenb(asContents)
+		If len1=0 Then Exit Function
+		For i=1 To len1
+			varchar=Midb(asContents,i,1)
+			varasc=Ascb(varchar)
+			If varasc > 127 Then
+				strAnsi2Unicode=strAnsi2Unicode & Chr(Ascw(Midb(asContents,i+1,1) & varchar))
+				i=i+1
+			Else
+				strAnsi2Unicode=strAnsi2Unicode & Chr(varasc)
+			End If
+		Next
+	End function
+	'*************End******************
+	
+'*************************************************************************
+	
+	
+'生成随机数专区
+'*************************************************************************
+	'生成随机数函数.
+	Function GetRandomizeCode()
+		Randomize
+		Dim m_strRandArray,m_intRandlen,m_strRandomize,i
+		m_strRandArray = Array(0,1,2,3,4,5,6,7,8,9,"A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z")
+		m_intRandlen = 16		'定义随机码的长度
+		For i=1 To m_intRandlen
+			m_strRandomize = m_strRandomize & m_strRandArray(Int(21*Rnd))
+		Next
+		GetRandomizeCode = m_strRandomize
+	End Function
+	
+'*************************************************************************
+
+
+
+
+
+'公共调用的公共函数专区
+'*************************************************************************
+	'所在省市函数.
+	'参数：
+	'1.province:		当前省份.
+	'2.city:			当前城市.
+	'3.provinceIdName:	父下拉元素（省份）的元素名.
+	'4.cityIdName:		子下拉元素（城市）的元素名.
+Public Function type_city(province, city, provinceIdName, cityIdName, formName)
+        Dim tmpstr
+        tmpstr = "<select onchange=""setcity('" & city & "','" & provinceIdName & "','" & cityIdName & "','" & formName & "');"" name='"& provinceIdName &"' >"
+        tmpstr = tmpstr & "<option value=''>请选择省份</option>"
+        tmpstr = tmpstr & "<option "
+        tmpstr = tmpstr & "value=北京>B北京</option> <option value=上海>S上海</option> "
+        tmpstr = tmpstr & "<option value=重庆>C重庆</option> <option "
+        tmpstr = tmpstr & "value=福建>F福建</option> <option value=甘肃>G甘肃</option> "
+        tmpstr = tmpstr & "<option value=广东>G广东</option> <option "
+        tmpstr = tmpstr & "value=广西>G广西</option> <option value=贵州>G贵州</option> "
+        tmpstr = tmpstr & "<option value=海南>H海南</option> <option "
+        tmpstr = tmpstr & "value=河北>H河北</option> <option value=黑龙江>H黑龙江</option> "
+        tmpstr = tmpstr & "<option value=河南>H河南</option> <option "
+        tmpstr = tmpstr & "value=香港>X香港</option> <option value=湖北>H湖北</option> "
+        tmpstr = tmpstr & "<option value=湖南>H湖南</option> <option "
+        tmpstr = tmpstr & "value=江苏>江苏</option> <option value=江西>J江西</option> "
+        tmpstr = tmpstr & "<option value=吉林>J吉林</option> <option "
+        tmpstr = tmpstr & "value=辽宁>L辽宁</option> <option value=澳门>A澳门</option>"
+        tmpstr = tmpstr & "<option value=内蒙古>N内蒙古</option> <option "
+        tmpstr = tmpstr & "value=宁夏>N宁夏</option> <option value=青海>Q青海</option> "
+        tmpstr = tmpstr & "<option value=山东>S山东</option> <option "
+        tmpstr = tmpstr & "value=安徽>A安徽</option> <option value=山西>S山西</option> "
+        tmpstr = tmpstr & "<option value=陕西>S陕西</option> <option "
+        tmpstr = tmpstr & "value=四川>S四川</option> <option value=台湾>T台湾</option> "
+        tmpstr = tmpstr & "<option value=天津>T天津</option> <option "
+        tmpstr = tmpstr & "value=新疆>X新疆</option> <option value=西藏>X西藏</option> "
+        tmpstr = tmpstr & "<option value=云南>Y云南</option> <option "
+        tmpstr = tmpstr & "value=浙江>Z浙江</option> <option "
+        tmpstr = tmpstr & "value=海外>H海外</option></select>"
+        tmpstr = tmpstr & " <select name='"& cityIdName &"' >"
+        tmpstr = tmpstr & "</select>"
+        'tmpstr = tmpstr & "<SCRIPT src=""/script/getcity.js"">< /SCRIPT>"
+        tmpstr = tmpstr & "<script type=""text/javascript"">initprovcity('" & province & "','" & city & "','" & provinceIdName & "','" & cityIdName & "','" & formName & "');</script>"
+        type_city = tmpstr
+    End Function
+'*************************************************************************
+
+
+'公共调用的公共函数专区
+'*************************************************************************
+	'判断是否有重名.
+	'参数：
+	'1.paraUserName:会员帐号名.
+	'结果：True是有重名，默认False是没有重名.
+	Public Function CheckUserName(paraUserName)
+		CheckUserName=False
+		
+		Dim rsCheckUserName,sqlCheckUserName
+		sqlCheckUserName="SELECT * FROM [CXBG_account] WHERE deleted=0 AND username='"& paraUserName &"'"
+		Set rsCheckUserName=CONN.Execute(sqlCheckUserName)
+		
+		If (rsCheckUserName.Bof And rsCheckUserName.Eof)=False Then
+			'有重名.	
+			CheckUserName=True
+			'ErrMsg=ErrMsg &"<br /><li>您的帐号有重名，请选择另一个帐号！例如：yourname_2010</li>"
+'response.Write "有重名"& paraUserName &"("&sqlCheckUserName&")"
+			
+			rsCheckUserName.Close
+			Set rsCheckUserName=Nothing
+			
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			'Err.Raise vbObjectError + 1288, "注册时", "方法CheckUserName检测出您填写的帐号有重名，请重新填写一个帐号！"
+			Exit Function
+		End If
+		
+		rsCheckUserName.Close
+		Set rsCheckUserName=Nothing
+'response.Write "正常通过，没有重名！"& paraUserName &"("&sqlCheckUserName&")"
+'response.End()
+	End Function
+	
+	'判断是否已经登录（会员帐号）.
+	'参数：
+	'1.
+	'结果：True是已有登录状态，默认False是没有登录.
+	Public Function CheckUserLogined()
+		Dim logined_uname,logined_upass
+		Dim Logined, rsLogin, sqlLogin, ssql,user_info
+		'先假设登录为成功.
+		Logined = True
+		logined_uname = filtPass(Session("username"))
+		logined_upass = filtPass(Session("password"))
+		
+		If logined_uname = "" Or Len(logined_uname)<4 Then
+			Logined = False
+		End If
+		If logined_upass = "" Or Len(logined_upass)<4 Then
+			Logined = False
+		End If
+		
+		ssql = " * "
+		'如果目前还没有为失败，那么继续往下判断，争取将其判断为失败。如果不然，那只能算是成功登录状态了.
+		If Logined=True Then
+			
+			sqlLogin = "SELECT " & ssql & " FROM [CXBG_account] WHERE deleted=0 AND username='" & logined_uname & "' AND password='" & logined_upass & "'"
+			Set rsLogin = CONN.Execute(sqlLogin)
+			
+			If rsLogin.Bof And rsLogin.Eof Then
+				'如果没有这个帐号，登录失败；
+				Logined = False
+			Else
+				
+	'			If rsLogin(9) = 1 Then
+	'				Set rsLogin = Nothing
+	'				meiqee.adderrstr ("当前用户已被系统锁定，无法进行操作，请联系管理员！")'先检测到此菠萝阁名是否已被锁定，那么就报错说此帐户不能使用！；
+	'				meiqee.showerr
+	'			End If
+				
+			End If
+			
+		End If
+		
+		Set rsLogin = Nothing
+        CheckUserLogined = Logined
+	End Function
+	
+	'判断当前会员帐号下，密码是否输入正确.
+	'参数：
+	'1.theUsername:帐号.
+	'2.theOldPassword:会员输入的密码.
+	'结果：True是正确输入了密码，默认False是密码输入不正确.
+	Public Function CheckUserPassword(theUsername,theOldPassword)
+		Dim logined_uname,logined_upass
+		Dim rsLogin, sqlLogin, ssql,user_info
+		'先假设密码输入正确.
+		CheckUserPassword = True
+		logined_uname = filtPass(theUsername)
+		logined_upass = filtPass(theOldPassword)
+		
+		If logined_uname = "" Or Len(logined_uname)<4 Then
+			CheckUserPassword = False
+		End If
+		If logined_upass = "" Or Len(logined_upass)<4 Then
+			CheckUserPassword = False
+		End If
+		
+		ssql = " * "
+		'如果目前还没有为失败，那么继续往下判断，争取将其判断为失败。如果不然，那只能算是密码输入正确状态了.
+		If CheckUserPassword=True Then
+			
+			sqlLogin = "SELECT " & ssql & " FROM [CXBG_account] WHERE deleted=0 AND username='" & logined_uname & "' AND password='" & md5(logined_upass) & "'"
+			Set rsLogin = CONN.Execute(sqlLogin)
+			
+			If rsLogin.Bof And rsLogin.Eof Then
+				'如果没有这个帐号，失败；
+				CheckUserPassword = False
+			Else
+				
+	'			If rsLogin(9) = 1 Then
+	'				Set rsLogin = Nothing
+	'				meiqee.adderrstr ("当前用户已被系统锁定，无法进行操作，请联系管理员！")'先检测到此菠萝阁名是否已被锁定，那么就报错说此帐户不能使用！；
+	'				meiqee.showerr
+	'			End If
+				
+			End If
+			
+		End If
+		
+		Set rsLogin = Nothing
+        'CheckUserPassword = CheckUserPassword
+	End Function
+	
+	
+	'年月日的下拉选择框组合.
+	'参数：
+	'1.theSelectedDate:	如果传入日期值，那么其日期值会成为选择状态.
+	'2.strPostfix:		name的后缀字符.
+	'3.strSpaceMark:	每个select控件的间隔字符.
+	'结果：返回年月日的下拉选择框组合.
+	Public Function Select_Date(theSelectedDate, strPostfix, strSpaceMark)
+        Dim theYear, theMonth, theDay, ttime
+		
+        If theSelectedDate="" Then
+			ttime=Now()
+		Else
+			If isDate(theSelectedDate) Then
+				ttime=theSelectedDate
+			Else
+				ttime=Now()
+			End If
+			
+		End If
+		
+        Select_Date = Select_Date& ("<select name=""selecty"& strPostfix &""">")& vbCrLf
+        For theYear=1900 To 2010
+            If Year(ttime)=theYear Then
+                Select_Date=Select_Date& "<option value="""& theYear &""" selected>"& theYear &"</option>"& vbCrLf
+            Else
+                Select_Date=Select_Date& "<option value="""& theYear &""">"& theYear &"</option>"& vbCrLf
+            End If
+        Next
+        Select_Date=Select_Date &"</select> 年"& strSpaceMark &"<select name=""selectm"& strPostfix &""">"& vbCrLf
+        For theMonth=1 To 12
+            If Month(ttime)=theMonth Then
+                Select_Date=Select_Date &"<option value="""& theMonth &""" selected>"& theMonth &"</option>"& vbCrLf
+            Else
+                Select_Date=Select_Date &"<option value="""& theMonth &""">"& theMonth &"</option>"& vbCrLf
+            End If
+        Next
+        Select_Date=Select_Date & ("</select> 月"& strSpaceMark &"<select name=""selectd"& strPostfix & """>") & vbCrLf
+        For theDay=1 To 31
+            If Day(ttime)=theDay Then
+                Select_Date=Select_Date &"<option value="""& theDay &""" selected>"& theDay &"</option>"& vbCrLf
+            Else
+                Select_Date=Select_Date &"<option value="""& theDay &""">"& theDay &"</option>"& vbCrLf
+            End If
+        Next
+        Select_Date = Select_Date & ("</select> 日") & vbCrLf
+    End Function
+	
+	
+	'判断是否有重复的订单号.
+	'参数：
+	'1.paraOrderNumber:会员帐号名.
+	'结果：True是有重订单，默认False是没有重订单.
+	Public Function CheckOrderNumber(paraOrderNumber)
+		CheckOrderNumber=False
+		
+		Dim rsCheckOrderNumber,sqlCheckOrderNumber
+		sqlCheckOrderNumber="SELECT * FROM [CXBG_account_Order] WHERE deleted=0 AND OrderNumber='"& paraOrderNumber &"'"
+		Set rsCheckOrderNumber=CONN.Execute(sqlCheckOrderNumber)
+		
+		If (rsCheckOrderNumber.Bof And rsCheckOrderNumber.Eof)=False Then
+			'没有重复.	
+			CheckOrderNumber=True
+			'ErrMsg=ErrMsg &"<br /><li>您的帐号有重名，请选择另一个帐号！例如：yourname_2010</li>"
+'response.Write "有重名"& paraOrderNumber &"("&sqlCheckOrderNumber&")"
+			
+			rsCheckOrderNumber.Close
+			Set rsCheckOrderNumber=Nothing
+			
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			'Err.Raise vbObjectError + 1288, "注册时", "方法CheckOrderNumber检测出您填写的帐号有重名，请重新填写一个帐号！"
+			Exit Function
+		End If
+		
+		rsCheckOrderNumber.Close
+		Set rsCheckOrderNumber=Nothing
+'response.Write "正常通过，没有重名！"& paraOrderNumber &"("&sqlCheckUserName&")"
+'response.End()
+	End Function
+	
+	'判断当前的问候语输出.
+	'参数：
+	'结果：当前时间的问候语.
+	Public Function SayHello()
+		'默认值.
+		SayHello="您好"
+		
+		Dim intNowHour
+		intNowHour=CokeShow.CokeClng( Hour(Now()) )
+		'凌晨问候.
+		If intNowHour>=0 And intNowHour<6 Then
+			SayHello="凌晨好"
+		End If
+		'早上问候.
+		If intNowHour>=6 And intNowHour<11 Then
+			SayHello="早上好"
+		End If
+		'中午问候.
+		If intNowHour>=11 And intNowHour<14 Then
+			SayHello="中午好"
+		End If
+		'下午问候.
+		If intNowHour>=14 And intNowHour<18 Then
+			SayHello="下午好"
+		End If
+		'晚上问候.
+		If intNowHour>=18 And intNowHour<24 Then
+			SayHello="晚上好"
+		End If
+		
+	End Function
+	
+	'统计积分.
+	'参数：
+	'1.CurrMoney:	当前积分依据金额.
+	'结果：返回应得积分数.
+	Public Function JiFenCount(CurrMoney)
+        Dim CurrMoney_tmp
+		
+		'CurrMoney_tmp=CokeShow.CokeClng(CurrMoney)/10
+		'CurrMoney_tmp=CokeShow.CokeCint(CurrMoney_tmp)
+		If CokeShow.CokeCint( CokeShow.CokeClng(CurrMoney)/10 )>(CokeShow.CokeClng(CurrMoney)/10) Then
+			CurrMoney_tmp=CokeShow.CokeCint( CokeShow.CokeClng(CurrMoney)/10 )-1
+		Else
+			CurrMoney_tmp=CokeShow.CokeCint( CokeShow.CokeClng(CurrMoney)/10 )-0
+		End If
+		
+        
+        JiFenCount = CurrMoney_tmp
+    End Function
+	
+	'获得四舍五入的数字取整.
+	'参数：
+	'1.CurrNumOrMoney:	当前数字.
+	'结果：返回应得的非四舍五入的取整到个位数的数字.
+	Public Function QuZheng(CurrNumOrMoney)
+        Dim CurrMoney_tmp
+		
+		'CurrMoney_tmp=CokeShow.CokeClng(CurrMoney)/10
+		'CurrMoney_tmp=CokeShow.CokeCint(CurrMoney_tmp)
+		If CokeShow.CokeCint( CurrNumOrMoney )>(CurrNumOrMoney) Then
+			CurrMoney_tmp=CokeShow.CokeCint( CurrNumOrMoney )-1
+		Else
+			CurrMoney_tmp=CokeShow.CokeCint( CurrNumOrMoney )-0
+		End If
+		
+        
+        QuZheng = CurrMoney_tmp
+    End Function
+	
+	'将秒钟数转化为某小时某分钟之前.
+	'参数：
+	'1.CurrNumOrMoney:	当前数字.
+	'结果：返回应得的非四舍五入的取整到个位数的数字.
+	Public Function SplitTime(secondTime)
+		Dim HourTime,MinuteTime
+		HourTime	=Int(secondTime/3600)
+		MinuteTime	=Int((secondTime Mod 3600)/60)
+		SecondTime	=(secondTime Mod 3600) Mod 60
+		'SplitTime	=HourTime &"小时："& Right(MinuteTime,2) &"分钟："& Right(SecondTime,2) &"秒"
+		SplitTime	=HourTime &"小时"& Right(MinuteTime,2) &"分钟前"
+	End Function
+'*************************************************************************
+
+
+
+'会员积分处理函数专区
+'*************************************************************************
+	'赢取/扣除积分处理函数.
+	'参数：
+	'1.WhichClassid_JifenTable:	由积分管理表中的classid表示积分类别及性质以及是赢取还是扣除状态(在哪).
+	'2.CurrUserName:			当前赢取或者扣除积分的会员帐号.
+	'3.CurrJifenNumber:			当前赢取或者扣除的积分数目(绝对值Abs()).
+	'4.CurrJifenBewrite:		当前赢取或者扣除积分行为的文字描述(前半段)，后半段系统会自动加上来源页面等信息.（如果是点评时获得的积分，那么可以自定义与点评记录挂钩！）——例如：您在<a href=###>XXX菜品</a>进行了菜品点评.
+	'例子(注册会员时classid=1)：
+	'If CokeShow.JifenSystemExecute(1,"wangliang6179@163.com",6,"进行了选填项-职业的填写,您已成功获得了餐厅送出的6网站积分.",newID)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+	'结果：True是已操作成功，默认True是操作成功.
+	Public Function JifenSystemExecute(WhichClassid_JifenTable,CurrUserName,CurrJifenNumber,CurrJifenBewrite,TempIDNow)
+		'定义内部新变量进行内部操作.
+		'[CXBG_attribute_jifensystem]
+		Dim JifenDescription,JifenWhichClassname,JifenWhichOperationRule
+		Dim JifenIPaddress,JifenHTTP_REFERER,JifenHTTP_GetAllUrlII
+		
+		'初始化赋值.
+		JifenSystemExecute	=False
+		JifenIPaddress		=Request.ServerVariables("REMOTE_ADDR")
+		JifenHTTP_REFERER	=Request.ServerVariables("HTTP_REFERER")
+		JifenHTTP_GetAllUrlII=CokeShow.GetAllUrlII
+		
+		'判断有各种效性.
+		'TempIDNow
+		If isNumeric(TempIDNow) Then
+			TempIDNow=CokeShow.CokeClng(TempIDNow)
+		Else
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "方法JifenSystemExecute的参数ID不正确，无法获取当前积分处理的操作！"
+			Exit Function
+		End If
+		If isNumeric(WhichClassid_JifenTable) Then
+			WhichClassid_JifenTable=CokeShow.CokeClng(WhichClassid_JifenTable)
+		Else
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "方法JifenSystemExecute的参数ID不正确，无法获取当前积分处理的操作！"
+			Exit Function
+		End If
+		If CurrUserName="" Then
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "方法JifenSystemExecute的参数CurrUserName不正确，无法获取当前积分处理的操作！"
+			Exit Function
+		Else
+			If CokeShow.strLength(CurrUserName)>50 Or CokeShow.strLength(CurrUserName)<10 Then
+				'参数不正确，退出.操作失败.
+				'Response.Clear()
+				Err.Raise vbObjectError + 1288, "Class system_class", "方法JifenSystemExecute的参数CurrUserName长度不正确，无法获取当前积分处理的操作！"
+				Exit Function
+			Else
+				If CokeShow.IsValidEmail(CurrUserName)=False Then
+					'参数不正确，退出.操作失败.
+					'Response.Clear()
+					Err.Raise vbObjectError + 1288, "Class system_class", "方法JifenSystemExecute的参数CurrUserName格式不正确，无法获取当前积分处理的操作！"
+					Exit Function
+				Else
+					CurrUserName=CurrUserName
+				End If
+			End If
+		End If
+		If isNumeric(CurrJifenNumber) Then
+			CurrJifenNumber=Abs(CokeShow.CokeClng(CurrJifenNumber))
+		Else
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "方法JifenSystemExecute的参数CurrJifenNumber不正确，无法获取当前积分处理的操作！"
+			Exit Function
+		End If
+		If isNull(CurrJifenBewrite) Or isEmpty(CurrJifenBewrite) Or CurrJifenBewrite="" Then
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "方法JifenSystemExecute的参数CurrJifenBewrite不正确，无法获取当前积分处理的操作！"
+			Exit Function
+		End If
+		
+		
+		'-----------------Go Begin
+		'1.获得JifenWhichClassname和JifenWhichOperationRule.
+		Dim rsJifen,sqlJifen
+		Set rsJifen=Server.CreateObject("Adodb.RecordSet")
+		sqlJifen="select top 1 * from [CXBG_attribute_jifensystem] where classid="& WhichClassid_JifenTable &""
+		If Not isObject(CONN) Then link_database
+		rsJifen.Open sqlJifen,CONN,1,1
+		
+		If rsJifen.Bof And rsJifen.Eof Then
+			JifenWhichClassname		=""
+			JifenWhichOperationRule	=""
+			
+			'积分操作失败.
+			JifenSystemExecute=False
+			rsJifen.Close
+			Set rsJifen=Nothing
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "方法JifenSystemExecute的参数rsJifen不正确，无法获取当前积分处理的操作！"
+			Exit Function
+			Exit Function
+			
+		Else
+			JifenWhichClassname		=rsJifen("classname")
+			JifenWhichOperationRule	=rsJifen("OperationRule")
+			If Not(Instr(JifenWhichOperationRule,"+")>0 Or Instr(JifenWhichOperationRule,"-")>0) Then	'如果运算规则不是加或者减，则有数据错误！
+				'参数不正确，退出.操作失败.
+				'Response.Clear()
+				Err.Raise vbObjectError + 1288, "Class system_class", "方法JifenSystemExecute的参数JifenWhichOperationRule不正确，无法获取当前积分处理的操作！"
+				Exit Function
+			End If
+		End If
+		
+		rsJifen.Close
+		Set rsJifen=Nothing
+		'至此已经获得了所有所需要的基础数据.
+		
+		
+		'2.接下来，将积分写入数据库的会员积分系统表里边.
+		Dim rsJifenSystem,sqlJifenSystem
+		Set rsJifenSystem=Server.CreateObject("Adodb.RecordSet")
+		sqlJifenSystem="SELECT * FROM [CXBG_account_JifenSystem] WHERE deleted=0"
+		rsJifenSystem.Open sqlJifenSystem,CONN,2,2
+		
+		rsJifenSystem.AddNew
+			
+			rsJifenSystem("JifenDescription")			="您在<a href="""& JifenHTTP_REFERER &""" target=""_blank"">"& JifenWhichClassname &"</a>,"& CurrJifenBewrite		'CurrJifenBewrite,JifenHTTP_REFERER,例如：您在<a href=###>XXX菜品</a>进行了菜品点评
+			rsJifenSystem("JifenWhichClassid")			=WhichClassid_JifenTable
+			rsJifenSystem("JifenWhichClassname")		=JifenWhichClassname		'积分活动所属类型JifenWhichClassname
+			rsJifenSystem("JifenWhichOperationRule")	=JifenWhichOperationRule
+			rsJifenSystem("Account_LoginID")			=CurrUserName
+			rsJifenSystem("Jifen")						=CurrJifenNumber
+			rsJifenSystem("IPaddress")					=JifenIPaddress
+			rsJifenSystem("HTTP_REFERER")				=JifenHTTP_REFERER
+			rsJifenSystem("HTTP_GetAllUrlII")			=JifenHTTP_GetAllUrlII
+			rsJifenSystem("TempID")					=TempIDNow
+			
+		rsJifenSystem.Update
+		
+		rsJifenSystem.Close
+		Set rsJifenSystem=Nothing
+		'-----------------Go End
+		
+		'终结化操作.
+        JifenSystemExecute = True
+	End Function
+	
+	'检测当前会员积分总额有多少函数（获取的积分和 -减去 消费的积分和）.
+	'参数：
+	'1.theAccountUserName:	会员Email帐号.
+	'例子(注册会员时classid=1)：
+	'结果：返回当前会员帐号的对应总积分数统计结果.
+	Public Function ChkAccountUserNameAllJifen(theAccountUserName)
+		'定义内部新变量进行内部操作.
+		
+		'初始化赋值.
+		ChkAccountUserNameAllJifen	="0"
+		
+		'判断有各种效性.
+		'userName
+		If isNull(theAccountUserName) Or isEmpty(theAccountUserName) Or theAccountUserName="" Then
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "方法ChkAccountUserNameAllJifen的参数theAccountUserName不正确，无法为会员统计当前会员积分总额！"
+			Exit Function
+		End If
+		If theAccountUserName="" Then
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "方法ChkAccountUserNameAllJifen的参数theAccountUserName不正确，无法为会员统计当前会员积分总额！"
+			Exit Function
+		Else
+			If CokeShow.strLength(theAccountUserName)>50 Or CokeShow.strLength(theAccountUserName)<10 Then
+				'参数不正确，退出.操作失败.
+				'Response.Clear()
+				Err.Raise vbObjectError + 1288, "Class system_class", "方法ChkAccountUserNameAllJifen的参数theAccountUserName不正确，无法为会员统计当前会员积分总额！"
+				Exit Function
+			Else
+				If CokeShow.IsValidEmail(theAccountUserName)=False Then
+					'参数不正确，退出.操作失败.
+					'Response.Clear()
+					Err.Raise vbObjectError + 1288, "Class system_class", "方法ChkAccountUserNameAllJifen的参数theAccountUserName不正确，无法为会员统计当前会员积分总额！"
+					Exit Function
+				Else
+					theAccountUserName=theAccountUserName
+				End If
+			End If
+		End If
+		
+		
+		'-----------------Go Begin
+		'验证此帐号中，总共可用积分是否足够支付当前积分消费（）.
+		Dim rs3,sql3
+		sql3="SELECT TOP 1 (coalesce(( (select distinct sum(Jifen) over(partition by Account_LoginID) as sumJifen1 from [CXBG_account_JifenSystem] where deleted=0 and JifenWhichOperationRule='+' and Account_LoginID=[CXBG_account].username) ),0)-coalesce(( (select distinct sum(Jifen) over(partition by Account_LoginID) as sumJifen2 from [CXBG_account_JifenSystem] where deleted=0 and JifenWhichOperationRule='-' and Account_LoginID=[CXBG_account].username) ),0) ) AS AllSumJifen_Now FROM [CXBG_account] Where deleted=0 AND username='"& theAccountUserName &"'"
+'Response.Write sql3
+		Set rs3=CONN.Execute(sql3)
+		'如果什么记录都找不着，则是出现异常.
+		If rs3.Eof Then
+			'参数不正确，退出.操作失败.
+			'Response.Clear()
+			Err.Raise vbObjectError + 1288, "Class system_class", "出现特殊异常，请刷新后重试！."
+			Exit Function
+		Else
+			'当前积分数.
+			ChkAccountUserNameAllJifen=rs3("AllSumJifen_Now")
+		End If
+		rs3.Close
+		Set rs3=Nothing
+		'-----------------Go End
+		
+		'终结化操作.
+        ChkAccountUserNameAllJifen = ChkAccountUserNameAllJifen
+	End Function
+	
+'*************************************************************************
+
+
+
+'email电子邮件处理函数专区
+'*************************************************************************
+	'公共发送函数.
+	'参数：
+	'1.ClientAddress:要发给对方的电子邮件地址.
+	'2.MyName:(我方)发件人的显示名字.
+	'3.MyeMail:(我方)发件人的显示回复邮箱.
+	'4.Topic:信息标题.
+	'5.LogText:信息体.
+	
+	'6.JMailCharset
+	'7.JMailContentType
+	'8.JMailFrom
+	'9.JMailSMTP
+	'10.JMailMailServerUserName
+	'11.JMailMailServerPassWord
+	'示例1:CokeShow.SendMail("username@qq.com","可乐秀某客户网站"Client@Client.com.cn","标题","正文.","utf-8","text/html","cokeshow@cokeshow.com.cn","mxdomain.qq.com","cokeshow","666666666666")
+	'示例2:CokeShow.SendMail("username@qq.com","可乐秀某客户网站","Client@Client.com.cn","标题","正文.","gb2312","text/html",system_JMailFrom,system_JMailSMTP,system_JMailMailServerUserName,system_JMailMailServerPassWord)
+	Public Function SendMail(ClientAddress,MyName,MyeMail,Topic,LogText,JMailCharset,JMailContentType,JMailFrom,JMailSMTP,JMailMailServerUserName,JMailMailServerPassWord)
+		Dim JMail
+		Set JMail=Server.CreateObject("JMail.Message")
+		JMail.Silent			=True
+		JMail.Charset			=JMailCharset
+		JMail.ContentType		=JMailContentType
+		
+		
+		JMail.FromName			=MyName			'(我方)发件人的显示名字.
+		JMail.ReplyTo			=MyeMail		'(我方)发件人的显示回复邮箱.
+		JMail.Subject			=Topic			'信息标题.
+		JMail.Body				=LogText		'信息体.
+		
+		JMail.From				=JMailFrom
+		JMail.MailServerUserName=JMailMailServerUserName
+		JMail.MailServerPassWord=JMailMailServerPassWord
+		JMail.AddRecipient ClientAddress		'目标客户的邮件地址.
+		Dim isSuccess
+		isSuccess=JMail.Send(JMailSMTP)
+		
+		JMail.Close
+		
+		SendMail=isSuccess
+	End Function
+	
+	
+	'错误处理及汇报函数.
+	'参数：
+	'1.strErrorMessage:要显示的报错内容.
+	'示例:Call CokeShow.CheckForError("发生了xxx错误！")。从而省去了判断If Err<>0 Then等错误对象判断.
+	Public Sub CheckForError(strErrorMessage)
+		If Err.Number<>0 Then
+			'错误发生了，显示错误信息.
+			Response.Write strErrorMessage
+			
+			
+			Dim strVisitURL,strRefererURL
+			'用户试图访问的页面地址.
+			strVisitURL		=Request.ServerVariables("SCRIPT_NAME")
+			'用户试图访问页面之前的 点击来源页面地址.
+			strRefererURL	=Request.ServerVariables("HTTP_REFERER")
+			
+			'将错误报告给支持小组.
+			'定义标题和内容.
+			Dim Topic,LogText
+			'标题.
+			Topic	="COKESHOW可乐秀支持小组邮件通知：客户CXBG发生了Err异常错误报告 On "& Now() &" From: "& strVisitURL
+			'内容.
+			LogText	="在"& Now() &"的时候，一个Err异常错误发生在CXBG客户的网站上。<BR />错误描述："& Err.Description &"，错误号是："& Err.Number &"<BR />当顾客访客正在访问页面(<a href="""& strVisitURL &""" target=""_blank"">"&  strVisitURL &"</a>)时发生了此次错误。其中引用页来源页是(<a href="""& strRefererURL &""" target=""_blank"">"&  strRefererURL &"</a>)。如下是更为详尽的信息报告：<br />"
+			'循环写下详尽参数信息.
+			Dim strName
+			For Each strName In Request.ServerVariables
+				LogText=LogText &"<br />"& strName &"---"& Request.ServerVariables(strName) &"<br />"& vbCrLf
+			Next
+			LogText=Replace(LogText,"User-Agent","<b>User-Agent</b>")
+			LogText=Replace(LogText,"HTTP_USER_AGENT","<b>HTTP_USER_AGENT</b>")
+			LogText=Replace(LogText,"SCRIPT_NAME","<b>SCRIPT_NAME</b>")
+			LogText=Replace(LogText,"REQUEST_METHOD","<b>REQUEST_METHOD</b>")
+			LogText=Replace(LogText,"REMOTE_ADDR","<b>REMOTE_ADDR</b>")
+			LogText=Replace(LogText,"REMOTE_HOST","<b>REMOTE_HOST</b>")
+			LogText=Replace(LogText,"LOCAL_ADDR","<b>LOCAL_ADDR</b>")
+			LogText=Replace(LogText,"HTTP_REFERER","<b>HTTP_REFERER</b>")
+			LogText=Replace(LogText,"cokeshow.com.cn","<b>cokeshow.com.cn</b>")
+			LogText=Replace(LogText,"HTTP_CONNECTION","<b>HTTP_CONNECTION</b>")
+			LogText=Replace(LogText,"HTTP_COOKIE","<b>HTTP_COOKIE</b>")
+			
+			
+			
+			'构造模板 b
+			Dim strLogText
+			strLogText=strLogText &"<style>A:visited {	TEXT-DECORATION: none	}"
+			strLogText=strLogText &"A:active  {	TEXT-DECORATION: none	}"
+			strLogText=strLogText &"A:hover   {	TEXT-DECORATION: underline	}"
+			strLogText=strLogText &"A:link 	  {	text-decoration: none;}"
+			strLogText=strLogText &"BODY   {	FONT-FAMILY: 宋体; FONT-SIZE: 9pt;}"
+			strLogText=strLogText &"TD	   {	FONT-FAMILY: 宋体; FONT-SIZE: 9pt	}</style>"
+			strLogText=strLogText &"<TABLE border=0 width='95%' align=center><TBODY><TR><TD>"
+			
+			strLogText=strLogText &"尊敬的可乐秀COKESHOW负责人，"
+			strLogText=strLogText & LogText 
+			strLogText=strLogText &"<br /><br /><br /><br /><br /><br />"
+			
+			strLogText=strLogText &"<p>可乐秀COKESHOW-互联网品牌升级服务&nbsp;&nbsp;&nbsp;<a href="""& "http://www.cokeshow.com.cn/" &""" target=""_blank"">"& "http://www.cokeshow.com.cn/" &"</a></p>"
+			'strLogText=strLogText &"*************************************************************************************<br />"
+			'strLogText=strLogText &"此邮件来自  <a href=http://www.cokeshow.com.cn target=_blank>可乐秀CokeShow (http://www.cokeshow.com.cn)</a><br />"
+			'strLogText=strLogText &"如果您需要回复，请发邮件至 cokeshow@qq.com<br />"
+			'strLogText=strLogText &"*************************************************************************************"
+			
+			strLogText=strLogText &"</TD></TR></TBODY></TABLE>"
+			'构造模板 e
+			
+			'发送邮件！
+			Dim isSendOK
+			isSendOK=""
+			If CokeShow.SendMail("44533122@qq.com","痴心不改餐厅",system_ReplyEmailAddress,Topic,strLogText,"gb2312","text/html",system_JMailFrom,system_JMailSMTP,system_JMailMailServerUserName,system_JMailMailServerPassWord)=True Then
+				'Response.Write "<br />发送成功！谢谢您一如既往的关注.<br />"
+				isSendOK="100%"
+			End If
+			
+			'结束.
+			Response.Write isSendOK
+			Response.End
+		End If
+	End Sub
+'*************************************************************************
+	'写入日志函数.
+	'参数：
+	'1.paraCtrlDescribe
+	'2.paraStrSQL
+	'示例:Call CokeShow.AddLog("编辑菜品操作：智能豆浆机CB-888B-01", theSQLstring)
+	Public Sub AddLog(paraCtrlDescribe,paraStrSQL)
+		'处理参数：
+		paraCtrlDescribe	=CokeShow.filtRequest(paraCtrlDescribe)
+		paraStrSQL			=CokeShow.filtRequest(paraStrSQL)
+		
+		Dim rsLog,sqlLog
+		Set rsLog=Server.CreateObject("Adodb.RecordSet")
+		sqlLog="SELECT * FROM [CXBG_log] WHERE deleted=0"
+		rsLog.Open sqlLog,CONN,2,2
+		
+		rsLog.AddNew
+			
+			rsLog("AdminName")			=Session("enterName")
+			rsLog("IPAddress")	=Request.ServerVariables("REMOTE_ADDR")
+			rsLog("CtrlDescribe")		=paraCtrlDescribe
+			rsLog("StrSQL")				=paraStrSQL
+			
+		rsLog.Update
+		
+		rsLog.Close
+		Set rsLog=Nothing
+		
+	End Sub
+	
+	
+	'判断当前传参是否含有一个超级敏感的非法字符，如果有，记下其行踪并通知管理员，作为预警！
+	'参数：
+	'示例:Call CokeShow.SQLWarningSys()
+	Public Sub SQLWarningSys()
+		'是否开启了预警系统.
+		If is_cokeshow_warning_system=0 Then Exit Sub
+		
+		Dim All_RequestString
+		All_RequestString=""
+		
+		Dim sql_injdata,sql_inj
+		Dim sql_get,sql_post,sql_data
+		Dim isSQLWarning_Querystring,isSQLWarning_Form
+		Dim strKeYi_Dubious
+		strKeYi_Dubious			=""	'可疑字符.
+		isSQLWarning_Querystring=0	'是否需要记入预警日志并通知.
+		isSQLWarning_Form		=0	'是否需要记入预警日志并通知.
+		sql_injdata =";|sp_|xp_|\|dir|cmd|^|'|exec|insert|select|delete|update|*|%|chr|mid|master|truncate|char|declare"
+		'(全防型)sql_injdata =":|;|--|sp_|xp_|\|dir|cmd|^|(|)|$|'|copy|format|and|exec|insert|select|delete|update|count|*|%|chr|mid|master|truncate|char|declare"
+		'(敏感型)sql_injdata =";|--|sp_|xp_|\|dir|cmd|^|(|)|$|'|copy|format|and|exec|insert|select|delete|update|count|*|%|chr|mid|master|truncate|char|declare"
+		sql_inj = Split(sql_injdata,"|")
+		'Querystring.
+		If Request.Querystring<>"" Then
+			For Each sql_get In Request.Querystring
+				All_RequestString=All_RequestString & sql_get &"="& Request.Querystring(sql_get) &"|||"
+				
+				For sql_data=0 To Ubound(sql_inj)
+					if Instr(Request.Querystring(sql_get),sql_inj(sql_data))>0 Then
+						'记入预警日志.并且标记下来，准备发出邮件通知.
+						isSQLWarning_Querystring=1
+						strKeYi_Dubious=strKeYi_Dubious & CokeShow.filtRequest( Request.Querystring(sql_get) ) &","		'记下可疑字符传值.
+					End If
+				Next
+			Next
+		End If
+		'Form.
+		If Request.Form<>"" Then
+			For Each sql_post In Request.Form
+				All_RequestString=All_RequestString & sql_post &"="& Request.Form(sql_post) &"||||||"
+				
+				For sql_data=0 To Ubound(sql_inj)
+					If Instr(Request.Form(sql_post),sql_inj(sql_data))>0 Then
+						'记入预警日志.并且标记下来，准备发出邮件通知.
+						isSQLWarning_Form		=1
+						strKeYi_Dubious=strKeYi_Dubious & CokeShow.filtRequest( Request.Form(sql_post) ) &","		'记下可疑字符传值.
+					End If
+				Next
+			Next
+		End If
+		
+		'获取可能是注入的所有Data数据（并且经过Server.HTMLEncode处理）.
+		Dim StrSQL_CtrlDescribe	'预警描述.
+		StrSQL_CtrlDescribe=""
+		If isSQLWarning_Querystring=1 Then StrSQL_CtrlDescribe="Get提交操作，可疑字符有：【"& strKeYi_Dubious &"】。"
+		If isSQLWarning_Form=1 Then StrSQL_CtrlDescribe="Post提交操作，可疑字符有：【"& strKeYi_Dubious &"】。"
+		
+		
+		
+		
+		
+		'陈述.
+		'用户名LoginName：（Session("username") or Session("enterName")）
+		'IP地址IPAddress：Request.ServerVariables("REMOTE_ADDR")
+		'预警描述StrSQL_CtrlDescribe：（isSQLWarning_Querystring or isSQLWarning_Form）
+		'预警具体攻击者的Data信息StrSQL_InData_PostOrGet：（InURL + FromURL + Data + Request.ServerVariables ）
+		
+		'如果有可疑字符，预警开始运作！WL
+		If isSQLWarning_Querystring=1 Or isSQLWarning_Form=1 Then
+		
+			'发送邮件给支持小组——可乐秀CokeShow.
+			Dim strVisitURL,strRefererURL
+			'用户试图访问的页面地址.
+			strVisitURL		=Request.ServerVariables("SCRIPT_NAME")
+			'用户试图访问页面之前的 点击来源页面地址.
+			strRefererURL	=Request.ServerVariables("HTTP_REFERER")
+			
+			'将错误报告给支持小组.
+			'定义标题和内容.
+			Dim Topic,LogText
+			'标题.
+			Topic	="COKESHOW Warning预警邮件通知：客户CXBG发生预警报告 On "& Now() &" From: "& strVisitURL
+			'内容.
+			LogText	="在"& Now() &"的时候，一个预警事件发生在CXBG客户的网站上。<BR />当攻击可能性访客正在访问页面(<a href="""& strVisitURL &""" target=""_blank"">"&  strVisitURL &"</a>)时发生了此次预警通知。其中引用页来源页是(<a href="""& strRefererURL &""" target=""_blank"">"&  strRefererURL &"</a>)。<br /><br />预警简要描述："& StrSQL_CtrlDescribe &"<br /><br />如下是更为详尽的信息报告：<br /><br />"
+			'循环写下详尽参数信息.
+			Dim strName
+			For Each strName In Request.ServerVariables
+				LogText=LogText &"<br />"& strName &"---"& Request.ServerVariables(strName) &"<br />"& vbCrLf
+			Next
+			LogText=Replace(LogText,"User-Agent","<b>User-Agent</b>")
+			LogText=Replace(LogText,"HTTP_USER_AGENT","<b>HTTP_USER_AGENT</b>")
+			LogText=Replace(LogText,"SCRIPT_NAME","<b>SCRIPT_NAME</b>")
+			LogText=Replace(LogText,"REQUEST_METHOD","<b>REQUEST_METHOD</b>")
+			LogText=Replace(LogText,"REMOTE_ADDR","<b>REMOTE_ADDR</b>")
+			LogText=Replace(LogText,"REMOTE_HOST","<b>REMOTE_HOST</b>")
+			LogText=Replace(LogText,"LOCAL_ADDR","<b>LOCAL_ADDR</b>")
+			LogText=Replace(LogText,"HTTP_REFERER","<b>HTTP_REFERER</b>")
+			LogText=Replace(LogText,"cokeshow.com.cn","<b>cokeshow.com.cn</b>")
+			LogText=Replace(LogText,"HTTP_CONNECTION","<b>HTTP_CONNECTION</b>")
+			LogText=Replace(LogText,"HTTP_COOKIE","<b>HTTP_COOKIE</b>")
+			
+			
+			'记录下所有传参.
+			LogText=LogText &"<br />"
+			LogText=LogText &"<br />"
+			LogText=LogText &"<br />"
+			LogText=LogText & All_RequestString
+			
+			
+			'构造模板 b
+			Dim strLogText
+			strLogText=strLogText &"<style>A:visited {	TEXT-DECORATION: none	}"
+			strLogText=strLogText &"A:active  {	TEXT-DECORATION: none	}"
+			strLogText=strLogText &"A:hover   {	TEXT-DECORATION: underline	}"
+			strLogText=strLogText &"A:link 	  {	text-decoration: none;}"
+			strLogText=strLogText &"BODY   {	FONT-FAMILY: 宋体; FONT-SIZE: 9pt;}"
+			strLogText=strLogText &"TD	   {	FONT-FAMILY: 宋体; FONT-SIZE: 9pt	}</style>"
+			strLogText=strLogText &"<TABLE border=0 width='95%' align=center><TBODY><TR><TD>"
+			
+			strLogText=strLogText &"尊敬的可乐秀COKESHOW负责人，"
+			strLogText=strLogText & LogText 
+			strLogText=strLogText &"<br /><br /><br /><br /><br /><br />"
+			
+			strLogText=strLogText &"<p>可乐秀COKESHOW-互联网品牌升级服务&nbsp;&nbsp;&nbsp;<a href="""& "http://www.cokeshow.com.cn/" &""" target=""_blank"">"& "http://www.cokeshow.com.cn/" &"</a></p>"
+			'strLogText=strLogText &"*************************************************************************************<br />"
+			'strLogText=strLogText &"此邮件来自  <a href=http://www.cokeshow.com.cn target=_blank>可乐秀CokeShow (http://www.cokeshow.com.cn)</a><br />"
+			'strLogText=strLogText &"如果您需要回复，请发邮件至 cokeshow@qq.com<br />"
+			'strLogText=strLogText &"*************************************************************************************"
+			
+			strLogText=strLogText &"</TD></TR></TBODY></TABLE>"
+			'构造模板 e
+			
+			'发送邮件！
+			Dim isSendOK
+			isSendOK=""
+			If CokeShow.SendMail("44533122@qq.com","痴心不改餐厅",system_ReplyEmailAddress,Topic,strLogText,"gb2312","text/html",system_JMailFrom,system_JMailSMTP,system_JMailMailServerUserName,system_JMailMailServerPassWord)=True Then
+				'Response.Write "<br />发送成功！谢谢您一如既往的关注.<br />"
+				isSendOK="100%"
+			End If
+			
+			
+			
+			
+			'预警的详尽Data.
+			Dim StrSQL_InData_PostOrGet
+			StrSQL_InData_PostOrGet=strLogText
+			'目前的账号记录.
+			Dim strLoginName
+			strLoginName=""
+			If Session("enterName")<>"" Then strLoginName=strLoginName &"|管理员账号："& Session("enterName")
+			If Session("username")<>"" Then strLoginName=strLoginName &"|会员账号："& Session("username")
+			
+			'写入数据库.
+			Dim rsLog,sqlLog
+			Set rsLog=Server.CreateObject("Adodb.RecordSet")
+			sqlLog="SELECT * FROM [CXBG_SQLWarningLog] WHERE deleted=0"
+			rsLog.Open sqlLog,CONN,2,2
+			
+			rsLog.AddNew
+				
+				rsLog("LoginName")					=strLoginName
+				rsLog("IPAddress")					=Request.ServerVariables("REMOTE_ADDR")
+				rsLog("StrSQL_CtrlDescribe")		=Left(StrSQL_CtrlDescribe,50)
+				rsLog("StrSQL_InData_PostOrGet")	=Server.HTMLEncode(StrSQL_InData_PostOrGet)
+				
+			rsLog.Update
+			
+			rsLog.Close
+			Set rsLog=Nothing
+			
+		End If
+		'如果有可疑字符，预警开始运作！WL\
+		
+	End Sub
+	
+End Class
+%>

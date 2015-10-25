@@ -1,0 +1,409 @@
+<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：会员详情页.
+'日期说明：2010-05-22
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+<!--#include virtual="/system/foreground_ToBrowseRecordsClass.asp"-->
+
+<%'!--#include virtual="/CokeCart/Shoppingcart.Class.asp"--%>
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+
+'购物车类实例化
+'Dim CokeCart
+'Set CokeCart = New ShoppingcartClass
+%>
+
+<%
+'初始化赋值.
+'变量定义.
+
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+
+
+Dim strGuide								'导航文字.
+
+Dim CokeMark,NowClassID
+
+
+
+'接收参数.
+
+CurrentTableName 	="[CXBG_account]"		'此模块涉及的[表]名.
+CurrentPageNow 		="/Club/MembersInformation.Welcome"
+UnitName			="会员详情"
+
+CokeMark	=CokeShow.filtRequest(Request("CokeMark"))		'使用加密解密函数！
+
+
+'处理参数.
+'处理查询执行 控制变量.
+
+
+
+'当前的菜品ID.
+If CokeMark="" Then
+	CokeMark=0
+Else
+	If isNumeric( CokeShow.DelCode_Num(CokeMark) ) Then
+		CokeMark=CokeShow.CokeClng( CokeShow.DelCode_Num(CokeMark) )
+	Else
+		CokeMark=0
+	End If
+End If
+'NowClassID
+'If CokeMark>0 Then NowClassID=CokeShow.CokeClng( CokeShow.otherField("[CXBG_details]",CokeMark,"id","details_class_id",True,0) ) Else NowClassID=0
+
+%>
+<%
+'主程序.Begin
+sql="SELECT TOP 500 *,(select distinct sum(Jifen) over(partition by Account_LoginID) as sumJifen from [CXBG_account_JifenSystem] where deleted=0 and JifenWhichOperationRule='+' and Account_LoginID=[CXBG_account].username) as sumJifen_Now,DATEDIFF(day,GETDATE(),dateadd(year,year(GETDATE())-year(Birthday),Birthday)) AS now_day_num,(select distinct count(id) over(partition by Account_LoginID) as countRemarkOnTotal from [CXBG_account_RemarkOn] where deleted=0 and Account_LoginID=[CXBG_account].username) as countRemarkOnTotal_Now,(select distinct count(id) over(partition by Account_LoginID) as countRemarkOnStarRating from [CXBG_account_RemarkOn] where deleted=0 and Account_LoginID=[CXBG_account].username and theStarRatingForChineseDishInformation>0) as countRemarkOnStarRating_Now FROM [CXBG_account] Where deleted=0 and id="& CokeMark
+If Not IsObject(CONN) Then link_database
+Set RS=Server.CreateObject("Adodb.RecordSet")
+'	Response.Write "<br />"& sql
+'	Response.End 
+RS.Open sql,CONN,1,1
+
+If RS.Eof And RS.Bof Then
+	Response.Redirect "/err404.asp"
+End If
+
+'主程序.End
+%>
+<%
+'定义当前导航项.
+Dim ShowNavigationNo
+ShowNavigationNo=6
+
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="<% =Trim( RS("cnname") &"-"& CokeShow.otherField("[CXBG_controller]",1,"ID","site_title",True,0)) %>" />
+	<meta http-equiv="Description" content="<% =Trim( RS("cnname") &"-"& CokeShow.otherField("[CXBG_controller]",1,"ID","site_title",True,0)) %>" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+    <%
+	'定义当前页的标题文字.
+	Dim PageTitleWords
+	PageTitleWords = RS("cnname") &" -- 会员Club俱乐部 -- 痴心不改餐厅(北京)"
+	%>
+	<title><% =PageTitleWords %></title>
+	
+	
+	
+    <link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+    <link href="/css/club_index.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/js/jQ-1.2.3.pack.js"></script>
+    <script type="text/javascript" src="/js/Tab.js"></script>
+    
+    <link href="/style/StarRating.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/script/ONCEFOREVER/StarRating.js"></script>
+    
+	<!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+	</style>
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		//dojo.require("dojo.parser");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		//dojo.require("dijit.Dialog");
+		
+		dojo.addOnLoad(function(){
+			
+		});
+	</script>
+	<script type="text/javascript" src="/script/public.js"></script>
+    
+     <script type="text/javascript">
+	//显示隐藏操作函数
+	function CheckDisplayAll(elementIdName) {
+		//
+		alert("当访客超过8人时，将会列出更多访客列表");
+		var checkbox_input_name = "www.cokeshow.com.cn";		//设置需要控制的选择框的id.
+		if (dojo.byId(elementIdName).checked) {
+			dojo.forEach(dojo.query("li[CokeShow='" + checkbox_input_name + "']"), function(x) {
+				//x.setAttribute('display', '');
+				dojo.style(x, {display:""});
+				console.log(dojo.style(x,"display"));
+			});
+			dojo.byId(elementIdName).checked = false;
+		}
+		else {
+			dojo.forEach(dojo.query("li[CokeShow='" + checkbox_input_name + "']"), function(x) {
+				//x.setAttribute('display', 'none');
+				dojo.style(x, {display:"none"});
+				console.log(dojo.style(x,"display"));
+			});
+			dojo.byId(elementIdName).checked = true;
+		}
+	}
+	</script>
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgclubbody">
+
+<div id="cxbgbg_clubimg">
+ <div id="cxbgbg_clubimgmid">
+ <!--header start-->
+  <div id="cxbgclub_headbg">
+    <!--header start-->
+    <!--#include virtual="/_include/_include_PublicHeadSearch_Code.asp"-->
+    <!--header end-->
+  </div>
+ <!--header end-->
+ <!--middle start-->
+<div class="yhhtmidbgclub">
+    <div class="hyht_left">
+      <div id="cxbgfuctbg_club"><span class="fontred lfdisplay">欢迎光临，抢座预订请拨打：</span><span class="font25 fontred lfdisplay">6493 0888</span>， 6493 7666<span class="rtdisplay font14">评菜推荐赢积分·快乐兑换礼品券！</span></div>
+	  <div class="leftclub_ht">
+	    <div class="club_bt01"><span class="font16fff">会员</span> <span class="font14000">资料</span><!--<a class="more_01" href=""></a>--></div>
+        <div class="hyxx">
+		  <div class="yhtxxx">
+            <img src="<% =Coke.ShowMemberSexPicURL(RS("id")) %>" width="100" height="100" />
+            
+			<div class="yhtxxx_right">
+			  <p class="font_club14red"><% =RS("cnname") %></p>
+			  <p>点评了：<span class="font_club12red"><% =RS("countRemarkOnTotal_Now") %></span></p>
+			  <p>积分：<span class="font_club12red"><% =CokeShow.ChkAccountUserNameAllJifen(RS("username")) %></span></p>
+			</div>	  
+		  </div>
+		  <ul class="hyxxul">
+		  <li>绑定会员卡状态 <% If RS("isBindingVIPCardNumber")=1 Then %><img src="/images/hytx/card_01.jpg" /><% Else %><img src="/images/hytx/card_02.jpg" /><% End If %></li>
+          <li>性别：<%
+		  Select Case RS("Sex")
+		  Case 0
+		  Response.Write "保密"
+		  Case 1
+		  Response.Write "女士"
+		  Case 2
+		  Response.Write "男士"
+		  End Select
+		  %></li>
+		  <li>生日：<% If RS("now_day_num")<0 Then Response.Write "还有很久才到生日呢" Else Response.Write "还有<span style=""color:red;"">"& RS("now_day_num") &"</span>天就当寿星哦" %></li>
+		  <li>注册日期：<br /><% =RS("adddate") %></li>
+		  <!--<li>最后登录日期：2010-02-30</li>-->
+		  <li>被浏览次数：<% =RS("iis") %>次</li>
+		  <li class="clubline"></li>
+		  <li>个人喜好：</li>
+		  <li class="xxtxt">
+		    
+            <p><% =RS("client_befondof") %></p>
+		    
+		  </li>
+		  </ul>
+		</div>
+	    <div class="club_bt">
+            <span class="font16fff">最近</span> <span class="font14000">访客</span>
+            <a class="more_01" href="javascript:return false;" onClick="CheckDisplayAll('CheckDisplayAll1');"></a>
+            <input
+            type="checkbox"
+            name="CheckDisplayAll1"
+            id="CheckDisplayAll1"
+            checked="checked"
+             style=" display:none;"
+            />
+        </div>
+		  <ul class="zjfk">
+		    <!--最近访客-->
+		    <!--#include virtual="/_include/Club/_include_MemberInformation_Visited_Code.asp"-->
+            <!--最近访客-->
+		  </ul>
+	   </div>
+	  <div class="rightclub_ht">
+	    <div class="club_htxx" id="div1">
+         <div class="club_btmid"><span class="font12fff">您现在的位置：</span><a class="f00012" href="">会员club</a><span class="font12000">-</span><a class="f00014" href="/Club/MembersInformation.Welcome?CokeMark=<% =CokeShow.AddCode_Num( RS("id") ) %>"><% =RS("cnname") %><span style="color:#F39;">(Show)</span></a><span class="font12000"> - </span>菜品点评</a></div>
+	     <ul class="hyht_hypl">
+            <!--会员的菜品点评-->
+            <!--#include virtual="/_include/Club/_include_MemberInformation_RemarkOnListArea_Code.asp"-->
+            <!--会员的菜品点评-->
+	     </ul>
+         <!--<div class="clubfy">
+	     <span>共<span class="font_yl">212</span>个记录 </span><span class="disabled">&lt; </span><span class="current">1</span><a href="#?page=2">2</a><a href="#?page=3">3</a>...<a href="#?page=199">199</a><a href="#?page=200">200</a><a class="nextym" href=""> 
+	下一页更精彩 </a>
+        </div>-->
+		</div>
+	    <div class="club_htxx" id="div2">
+         <div class="club_btmid"><span class="font12fff">您现在的位置：</span><a class="f00012" href="">会员club</a><span class="font12000">-</span><a class="f00014" href="/Club/MembersInformation.Welcome?CokeMark=<% =CokeShow.AddCode_Num( RS("id") ) %>"><% =RS("cnname") %><span style="color:#F39;">(Show)</span></a><span class="font12000"> - </span>关注的游戏</a></div>
+	   <ul class="hyht_hyyx">
+	     	<!--关注的游戏-->
+            <!--#include virtual="/_include/Club/_include_MemberInformation_GamesListArea_Code.asp"-->
+            <!--关注的游戏-->
+	   </ul>
+         <!--<div class="clubfy">
+	     <span>共<span class="font_yl">212</span>个记录 </span><span class="disabled">&lt; </span><span class="current">1</span><a href="#?page=2">2</a><a href="#?page=3">3</a>...<a href="#?page=199">199</a><a href="#?page=200">200</a><a class="nextym" href=""> 
+	下一页更精彩 </a>
+        </div>-->
+		</div>
+	    <div class="club_htxx" id="div3">
+         <div class="club_btmid"><span class="font12fff">您现在的位置：</span><a class="f00012" href="">会员club</a><span class="font12000">-</span><a class="f00014" href="/Club/MembersInformation.Welcome?CokeMark=<% =CokeShow.AddCode_Num( RS("id") ) %>"><% =RS("cnname") %><span style="color:#F39;">(Show)</span></a><span class="font12000"> - </span>兑换的礼品券</a></div>
+		 <ul class="hyht_dhq_txt">
+         	<!--兑换的礼品券-->
+            <!--#include virtual="/_include/Club/_include_MemberInformation_GiftCertificatedsListArea_Code.asp"-->
+            <!--兑换的礼品券-->
+		 </ul>
+         <!--<div class="clubfy">
+	     <span>共<span class="font_yl">212</span>个记录 </span><span class="disabled">&lt; </span><span class="current">1</span><a href="#?page=2">2</a><a href="#?page=3">3</a>...<a href="#?page=199">199</a><a href="#?page=200">200</a><a class="nextym" href=""> 
+	下一页更精彩 </a>
+        </div>-->
+		</div>
+	  </div>
+	</div>
+	
+	<div class="club_right">
+	  <div class="sjym_right">
+        <div class="yhht_rightbt"><span class="fontclubbt14"><% =RS("cnname") %></span><span class="font16000">的最爱</span></div>
+	    <ul class="yhht_ullist">
+          <li id="mod1" tabcontentid="div1" activeclass="yhht_ullist_vis" deactiveclass="yhht_ullist_link" groupname="m1" default="default" class="yhht_ullist_link" hoverclass="yhht_ullist_hov"><span class="font12fff"><%
+		  Select Case RS("Sex")
+		  Case 0
+		  Response.Write "他/她"
+		  Case 1
+		  Response.Write "她"
+		  Case 2
+		  Response.Write "他"
+		  End Select
+		  %>的 - </span>最近菜品点评<span class="font10fff"> <!--(20)--></span></li>
+	      <li id="mod2" tabcontentid="div2" activeclass="yhht_ullist_vis" deactiveclass="yhht_ullist_link" groupname="m1" class="yhht_ullist_link" hoverclass="yhht_ullist_hov"><span class="font12fff"><%
+		  Select Case RS("Sex")
+		  Case 0
+		  Response.Write "他/她"
+		  Case 1
+		  Response.Write "她"
+		  Case 2
+		  Response.Write "他"
+		  End Select
+		  %>的 - </span>关注的游戏<span class="font10fff"> <!--(20)--></span></li>
+	      <li id="mod3" tabcontentid="div3" activeclass="yhht_ullist_vis" deactiveclass="yhht_ullist_link" groupname="m1" class="yhht_ullist_link" hoverclass="yhht_ullist_hov"><span class="font12fff"><%
+		  Select Case RS("Sex")
+		  Case 0
+		  Response.Write "他/她"
+		  Case 1
+		  Response.Write "她"
+		  Case 2
+		  Response.Write "他"
+		  End Select
+		  %>的 - </span>兑换的礼品券<span class="font10fff"> <!--(20)--></span></li>
+          <div class="clear"></div>
+	      </ul>
+	    <div class="yhht_rightbt_bot"></div>
+	    <div class="index_rightbt"><span class="fontredbt14"><%
+		  Select Case RS("Sex")
+		  Case 0
+		  Response.Write "他/她"
+		  Case 1
+		  Response.Write "她"
+		  Case 2
+		  Response.Write "他"
+		  End Select
+		  %>的最新</span><span class="font16000">收藏菜</span><!--<a class="more_02" href=""></a>--></div>
+	    <ul class="club_zjsc">
+            <!--她的最新收藏菜-->
+            <!--#include virtual="/_include/Club/_include_MemberInformation_Favorite_Code.asp" -->
+            <!--她的最新收藏菜-->
+	    </ul>
+	  </div>
+	</div>
+    <div class="clear"></div>
+  </div>
+<!--middle end-->
+  <div class="left_line03"></div>
+  <div class="footer_club">
+    <!--底部-->
+	<!--#include virtual="/_include/_include_PublicFootCopyright_Code.asp"-->
+    <!--底部-->
+  </div>
+  <div class="footerclub_bom"></div>
+ </div>
+</div>
+</body>
+</html>
+<%
+'UPDATE更新访问量.
+'如果没有访问过的痕迹，则加一.
+If isEmpty(Session("visitor_memberinformation_datetime_"& RS("id") )) Or isNull(Session("visitor_memberinformation_datetime_"& RS("id") )) Or Session("visitor_memberinformation_datetime_"& RS("id") )="" Then
+	
+	CONN.Execute( "UPDATE [CXBG_account] SET iis=iis+1 WHERE id="& RS("id") )
+	
+	
+'如果有访问过的迹象，则不加一.
+Else
+	'有Session就不做计数.
+End If
+'记下被当前访客访问的痕迹！
+Session("visitor_memberinformation_datetime_"& RS("id") )="gogogo"
+
+'针对会员访问.
+'对于正在会员状态的会员来说，如果今天某个时间段没有来访过，那么也允许其记录在案.
+If CokeShow.CheckUserLogined()=True And isNumeric(Session("id")) And Len(Session("username"))>=10 Then
+	Dim sql_memberinformationIIS,rs_memberinformationIIS
+	sql_memberinformationIIS="Select top 1 * From [CXBG_account_IIS] where Account_LoginID='"& Session("username") &"' AND DateDiff(mi, adddate, GETDATE())<10 AND byvisit_Account_LoginID='"& RS("username") &"'"
+	Set rs_memberinformationIIS=Server.CreateObject("Adodb.RecordSet")
+	rs_memberinformationIIS.open sql_memberinformationIIS,conn,2,2
+
+	If rs_memberinformationIIS.Eof Then	'如果没记录.
+		'如果没有在10分钟内访问过该会员记录，则添加访问记录.
+		rs_memberinformationIIS.addnew
+			
+			rs_memberinformationIIS("Account_LoginID")	=Session("username")
+			rs_memberinformationIIS("IPaddress")		=Request.ServerVariables("REMOTE_ADDR")
+			rs_memberinformationIIS("HTTP_REFERER")		=Request.ServerVariables("HTTP_REFERER")
+			rs_memberinformationIIS("HTTP_GetAllUrlII")	=CokeShow.GetAllUrlII
+			
+			rs_memberinformationIIS("byvisit_Account_LoginID")	=RS("username")
+			
+		rs_memberinformationIIS.update
+	Else
+		'如果有记录，则表示刚刚访问过，不用加了.
+	End If
+	
+	rs_memberinformationIIS.Close
+    set rs_memberinformationIIS=Nothing
+End If
+%>

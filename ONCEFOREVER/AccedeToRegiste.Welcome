@@ -1,0 +1,1063 @@
+﻿<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：注册页.
+'日期说明：2010-05-15
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+
+<!--#include virtual="/system/md5.asp"-->
+
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+
+
+%>
+
+<%
+'初始化赋值.
+'变量定义.
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+Dim strGuide								'导航文字.
+Dim Action
+
+Dim fromurl
+
+
+
+'接收参数.
+Action		=CokeShow.filtRequest(Request("Action"))
+fromurl		=Request("fromurl")
+'CokeMark	=CokeShow.filtRequest(Request("CokeMark"))		'使用加密解密函数！
+
+
+
+'接收参数.
+CurrentTableName 	="[CXBG_account]"		'此模块涉及的[表]名.
+CurrentPageNow 		="AccedeToRegiste.Welcome"
+UnitName			="新会员注册"
+
+'response.Write CokeShow.AddCode_Num(6)
+
+'处理参数.
+'处理查询执行 控制变量
+'If classid="" Then
+'	classid=0
+'Else
+'	If isNumeric(classid) Then classid=CokeShow.CokeClng(classid) Else classid=0		'为了不让大导航条的首页按钮亮显.
+'End If
+''当前的菜品ID.
+'If CokeMark="" Then
+'	CokeMark=0
+'Else
+'	If isNumeric( CokeShow.DelCode_Num(CokeMark) ) Then
+'		CokeMark=CokeShow.CokeClng( CokeShow.DelCode_Num(CokeMark) )
+'	Else
+'		CokeMark=0
+'	End If
+'End If
+
+'response.Write "<br />CokeMark:"& CokeMark
+
+'定义当前分类（菜品分类）的classid.专门用于控制是否显示首页高亮显示.[当大导航上的某个分类被浏览时，依然可以高亮显示该分类导航！]
+Dim intCurrentClassid
+'intCurrentClassid = classid
+intCurrentClassid = 99999		'如果等于99999，则表示无论如何，大导航都不会有高亮显示！
+%>
+
+<%
+'主程序.Begin
+
+'主程序.End
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="会员Club新会员注册" />
+	<meta http-equiv="Description" content="会员Club——新会员注册申请，点评家的诞生圣地：）" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+	<title>会员Club—新会员注册，美食家的诞生圣地：） <% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_title",True,0) %></title>
+    
+    <link href="/css/other_yhzx.css" type="text/css" rel="stylesheet" />
+    <link href="/css/dlzc.css" type="text/css" rel="stylesheet" />
+    <link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+    
+    <!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+		@import "/style/UpdateStyle.css";
+	</style>
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		dojo.require("dojo.parser");
+		dojo.require("dijit.form.Form");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		//dojo.require("dijit.Dialog");
+		dojo.require("dijit.form.ValidationTextBox");
+		dojo.require("dijit.form.Button");
+		
+		dojo.addOnLoad(function(){
+			dojo.byId("username").focus();
+		});
+	</script>
+    <script type="text/javascript" src="/script/public.js"></script>
+	<script type="text/javascript" 
+	src="/script/ONCEFOREVER/__accountNameValidation.js" 
+	></script>
+	<script type="text/javascript" 
+	src="/script/ONCEFOREVER/__accountPasswordsValidation.js" 
+	></script>
+    
+    
+    <script type="text/javascript">
+	//显示隐藏操作函数
+	function CheckDisplayAll(elementIdName) {
+		var checkbox_input_name = "www.cokeshow.com.cn";		//设置需要控制的选择框的id.
+		if (dojo.byId(elementIdName).checked) {
+			dojo.forEach(dojo.query("tr[CokeShow='" + checkbox_input_name + "']"), function(x) {
+				//x.setAttribute('display', '');
+				dojo.style(x, {display:""});
+				console.log(dojo.style(x,"display"));
+			});
+		}
+		else {
+			dojo.forEach(dojo.query("tr[CokeShow='" + checkbox_input_name + "']"), function(x) {
+				//x.setAttribute('display', 'none');
+				dojo.style(x, {display:"none"});
+				console.log(dojo.style(x,"display"));
+			});
+		}
+	}
+	</script>
+
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgbody">
+
+<div id="cxbgbg_img">
+ <div id="dlzc_imgmid">
+  <div id="dlzc_headbg" style="background:url(../images/dlzc_img01A.jpg) repeat-y;">
+	<span class="fontred">抢座预订：<span class="font25">6493 0888</span>， 6493 7666</span>
+  </div>
+<!--middle start-->
+  <div class="dlzcmidbg">
+    <div class="dlzccentbg">
+      <div class="hydlzcbt" style="background:url(/images/ico/small/group_add.png) 0px 15px no-repeat;">美食家的诞生：</div>
+	  <div class="hyzctable">
+	  
+<!--主页面-->
+<%
+
+'判断处理
+If Action="Register" Then
+	Call RegisterNow()
+	
+ElseIf Action="RegisterSuccessUI" Then
+	Call RegisterSuccessUI()
+Else
+	Call RegisterUI()
+End If
+
+
+If FoundErr=True Then
+	CokeShow.AlertErrMsg_foreground( ErrMsg )
+End If
+
+%>
+<!--主页面-->
+      
+      
+	</div>
+	</div>
+    <div class="clear"></div>
+  </div>
+  <div class="zcdlfooter"></div>
+<!--middle end-->
+</div>
+</div>
+</body>
+</html>
+<%
+'登录界面.
+Sub RegisterUI()
+%>
+<script type="text/javascript" src="/script/getcity.js"></script>
+<script type="text/javascript">
+   function update_strength(input_field_id, output_display_id) 
+    {
+    var input_field = document.getElementById(input_field_id);
+    var output_display = document.getElementById(output_display_id);
+        
+    var input_str = input_field.value;
+    var input_length = input_str.length;
+
+    var strength = 0;
+
+    // increase strength if contains [0-9]
+    number_re = new RegExp("[0-9]");
+    if (number_re.test(input_str)) {
+      strength++;
+    }
+    // increase strength if contains non alpha
+    non_alpha_re = new RegExp("[^A-Za-z0-9]");
+    if (non_alpha_re.test(input_str)) {
+      strength++;
+    }
+
+    // increase strength if contains upper case
+    upper_alpha_re = new RegExp("[A-Z]");
+    if (upper_alpha_re.test(input_str)) {
+      strength++;
+    }
+    
+    // increase strength if long enough
+    if(input_length >=8) {
+      strength++;
+    }    
+
+    var strength_str; 
+    if (strength <= 1) {
+        strength_str = '&nbsp;&nbsp;<span class="yhmmtxt">密码强度：</span> <img src="/images/yes.gif" alt="正确" /><span class="mmqryl">弱</span> <span class="mmqrhs">中</span> <span class="mmqrhs">强</span>';
+    } else if (strength <= 2) {
+      strength_str = '&nbsp;&nbsp;<span class="yhmmtxt">密码强度：</span> <img src="/images/yes.gif" alt="正确" /><span class="mmqryl">弱</span> <span class="mmqryl">中</span> <span class="mmqrhs">强</span>';
+    } else {
+      strength_str = '&nbsp;&nbsp;<span class="yhmmtxt">密码强度：</span> <img src="/images/yes.gif" alt="正确" /><span class="mmqryl">弱</span> <span class="mmqryl">中</span> <span class="mmqryl">强</span>';
+    }
+    
+    if(input_str.length < 6) {
+      strength_str = '&nbsp;&nbsp;<span class="yhmmtxt">密码强度：</span> <span class="mmqryl">无效</span> <span class="mmqrhs">中</span> <span class="mmqrhs">强</span>';
+    }
+
+    output_display.innerHTML  = strength_str;
+}
+</script>
+      <form action="/ONCEFOREVER/AccedeToRegiste.Welcome" method="post" name="reg" id="reg"
+        dojoType="dijit.form.Form"
+        execute="processForm('reg')"
+      ><!--dojoType="dijit.form.Form"-->
+      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+          <td width="17%"><span class="fontred">*</span>账号Email</td>
+          <td width="83%">
+            <input type="text" id="username" name="username"
+			dojoType="dijit.form.ValidationTextBox"
+			required="true"
+            propercase="false"
+			promptMessage="欢迎光临"
+			invalidMessage="请填写正确的Email电子邮件格式，例如：yourname6179@qq.com"
+			trim="true"
+			lowercase="true"
+            value=""
+			regExp="^[0-9a-zA-Z]+([0-9a-zA-Z]|_|\.|-)+[0-9a-zA-Z]+@(([0-9a-zA-Z]+\.)|([0-9a-zA-Z]+-))+[0-9a-zA-Z]+$"
+			style="width:250px;"
+            class="input_200"
+			 onChange="accountNameOnChange"
+			/> 
+            <br />
+            请填写您的常用E-mail，例如：yourname6688@qq.com
+          </td>
+        </tr>
+        <tr>
+          <td><span class="fontred">*</span>帐号密码：</td>
+          <td>
+		  <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+              <td width="50%">
+             	<input type="password" id="password" name="password" size="20"
+                dojoType="dijit.form.ValidationTextBox"
+                required="true"
+                propercase="false"
+                invalidMessage="密码不能为空！并且长度不应少于6位！"
+                trim="true"
+                lowercase="false"
+                value=""
+                regExp=".{6,20}"
+                style="width:x200px;"
+                class="input_150"
+                 onKeyup="update_strength('password','output_display_id')"
+                /> 
+              </td>
+              <td width="50%">
+              	<div id="output_display_id">
+                    &nbsp;
+                    <span class="yhmmtxt">密码强度：</span> 
+                    <span class="mmqryl">无效</span> 
+                    <span class="mmqrhs">中</span> 
+                    <span class="mmqrhs">强</span>
+                </div>
+              </td>
+            </tr>
+          </table>
+		  </td>
+        </tr>
+        <tr>
+          <td><span class="fontred">*</span>确认密码：</td>
+          <td>
+          	<input type="password" id="repassword" name="repassword" size="20"
+			dojoType="dijit.form.ValidationTextBox"
+			required="true"
+            propercase="false"
+            invalidMessage="确认密码不能为空！并且长度不应少于6位！"
+            trim="true"
+            lowercase="false"
+            value=""
+            regExp=".{6,20}"
+            style="width:x200px;"
+			class="input_150"
+             onChange="accountPasswordsOnChange"
+			/>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="fontred">*</span>昵称：</td>
+          <td>
+          	<input type="text" id="cnname" name="cnname" size="20"
+			dojoType="dijit.form.ValidationTextBox"
+			required="true"
+            propercase="true"
+            invalidMessage="昵称最长只能取8个字"
+            trim="true"
+            lowercase="false"
+            value=""
+            regExp=".{2,8}"
+            style="width:x200px;"
+			class="input_150"
+			/>
+          </td>
+        </tr>
+        
+        <tr>
+          <td><span class="fontred">*</span>性别：</td>
+          <td>
+          	<img src="/images/hytx/secrecy_100.jpg" width="36" height="36" alt="保密" /><input type="radio" name="Sex" id="Sex0" value="0" <% 'If RS("Sex")=0 Then Response.Write "checked=""checked""" %> checked="checked" /><label for="Sex0">保密</label>
+            &nbsp;&nbsp;&nbsp;
+            <img src="/images/hytx/boy_36.jpg" alt="男士" /><input type="radio" name="Sex" id="Sex2" value="2" <% 'If RS("Sex")=2 Then Response.Write "checked=""checked""" %> /><label for="Sex2">男士</label>
+            &nbsp;&nbsp;&nbsp;
+            <img src="/images/hytx/girl_36.jpg" alt="女士" /><input type="radio" name="Sex" id="Sex1" value="1" <% 'If RS("Sex")=1 Then Response.Write "checked=""checked""" %> /><label for="Sex1">女士</label>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="fontred">*</span>生日：</td>
+          <td>
+          	<% =CokeShow.Select_Date("1988-08-08", "Coke", "&nbsp;&nbsp;&nbsp;") %>
+            <br />
+            (痴心不改餐厅将会为您准备特别礼物,请填写真实生日哦)</td>
+        </tr>
+        
+        
+        <tr>
+          <td colspan="2">
+            <input
+            type="checkbox"
+            name="CheckDisplayAll1"
+            id="CheckDisplayAll1"
+            onclick="CheckDisplayAll('CheckDisplayAll1');"
+            checked="checked"
+            />
+            <label for="CheckDisplayAll1">显示选填项 <span style="color:green; font-weight:bold; font-size:16px;">↓<img src="/images/ico/small/coins_add.png" alt="赢取积分" /></span></label> 
+            <br />
+            (填写选填项即可第一时间获取积分，用网站积分可以兑换餐厅各种礼品券!)
+          </td>
+        </tr>
+        
+        <tr CokeShow="www.cokeshow.com.cn" style="display:;">
+          <td>所在地区：</td>
+          <td>
+          	<% =CokeShow.type_city("", "", "province", "city", "reg") %>
+            &nbsp;
+            +奖励<span style="color:#FF2A66;">6积分</span>哦
+          </td>
+        </tr>
+        <tr CokeShow="www.cokeshow.com.cn" style="display:;">
+          <td>您的姓名：</td>
+          <td>
+          	<input type="text" id="client_name" name="client_name" size="20"
+			dojoType="dijit.form.ValidationTextBox"
+			required="false"
+            propercase="true"
+            invalidMessage="姓名应该在1~30字符之内哦，也可以只填写您的姓氏或称呼，如:李先生或者Alice"
+            trim="true"
+            lowercase="false"
+            value=""
+            regExp=".{1,50}"
+            style="width:x200px;"
+			class="input_150"
+			/>
+            &nbsp;
+            +奖励<span style="color:#FF2A66;">6积分</span>
+          </td>
+        </tr>
+        <tr CokeShow="www.cokeshow.com.cn" style="display:;">
+          <td>电话：</td>
+          <td>
+          	<input type="text" id="client_telephone" name="client_telephone"
+			dojoType="dijit.form.ValidationTextBox"
+			required="false"
+            propercase="false"
+			promptMessage=""
+			invalidMessage="请填写电话或者手机"
+			trim="true"
+			lowercase="false"
+            value=""
+			regExp="\d{3,4}\-?\d{6,8}\-?\d{1,4}|[\d\+\-]{11,15}|\d{5,8}"
+			style="width:x200px;"
+			class="input_150"
+			/>
+            &nbsp;
+            +奖励<span style="color:#FF2A66;">6积分</span>
+          </td>
+        </tr>
+        <tr CokeShow="www.cokeshow.com.cn" style="display:;">
+          <td>学历：</td>
+          <td>
+          	<select name="client_schooling" id="client_schooling">
+            	<% Call CokeShow.Option_ID("[CXBG_attribute_schooling]","",0,0,"classid","classname",True) %>
+            </select>
+            &nbsp;
+            +奖励<span style="color:#FF2A66;">6积分</span>
+          </td>
+        </tr>
+        <tr CokeShow="www.cokeshow.com.cn" style="display:;">
+          <td>家庭成员：</td>
+          <td>
+          	<% ="<input id='familynumber_0' type='radio' name='client_memberoffamily' value='1' /><label for='familynumber_0'>1</label>&nbsp;&nbsp;<input id='familynumber_1' type='radio' name='client_memberoffamily' value='2' /><label for='familynumber_1'>2</label>&nbsp;&nbsp;<input id='familynumber_2' type='radio' name='client_memberoffamily' value='3' /><label for='familynumber_2'>3</label>&nbsp;&nbsp;<input id='familynumber_3' type='radio' name='client_memberoffamily' value='4' /><label for='familynumber_3'>4</label>&nbsp;&nbsp;<input id='familynumber_4' type='radio' name='client_memberoffamily' value='更多' /><label for='familynumber_4'>更多</label>" %>
+            <% '="家庭结构：<input name='familymember' type='checkbox' id='Father' value='父亲' title='请选择您的家庭结构，可多选'><label for='Father'>父亲</label>&nbsp;&nbsp;<input name='familymember' type='checkbox' id='Mother' value='母亲' title='请选择您的家庭结构，可多选'><label for='Mother'>母亲</label>&nbsp;&nbsp;<input name='familymember' type='checkbox' id='Husband' value='丈夫' title='请选择您的家庭结构，可多选'><label for='Husband'>丈夫</label>&nbsp;&nbsp;<input name='familymember' type='checkbox' id='Wife' value='妻子' title='请选择您的家庭结构，可多选'><label for='Wife'>妻子</label><br>&nbsp;&nbsp;<font color=#ffffff>Homestay</font><input name='familymember' type='checkbox' id='Son' value='儿子' title='请选择您的家庭结构，可多选'><label for='Son'>儿子</label>&nbsp;&nbsp;<input name='familymember' type='checkbox' id='Daughter' value='女儿' title='请选择您的家庭结构，可多选'><label for='Daughter'>女儿</label>&nbsp;&nbsp;<input name='familymember' type='checkbox' id='Brother' value='兄弟' title='请选择您的家庭结构，可多选'><label for='Brother'>兄弟</label>&nbsp;&nbsp;<input name='familymember' type='checkbox' id='Sister' value='姐妹' title='请选择您的家庭结构，可多选'><label for='Sister'>姐妹</label>" %>
+            &nbsp;
+            +奖励<span style="color:#FF2A66;">6积分</span>
+          </td>
+        </tr>
+        <tr CokeShow="www.cokeshow.com.cn" style="display:;">
+          <td>爱好：</td>
+          <td>
+          	<input type="text" id="client_befondof" name="client_befondof"
+			dojoType="dijit.form.ValidationTextBox"
+			required="false"
+            propercase="false"
+			promptMessage=""
+			invalidMessage="填写爱好要详细一点才能发给积分哦"
+			trim="true"
+			lowercase="false"
+            value=""
+			regExp=".{2,50}"
+			style="width:x200px;"
+			class="input_150"
+			/>
+            &nbsp;
+            +奖励<span style="color:#FF2A66;">6积分</span>
+          </td>
+        </tr>
+        <tr CokeShow="www.cokeshow.com.cn" style="display:;">
+          <td>月收入：</td>
+          <td>
+          	<select name="client_MonthlyIncome" id="client_MonthlyIncome">
+            	<% Call CokeShow.Option_ID("[CXBG_attribute_income]","",0,0,"classid","classname",True) %>
+            </select>
+            &nbsp;
+            +奖励<span style="color:#FF2A66;">6积分</span>
+          </td>
+        </tr>
+        <tr CokeShow="www.cokeshow.com.cn" style="display:;">
+          <td>职业：</td>
+          <td>
+          	<select name="client_work" id="client_work">
+            	<% Call CokeShow.Option_ID("[CXBG_attribute_work]","",0,0,"classid","classname",True) %>
+            </select>
+            &nbsp;
+            +奖励<span style="color:#FF2A66;">6积分</span>
+          </td>
+        </tr>
+        
+
+        
+        
+        <tr>
+          <td><span class="fontred">*</span> 验证码：</td>
+          <td>
+            <input type="text" id="CodeStr" name="CodeStr" size="4"
+			dojoType="dijit.form.ValidationTextBox"
+			required="true"
+			propercase="false"
+			invalidMessage="请填写4位数字！"
+			trim="true"
+            lowercase="false"
+            value=""
+			regExp="\d{4}"
+			style="width:80px;"
+			class="input_150"
+            maxlength="4"
+			/>
+            &nbsp;<span class="fontred">*</span>
+            <img id="GetCode" src="/public/code.asp" style="cursor:hand" onClick="this.src='/public/code.asp?c='+Math.random()" alt="点击更换验证码" />
+		  </td>
+        </tr>
+        <tr>
+          <td>&nbsp;</td>
+          <td>
+            
+            <input type="checkbox" name="agree" id="agree" value="1" checked="checked" />
+我已看过并接受《<a href="/Details/DetailsInformation.Welcome?CokeMark=<% =CokeShow.AddCode_Num( 17 ) %>" target="_blank">用户协议</a>》
+		  </td>
+        </tr>
+        <tr>
+          <td height="50" colspan="2" align="center" valign="middle">
+          	<button type="submit" id="submitbtn" 
+              dojoType="dijit.form.Button"
+              class="button"
+              >
+              &nbsp;马上注册&nbsp;
+              </button>
+              
+              <!--<input type="submit" name="submitbtn" id="submitbtn"
+              value="&nbsp;注册&nbsp;"
+              class="button"
+              />
+              
+              <input type="button" name="backbtn" id="backbtn"
+              value="&nbsp;返回&nbsp;"
+              class="button"
+               onclick="history.back(-1);"
+              />-->
+              <button type="button" id="backbtn" 
+              dojoType="dijit.form.Button"
+              class="button"
+               onclick="history.back(-1);"
+              >
+              &nbsp;返回&nbsp;
+              </button>
+              
+              	<div>&nbsp;</div>
+                <div class="mjmatxtdiv" style="font-size:14px;"><img src="/images/bit_05.gif" width="5" height="9" /> <img src="/images/ico/small/group_go.png" /> <a href="/ONCEFOREVER/LogOn.Welcome<% If fromurl<>"" And Len(fromurl)>10 Then Response.Write "?fromurl="& CokeShow.EncodeURL( fromurl,"" ) %>">我已有账号,我要登录!</a></div>
+				<div class="mjmatxtdiv">
+                <img src="/images/bit_05.gif" width="5" height="9" /> <a href="/ONCEFOREVER/LostPassword.Welcome">忘记密码?</a>
+                &nbsp;
+                <img src="/images/bit_05.gif" width="5" height="9" /> <a href="/">返回首页</a>
+                </div>
+                <div class="mjmatxtdiv"></div>
+            
+          </td>
+        </tr>
+      </table>
+      <input type="hidden" name="Action" value="Register" />
+      <input type="hidden" name="fromurl" value="<% =fromurl %>" />
+      </form>
+      
+
+<%
+End Sub
+
+
+'登录处理.
+Public Sub RegisterNow()
+	
+	Dim username,password,repassword,cnname,account_level
+	Dim Birthday,Sex
+	Dim agree
+	'Dim Email,MSN,QQ,OfficePhone,Mobile,CompanyName
+	Dim province,city
+	Dim client_name,client_telephone,client_schooling,client_memberoffamily,client_befondof,client_MonthlyIncome,client_work
+	
+	'获取其它参数
+	username	=CokeShow.filtPass(Request("username"))
+	password	=CokeShow.filtPass(Request("password"))
+	repassword	=CokeShow.filtPass(Request("repassword"))
+	cnname		=CokeShow.filtRequest(Request("cnname"))
+	Birthday	=CokeShow.filtRequest(Request("selectyCoke")) &"-"& CokeShow.filtRequest(Request("selectmCoke")) &"-"& CokeShow.filtRequest(Request("selectdCoke"))
+	Sex			=CokeShow.filtRequest(Request("Sex"))
+	
+	'account_level	=CokeShow.filtRequest(Request("account_level"))
+	agree		=CokeShow.filtRequest(Request("agree"))
+	
+'	Email		=CokeShow.filtRequest(Request("Email"))
+'	MSN			=CokeShow.filtRequest(Request("MSN"))
+'	QQ			=CokeShow.filtRequest(Request("QQ"))
+'	OfficePhone	=CokeShow.filtRequest(Request("OfficePhone"))
+'	Mobile		=CokeShow.filtRequest(Request("Mobile"))
+'	CompanyName	=CokeShow.filtRequest(Request("CompanyName"))
+	
+	province	=CokeShow.filtRequest(Request("province"))
+	city		=CokeShow.filtRequest(Request("city"))
+	
+	client_name				=CokeShow.filtRequest(Request("client_name"))
+	client_telephone		=CokeShow.filtRequest(Request("client_telephone"))
+	client_schooling		=CokeShow.filtRequest(Request("client_schooling"))
+	client_memberoffamily	=CokeShow.filtRequest(Request("client_memberoffamily"))
+	client_befondof			=CokeShow.filtRequest(Request("client_befondof"))
+	client_MonthlyIncome	=CokeShow.filtRequest(Request("client_MonthlyIncome"))
+	client_work				=CokeShow.filtRequest(Request("client_work"))
+	
+	
+	'验证
+	If Not CokeShow.CodePass Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br><li>验证码错误！</li>"
+	End If
+'	If username="" Then
+'		FoundErr=True
+'		ErrMsg=ErrMsg &"<br><li>帐号不能为空！</li>"
+'	Else
+'		If CokeShow.strLength(username)>50 Or CokeShow.strLength(username)<10 Then
+'			FoundErr=True
+'			ErrMsg=ErrMsg &"<br><li>您的Email帐号长度不应大于50个字符，也不应小于10个字符的！</li>"
+'		Else
+'			username=username
+'		End If
+'	End If
+	If username="" Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br /><li>帐号不能为空！</li>"
+	Else
+		If CokeShow.strLength(username)>50 Or CokeShow.strLength(username)<10 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br /><li>您的Email帐号长度不应大于50个字符，也不应小于10个字符的！请填写您的正确Email地址以方便我们和您取得联系.</li>"
+		Else
+			If CokeShow.IsValidEmail(username)=False Then
+				FoundErr=True
+				ErrMsg=ErrMsg & "<br /><li>您的帐号(即Email)格式不正确！</li>"
+			Else
+				username=username
+			End If
+		End If
+	End If
+	
+	If password="" Or repassword="" Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br><li>密码与确认密码均不能为空！</li>"
+	Else
+		If CokeShow.strLength(password)>20 Or CokeShow.strLength(password)<6 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br><li>密码长度不能大于20个字符，也不能小于6个字符（至少六位）！</li>"
+		Else
+			password=password
+		End If
+	End If
+	If password<>repassword Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br><li>密码和确认密码不一致！</li>"
+	End If
+	
+	If cnname<>"" Then
+		If CokeShow.strLength(cnname)>8 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br><li>昵称只能8个字之内！</li>"
+		Else
+			cnname=cnname
+		End If
+	Else
+		'不填写时的默认值.
+		cnname=""
+	End If
+	
+	'If Email="" Then
+'		FoundErr=True
+'		ErrMsg=ErrMsg &"<br /><li>Email不能为空！</li>"
+'	Else
+'		If CokeShow.strLength(Email)>50 Or CokeShow.strLength(Email)<10 Then
+'			FoundErr=True
+'			ErrMsg=ErrMsg &"<br /><li>Email长度不能大于50个字符，或小于10个字符！请填写您的正确Email地址以方便我们和您取得联系.</li>"
+'		Else
+'			If CokeShow.IsValidEmail(Email)=False Then
+'				FoundErr=True
+'				ErrMsg=ErrMsg & "<br /><li>您的Email格式不正确！</li>"
+'			End If
+'		End If
+'	End If
+	
+'	If MSN<>"" Then
+'		If CokeShow.IsValidEmail(MSN)=False Then
+'			FoundErr=True
+'			ErrMsg=ErrMsg & "<br /><li>您的MSN格式不正确！</li>"
+'		End If
+'	Else
+'		'不填写时的默认值.
+'		MSN=""
+'	End If
+'	
+'	If QQ<>"" Then
+'		If CokeShow.strLength(QQ)>20 Then
+'			FoundErr=True
+'			ErrMsg=ErrMsg &"<br /><li>QQ只能20位字符之内！此项也可以不填。</li>"
+'		Else
+'			If isNumeric(QQ)=False Then
+'				FoundErr=True
+'				ErrMsg=ErrMsg & "<br /><li>您的QQ格式不正确，应该为纯数字号码！</li>"
+'			End If
+'		End If
+'	Else
+'		'不填写时的默认值.
+'		QQ=""
+'	End If
+'	
+'	If OfficePhone<>"" Then
+'		If CokeShow.strLength(OfficePhone)>30 Then
+'			FoundErr=True
+'			ErrMsg=ErrMsg &"<br /><li>办公电话应该在30位字符之内！此项也可以不填。</li>"
+'		Else
+'			OfficePhone=OfficePhone
+'		End If
+'	Else
+'		'不填写时的默认值.
+'		OfficePhone=""
+'	End If
+'	
+'	If Mobile<>"" Then
+'		If CokeShow.strLength(Mobile)>30 Then
+'			FoundErr=True
+'			ErrMsg=ErrMsg &"<br /><li>手机应该在30位字符之内！此项也可以不填。</li>"
+'		Else
+'			Mobile=Mobile
+'		End If
+'	Else
+'		'不填写时的默认值.
+'		Mobile=""
+'	End If
+'	
+'	If CompanyName<>"" Then
+'		If CokeShow.strLength(CompanyName)>50 Then
+'			FoundErr=True
+'			ErrMsg=ErrMsg &"<br /><li>公司名应该在50位字符之内！此项也可以不填。</li>"
+'		Else
+'			CompanyName=CompanyName
+'		End If
+'	Else
+'		'不填写时的默认值.
+'		CompanyName=""
+'	End If
+	
+	If Replace(Birthday,"-","")<>"" Then
+		If CokeShow.strLength(Birthday)>10 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br /><li>生日日期错误！</li>"
+		Else
+			If isDate(Birthday)=False Then
+				FoundErr=True
+				ErrMsg=ErrMsg & "<br /><li>您的生日日期的格式不正确！</li>"
+			Else
+				Birthday=Birthday
+			End If
+		End If
+	Else
+		'不填写时的默认值.
+		Birthday=""
+	End If
+	
+	If Sex<>"" Then
+		If CokeShow.strLength(Sex)>1 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br /><li>性别的参数错误！</li>"
+		Else
+			If isNumeric(Sex)=False Then
+				FoundErr=True
+				ErrMsg=ErrMsg & "<br /><li>您的性别的参数格式不正确！</li>"
+			Else
+				Sex=CokeShow.CokeCint(Sex)
+			End If
+		End If
+	Else
+		'不填写时的默认值.
+		Sex=0
+	End If
+	
+	If province<>"" Then
+		If CokeShow.strLength(province)>10 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br /><li>省份应该在10位字符之内！此项也可以不填。</li>"
+		Else
+			province=province
+		End If
+	Else
+		'不填写时的默认值.
+		province=""
+	End If
+	If city<>"" Then
+		If CokeShow.strLength(city)>10 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br /><li>城市应该在10位字符之内！此项也可以不填。</li>"
+		Else
+			city=city
+		End If
+	Else
+		'不填写时的默认值.
+		city=""
+	End If
+	
+	If agree<>"1" Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br /><li>在注册之前，请您查阅并且同意我们的用户协议，以保护您的合法权益！</li>"
+	End If
+	
+	
+	If client_name<>"" Then
+		If CokeShow.strLength(client_name)>50 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br><li>您的姓名只能50位字符之内！此项也可以不填。</li>"
+		Else
+			client_name=client_name
+		End If
+	Else
+		'不填写时的默认值.
+		client_name=""
+	End If
+	If client_telephone<>"" Then
+		If CokeShow.strLength(client_telephone)>50 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br /><li>电话应该在50位字符之内！此项也可以不填写。</li>"
+		Else
+			client_telephone=client_telephone
+		End If
+	Else
+		'不填写时的默认值.
+		client_telephone=""
+	End If
+	
+	If client_schooling<>"" Then
+		If isNumeric(client_schooling)=False Then
+			FoundErr=True
+			ErrMsg=ErrMsg & "<br /><li>您的学历的参数格式不正确！</li>"
+		Else
+			client_schooling=CokeShow.CokeClng(client_schooling)
+		End If
+	Else
+		'不填写时的默认值.
+		client_schooling=0
+	End If
+	
+	If client_memberoffamily<>"" Then
+		If CokeShow.strLength(client_memberoffamily)>10 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br /><li>家庭成员应该在10位字符之内！此项也可以不选。</li>"
+		Else
+			client_memberoffamily=client_memberoffamily
+		End If
+	Else
+		'不填写时的默认值.
+		client_memberoffamily=""
+	End If
+	
+	If client_befondof<>"" Then
+		If CokeShow.strLength(client_befondof)>50 Then
+			FoundErr=True
+			ErrMsg=ErrMsg &"<br /><li>爱好应该在50位字符之内！此项也可以不填写。</li>"
+		Else
+			client_befondof=client_befondof
+		End If
+	Else
+		'不填写时的默认值.
+		client_befondof=""
+	End If
+	
+	If client_MonthlyIncome<>"" Then
+		If isNumeric(client_MonthlyIncome)=False Then
+			FoundErr=True
+			ErrMsg=ErrMsg & "<br /><li>您的月收入的参数格式不正确！</li>"
+		Else
+			client_MonthlyIncome=CokeShow.CokeClng(client_MonthlyIncome)
+		End If
+	Else
+		'不填写时的默认值.
+		client_MonthlyIncome=0
+	End If
+	
+	If client_work<>"" Then
+		If isNumeric(client_work)=False Then
+			FoundErr=True
+			ErrMsg=ErrMsg & "<br /><li>您的职业的参数格式不正确！</li>"
+		Else
+			client_work=CokeShow.CokeClng(client_work)
+		End If
+	Else
+		'不填写时的默认值.
+		client_work=0
+	End If
+	
+	'检测是否有重名的函数.
+	If CokeShow.CheckUserName(username)=True Then
+		FoundErr=True
+		ErrMsg=ErrMsg &"<br /><li>您的帐号“"& username &"”已存在，请您另选新帐号！</li>"
+	End If
+'response.Write "I  username="& username &"; CokeShow.CheckUserName(username)="& CokeShow.CheckUserName(username) &"<BR />"
+
+	'拦截错误，不然错误往下进行！
+	If FoundErr=True Then
+		Exit Sub
+		'RESPONSE.End()
+		'Response.Redirect "/index.Welcome"
+	End If
+	
+	'检测是否有重名记录.
+	'Dim rsChk,sqlChk
+	Set RS=Server.CreateObject("Adodb.RecordSet")
+	sql="SELECT * FROM "& CurrentTableName &" WHERE deleted=0"
+	
+
+	'If Not isObject(CONN) Then link_database
+	RS.Open sql,CONN,2,2
+	
+	
+	'没有重名，则加入数据库.
+
+	RS.AddNew
+		
+		RS("username")		=username
+		'如果填写了密码，则进行修改.
+		If password<>"" Then
+			RS("password")	=md5(password)
+		End If
+		
+		RS("cnname")		=cnname
+		If isDate(Birthday) Then RS("Birthday")=Birthday
+		RS("Sex")			=Sex
+		
+		RS("province")		=province
+		RS("city")			=city
+		
+'		RS("Email")			=""
+'		RS("MSN")			=MSN
+'		RS("QQ")			=QQ
+'		RS("OfficePhone")	=OfficePhone
+'		RS("Mobile")		=Mobile
+'		RS("CompanyName")	=CompanyName
+		RS("client_name")				=client_name
+		RS("client_telephone")			=client_telephone
+		RS("client_schooling")			=client_schooling
+		RS("client_memberoffamily")		=client_memberoffamily
+		RS("client_befondof")			=client_befondof
+		RS("client_MonthlyIncome")		=client_MonthlyIncome
+		RS("client_work")				=client_work
+		
+	
+	RS.Update
+	RS.MoveLast
+	Dim newID
+	newID = RS("id")
+	
+	RS.Close
+	Set RS=Nothing
+'response.Write "II  username="& username &"; CokeShow.CheckUserName(username)="& CokeShow.CheckUserName(username)
+'RESPONSE.End()
+	
+	'积分运算.Begin
+		'选填项-所在地区.
+		If province<>"" And city<>"" Then
+			If CokeShow.JifenSystemExecute(1,username,6,"进行了选填项-所在地区的填写,您已成功获得了餐厅送出的6网站积分.",newID)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+		End If
+		'选填项-您的姓名.
+		If client_name<>"" Then
+			If CokeShow.JifenSystemExecute(1,username,6,"进行了选填项-您的姓名的填写,您已成功获得了餐厅送出的6网站积分.",newID)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+		End If
+		'选填项-电话.
+		If client_telephone<>"" Then
+			If CokeShow.JifenSystemExecute(1,username,6,"进行了选填项-电话的填写,您已成功获得了餐厅送出的6网站积分.",newID)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+		End If
+		'选填项-学历.
+		If client_schooling>0 Then
+			If CokeShow.JifenSystemExecute(1,username,6,"进行了选填项-学历的填写,您已成功获得了餐厅送出的6网站积分.",newID)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+		End If
+		'选填项-家庭成员.
+		If client_memberoffamily<>"" Then
+			If CokeShow.JifenSystemExecute(1,username,6,"进行了选填项-家庭成员的填写,您已成功获得了餐厅送出的6网站积分.",newID)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+		End If
+		'选填项-爱好.
+		If client_befondof<>"" Then
+			If CokeShow.JifenSystemExecute(1,username,6,"进行了选填项-爱好的填写,您已成功获得了餐厅送出的6网站积分.",newID)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+		End If
+		'选填项-月收入.
+		If client_MonthlyIncome>0 Then
+			If CokeShow.JifenSystemExecute(1,username,6,"进行了选填项-月收入的填写,您已成功获得了餐厅送出的6网站积分.",newID)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+		End If
+		'选填项-职业.
+		If client_work>0 Then
+			If CokeShow.JifenSystemExecute(1,username,6,"进行了选填项-职业的填写,您已成功获得了餐厅送出的6网站积分.",newID)=True Then Response.Write "积分处理成功！<br />" Else Response.Write "积分处理失败！<br />"
+		End If
+	'积分运算.End
+	
+		
+	'发放一个临时会话变量，凭此可以免费登录！
+	Session("YouCanLoginID_Temp")="CokeShow"& CokeShow.GetRandomizeCode
+	
+	'拦截&优先处理.
+	'如果来自购买操作的快速注册等需求，那么需要跳回上一步的操作fromurl处![先立刻成为登录状态]
+	'方法：第一步，向会员中心首页发送免费登录请求，令top文件处理并获得免费登录状态；第二部，在会员中心首页前半段，会让有来路传参的请求跳转到来路处继续操作！
+	If fromurl<>"" And Len(fromurl)>10 Then
+		Response.Redirect "/ONCEFOREVER/Account_index.Welcome?Action=RegisterSuccessUI&username="& username &"&ID_Temp="& Replace(CokeShow.PassEncode( Ucase(Md5( Session("YouCanLoginID_Temp") & username )) ),"%","") &"&fromurl="& fromurl
+		Response.End()
+		Exit Sub
+	End If
+	
+	
+	'CokeShow.ShowOK "恭喜您，您的新会员帐号注册"& UnitName &"成功!", CurrentPageNow &"?Action=RegisterSuccessUI&username="& username &"&ID_Temp="& Md5( Session("YouCanLoginID_Temp") & username )
+	'Response.Redirect "/index.Welcome"
+	Response.Redirect "?Action=RegisterSuccessUI&username="& username &"&ID_Temp="& Replace(CokeShow.PassEncode( Ucase(Md5( Session("YouCanLoginID_Temp") & username )) ),"%","")
+	'免费登录算法：CokeShow.AddCode_Num( Ucase(Md5( Session("YouCanLoginID_Temp") & CokeShow.filtPass(Request("username")) )) )
+	'1.捆绑大于6字符的Session("YouCanLoginID_Temp")值+帐号值在一起； 2.对其进行MD5加密； 3.对其全大写化； 4.最后对其进行PassEncode加密+去除百分号%。 5.对照一下谁能够传递过来这样的匹配字符串，就允许其登录相应的会员帐号！
+
+End Sub
+
+
+'成功注册页面.
+Sub RegisterSuccessUI()
+%>
+      <table width="100%" border="0" cellspacing="0" cellpadding="0">
+        <tr>
+          <td>
+          	
+            恭喜您，用户名 <% =Request("username") %> 注册成功！
+            <br />
+            您现在想做什么呢：
+            <br />
+            <a href="###"><img src="/images/bit_05.gif" width="5" height="9" />返回刚才正在进行的事情</a>
+            <br />
+            <a href="/"><img src="/images/bit_05.gif" width="5" height="9" />返回首页</a>
+            <br />
+            <a href="/ONCEFOREVER/Account_index.Welcome<% ="?Action=RegisterSuccessUI&username="& Request("username") &"&ID_Temp="& Request("ID_Temp") %>" target="_blank"><img src="/images/bit_05.gif" width="5" height="9" />登录进入会员中心</a>
+            <!--<br />
+            <a href="/"><img src="/images/bit_05.gif" width="5" height="9" />继续刚才的操作&gt;&gt;</a>-->
+            
+            
+          </td>
+        </tr>
+      </table>
+<%
+End Sub
+%>

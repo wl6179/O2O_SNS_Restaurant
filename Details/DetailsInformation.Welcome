@@ -1,0 +1,351 @@
+<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：新闻列表.
+'日期说明：2010-05-12
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+<!--#include virtual="/system/foreground_ToBrowseRecordsClass.asp"-->
+
+<%'!--#include virtual="/CokeCart/Shoppingcart.Class.asp"--%>
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+
+'购物车类实例化
+'Dim CokeCart
+'Set CokeCart = New ShoppingcartClass
+%>
+
+<%
+'初始化赋值.
+'变量定义.
+
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+
+
+Dim strGuide								'导航文字.
+
+Dim CokeMark,NowClassID
+
+
+
+'接收参数.
+
+CurrentTableName 	="[CXBG_details]"		'此模块涉及的[表]名.
+CurrentPageNow 		="/Details/DetailsInformation.Welcome"
+UnitName			="信息"
+
+CokeMark	=CokeShow.filtRequest(Request("CokeMark"))		'使用加密解密函数！
+
+
+'处理参数.
+'处理查询执行 控制变量.
+
+
+
+'当前的菜品ID.
+If CokeMark="" Then
+	CokeMark=0
+Else
+	If isNumeric( CokeShow.DelCode_Num(CokeMark) ) Then
+		CokeMark=CokeShow.CokeClng( CokeShow.DelCode_Num(CokeMark) )
+	Else
+		CokeMark=0
+	End If
+End If
+'NowClassID
+If CokeMark>0 Then NowClassID=CokeShow.CokeClng( CokeShow.otherField("[CXBG_details]",CokeMark,"id","details_class_id",True,0) ) Else NowClassID=0
+
+%>
+<%
+'主程序.Begin
+sql="SELECT TOP 1 * FROM "& CurrentTableName &" WHERE deleted=0 AND id="& CokeMark
+If Not IsObject(CONN) Then link_database
+Set RS=Server.CreateObject("Adodb.RecordSet")
+'	Response.Write "<br />"& sql
+'	Response.End 
+RS.Open sql,CONN,1,1
+
+If RS.Eof And RS.Bof Then
+	Response.Redirect "/err404.asp"
+End If
+
+'主程序.End
+%>
+<%
+'定义当前导航项.
+Dim ShowNavigationNo
+ShowNavigationNo=7
+If Request("classid")="25" Then
+	ShowNavigationNo=4
+End If
+
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="<% =Trim( RS("topic") ) %>" />
+	<meta http-equiv="Description" content="<% =CokeShow.InterceptStr( CokeShow.nohtmlII(RS("logtext")),250 ) %>" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+    <%
+	'定义当前页的标题文字.
+	Dim PageTitleWords
+	PageTitleWords = RS("topic") &" -- "& CokeShow.otherField("[CXBG_controller]",1,"ID","site_title",True,0)
+	%>
+	<title><% =PageTitleWords %></title>
+	
+    
+    
+    <link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+    <link href="/css/sjym.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/js/jQ-1.2.3.pack.js"></script>
+    <script type="text/javascript" src="/js/Tab.js"></script>
+	
+    <!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+	</style>
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		//dojo.require("dojo.parser");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		//dojo.require("dijit.Dialog");
+		
+		dojo.addOnLoad(function(){
+			
+		});
+	</script>
+    <script type="text/javascript" src="/script/public.js"></script>
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgbody">
+
+<div id="cxbgbg_img">
+ <div id="cxbgbg_imgmid">
+  <div id="cxbg_headbg">
+ <!--header start-->
+  <!--#include virtual="/_include/_include_PublicHeadSearch_Code.asp"-->
+ <!--header end-->
+  </div>
+ <!--middle start-->
+<div class="sjymmidbg">
+<div class="sjym_txtimg_bg">
+   <div id="sjymfuctbg" class="fontred">欢迎光临，抢座预订请拨打：<span class="font25">6493 0888</span>， 6493 7666</div>
+   <div id="sjymwztbg">
+	 
+     <span class="font12fff">您现在的位置：</span><a href="/" class="f00012">首页</a><span class="font12000">-</span> <a class="f00014" href="/Details/Details.Welcome">全部信息</a><span class="font12000">-</span> <a href="/Details/Details.Welcome?classid=<% =NowClassID %>" target="_self" class="f00014"><% =CokeShow.otherField("[CXBG_details_class]",NowClassID,"classid","classname",True,100) %></a><span class="font12000">&gt;&gt;</span> <% =RS("topic") %>
+     
+   </div>
+   
+   <div class="sjymxx_mid">
+     <div class="tjzjdp_sjym">
+	   <p class="newsxx_bt"><% =RS("topic") %></p>
+	   <div class="tjzjdp_sjym_txtpp">
+	     
+         
+	     <img src="<% If RS("Photo")<>"" Then Response.Write RS("Photo") Else Response.Write "/images/hytx/lucky.gif" %>" width="200" height="130" />
+	     <div style="font-size:14px;">
+			 <% If RS("photo_desc")<>"" Then %>
+                <% ="摘要简介：<i>"& RS("photo_desc") &"</i>" %>
+             <% End If %>
+         </div>
+	     <div class="cokeshow.logtext" style="font-size:14px; letter-spacing:1px;">
+             <% =RS("logtext") %>
+         </div>
+         <p class="txtalign_center">&nbsp;
+             
+         </p>
+         <p class="txtalign_center" style="text-align:left; text-indent:0;">
+             编辑园丁：<% =RS("author") %>
+             <br />信息诞生日期：<% =CokeShow.filt_DateStr(RS("adddate")) %>
+             <br />总共阅读人数：<% =RS("iis") %> 人
+             <!--<br />评论家的点评：0 条-->
+         </p>
+         
+	   </div>
+	 </div>
+	 <!--<div class="tjzjdp_sjym">
+	   <p class="coloreee_bt">会员评论</p>
+	   <ul class="tjzjdp_sjym_hypl">
+	     <li>
+	       <table width="100%" border="0" cellspacing="0" cellpadding="0">
+             <tr>
+               <td width="11%" rowspan="3" valign="top"><img src="/images/hytx/girl_hy45_01.jpg" width="45" height="45" /></td>
+               <td width="66%" class="coloreee"><a class="fontred_a" href="">痴心不改会员名称</a></td>
+               <td width="23%" class="coloreee"><span class="xxright"><img src="/images/xx.gif" width="15" height="16" /> <img src="/images/xx.gif" width="15" height="16" /> <img src="/images/xx.gif" width="15" height="16" /> <img src="/images/xx.gif" width="15" height="16" /> <img src="/images/xx_goy.gif" width="15" height="16" /></span></td>
+             </tr>
+             <tr>
+               <td colspan="2"><span class="fontred">口味：2分 　  </span>环境：1 　服务：1 　人均消费：&yen;50</td>
+               </tr>
+             <tr>
+               <td colspan="2">上周五和朋友一起小聚，选择了这里，停车位较多，食物的味道不错，服务态度很好 餐厅环境也很好，菜品品种选的的比较多，这个菜市这里的特色，如果大家有时间可以来这里民长一下，伟大相当赞！！</td>
+               </tr>
+           </table>
+		 </li>
+	     <li>
+	       <table width="100%" border="0" cellspacing="0" cellpadding="0">
+             <tr>
+               <td width="11%" rowspan="3" valign="top"><img src="/images/hytx/girl_hy45_01.jpg" width="45" height="45" /></td>
+               <td width="66%" class="coloreee"><a class="fontred_a" href="">痴心不改会员名称</a></td>
+               <td width="23%" class="coloreee">2010-04-20</td>
+             </tr>
+             <tr>
+               <td colspan="2"><span class="fontred">口味：2分 　  </span>环境：1 　服务：1 　人均消费：&yen;50</td>
+               </tr>
+             <tr>
+               <td colspan="2">上周五和朋友一起小聚，选择了这里，停车位较多，食物的味道不错，服务态度很好 餐厅环境也很好，菜品品种选的的比较多，这个菜市这里的特色，如果大家有时间可以来这里民长一下，伟大相当赞！！</td>
+               </tr>
+           </table>
+		 </li>
+	     <li>
+	       <table width="100%" border="0" cellspacing="0" cellpadding="0">
+             <tr>
+               <td width="11%" rowspan="3" valign="top"><img src="/images/hytx/girl_hy45_01.jpg" width="45" height="45" /></td>
+               <td width="66%" class="coloreee"><a class="fontred_a" href="">痴心不改会员名称</a></td>
+               <td width="23%" class="coloreee">2010-04-20</td>
+             </tr>
+             <tr>
+               <td colspan="2"><span class="fontred">口味：2分 　  </span>环境：1 　服务：1 　人均消费：&yen;50</td>
+               </tr>
+             <tr>
+               <td colspan="2">上周五和朋友一起小聚，选择了这里，停车位较多，食物的味道不错，服务态度很好 餐厅环境也很好，菜品品种选的的比较多，这个菜市这里的特色，如果大家有时间可以来这里民长一下，伟大相当赞！！</td>
+               </tr>
+           </table>
+		 </li>
+	     <li>
+	       <table width="100%" border="0" cellspacing="0" cellpadding="0">
+             <tr>
+               <td width="11%" rowspan="3" valign="top"><img src="/images/hytx/girl_hy45_01.jpg" width="45" height="45" /></td>
+               <td width="66%" class="coloreee"><a class="fontred_a" href="">痴心不改会员名称</a></td>
+               <td width="23%" class="coloreee">2010-04-20</td>
+             </tr>
+             <tr>
+               <td colspan="2"><span class="fontred">口味：2分 　  </span>环境：1 　服务：1 　人均消费：&yen;50</td>
+               </tr>
+             <tr>
+               <td colspan="2">上周五和朋友一起小聚，选择了这里，停车位较多，食物的味道不错，服务态度很好 餐厅环境也很好，菜品品种选的的比较多，这个菜市这里的特色，如果大家有时间可以来这里民长一下，伟大相当赞！！</td>
+               </tr>
+           </table>
+		 </li>
+	     <li>
+	       <table width="100%" border="0" cellspacing="0" cellpadding="0">
+             <tr>
+               <td width="11%" rowspan="3" valign="top"><img src="/images/hytx/girl_hy45_01.jpg" width="45" height="45" /></td>
+               <td width="66%" class="coloreee"><a class="fontred_a" href="">痴心不改会员名称</a></td>
+               <td width="23%" class="coloreee">2010-04-20</td>
+             </tr>
+             <tr>
+               <td colspan="2"><span class="fontred">口味：2分 　  </span>环境：1 　服务：1 　人均消费：&yen;50</td>
+               </tr>
+             <tr>
+               <td colspan="2">上周五和朋友一起小聚，选择了这里，停车位较多，食物的味道不错，服务态度很好 餐厅环境也很好，菜品品种选的的比较多，这个菜市这里的特色，如果大家有时间可以来这里民长一下，伟大相当赞！！</td>
+               </tr>
+           </table>
+		 </li>
+	   </ul>
+        <div class="sjfy">
+	     <span>共<span class="font_yl">212</span>个记录 </span><span class="disabled">&lt; </span><span class="current">1</span><a href="#?page=2">2</a><a href="#?page=3">3</a>...<a href="#?page=199">199</a><a href="#?page=200">200</a><a class="nextym" href=""> 
+	下一页更精彩 </a>
+        </div>
+	 </div>-->
+	 
+	 <!--<div class="tjzjdp_sjym">
+       <p class="coloreee_bt">详情</p>
+	   <div class="tjzjdp_sjym_txtpp">
+	     <table width="100%" border="0" cellspacing="3" cellpadding="0">
+           <tr>
+             <td width="13%" valign="top"><span class="fontred">*</span>昵称：</td>
+             <td width="87%" colspan="3">
+               <input class="input_150" type="text" name="textfield" />             </td>
+             </tr>
+           
+           <tr>
+             <td valign="top">内容：</td>
+             <td colspan="3">
+               <textarea class="textarea_400" name="textarea"></textarea>             </td>
+             </tr>
+           <tr>
+             <td valign="top"><span class="fontred">*</span>验证码：</td>
+             <td colspan="3" nowrap="nowrap"><input class="input_150" type="text" name="textfield3" /></td>
+             </tr>
+           <tr>
+             <td height="30" colspan="4" align="center" valign="bottom"><a class="button_img77" href="">会员评论</a></td>
+             </tr>
+         </table>
+	   </div>
+	   </div>-->
+	 <div class="clear"></div>
+   </div>
+</div>
+</div>
+<!--middle end-->
+
+<div class="left_line02"></div>
+    <div class="footer">
+  	<!--底部-->
+	<!--#include virtual="/_include/_include_PublicFootCopyright_Code.asp"-->
+    <!--底部-->
+    </div>
+  <div class="footer_bom"></div>
+ </div>
+</div>
+
+</body>
+</html>
+<%
+'UPDATE更新访问量.
+'如果没有访问过的痕迹，则加一.
+If isEmpty(Session("visitor_details_datetime_"& RS("id") )) Or isNull(Session("visitor_details_datetime_"& RS("id") )) Or Session("visitor_details_datetime_"& RS("id") )="" Then
+	
+	CONN.Execute( "UPDATE [CXBG_details] SET iis=iis+1 WHERE id="& RS("id") )
+'如果有访问过的迹象，则不加一.
+Else
+	'有Session就不做计数.
+End If
+'记下被当前访客访问的痕迹！
+Session("visitor_details_datetime_"& RS("id") )="gogogo"
+%>

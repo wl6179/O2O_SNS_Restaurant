@@ -1,0 +1,26 @@
+/* CSS Document */
+/*header*/
+#dlzc_headbg{width:500px; height:97px; padding:60px 46px 0px 0px; margin:0px auto 0px auto; background:url(../images/dlzc_img01.jpg) repeat-y; text-align:right;}
+
+/*mid-left*/
+.dlzccentbg{width:456px; padding:0px 45px; background:url(../images/dlzc_img02.jpg) no-repeat;}
+.hydlzcbt{width:200px; background:url(../images/hy.gif) 0px 15px no-repeat; padding-left:20px; line-height:48px; height:48px; font-size:14px; font-family:"微软雅黑" "宋体"; color:#CD4400;}
+.tjpyzcbt{width:200px; background:url(../images/tjpybit.gif) 0px 15px no-repeat; padding-left:20px; line-height:48px; height:48px; font-size:14px; font-family:"微软雅黑" "宋体"; color:#CD4400; margin:70px 0px 0px 30px;  *margin:55px 0px 0px 30px;}
+
+.hyzctable{width:400px; margin:15px auto 0px auto;}
+.hyzctable table tr td{ line-height:28px; padding:5px 0px;}
+
+.tjpytable{width:400px; margin:15px auto 0px auto;}
+.tjpytable table tr td{ line-height:28px; padding:1px 0px;}
+
+.rzqspan{height:14px; width:90%;  background:url(../images/qzrbg.jpg); font-size:0px; border:1px #B4B4B4 solid;}
+
+
+.zcdlfooter{width:548px; height:45px; background:url(../images/yhzcbom.jpg); margin:0px auto;}
+
+.aclose{width:50px; height:16px; line-height:16px; display:block; float:right; margin-right:5px; background:url(../images/close.gif) 30px 0px no-repeat; color:#CC0000;}
+.aclose:hover{background:url(../images/close.gif) 30px -16px no-repeat; color:#000000;}
+
+.tjpy_tell{width:490px; height:60px; padding-top:5px; text-align:right; text-align:right; line-height:60px;}
+
+.clear{ clear:both;}

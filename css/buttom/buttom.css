@@ -1,0 +1,33 @@
+a.ovalbutton{
+background: transparent url('oval-gray-left.gif') no-repeat top left;
+display: block;
+float: left;
+font: normal 13px Tahoma;
+line-height: 16px; 
+height: 24px;
+padding-left: 11px; 
+text-decoration: none;
+}
+
+a:link.ovalbutton, a:visited.ovalbutton, a:active.ovalbutton{
+color: #666; }
+
+a.ovalbutton span{
+background: transparent url('oval-gray-right.gif') no-repeat top right;
+display: block;
+padding: 4px 11px 4px 0; 
+}
+
+a.ovalbutton:hover{
+background-position: bottom left;
+}
+
+a.ovalbutton:hover span{ 
+background-position: bottom right;
+color: black;
+}
+
+.buttonwrapper{
+overflow: hidden; 
+width: 100%;
+}

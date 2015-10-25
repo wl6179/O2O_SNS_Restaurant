@@ -1,0 +1,261 @@
+﻿<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：首页.
+'日期说明：2010-04-30
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include file="system/system_conn.asp"-->
+<!--#include file="system/system_class.asp"-->
+
+<!--#include file="system/foreground_class.asp"-->
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+%>
+
+<%
+'变量定义区.
+Dim CurrentPageNow
+CurrentPageNow 	= "index.Welcome"			'当前页.
+
+
+Dim language,classid
+language=CokeShow.filtRequest(Request("language"))
+classid=CokeShow.filtRequest(Request("classid"))
+'处理语言，默认为cn.
+If language="" Then
+	language="cn"
+Else
+	language=Trim(language)
+End If
+
+'处理查询执行 控制变量
+If classid="" Then
+	classid=0
+Else
+	If isNumeric(classid) Then classid=CokeShow.CokeClng(classid) Else classid=0
+End If
+
+
+'定义当前分类（菜品分类）的classid.专门用于控制是否显示首页高亮显示.[当大导航上的某个分类被浏览时，依然可以高亮显示该分类导航！]
+Dim intCurrentClassid
+intCurrentClassid = classid
+'intCurrentClassid = 99999		'如果等于99999，则表示无论如何，大导航都不会有高亮显示！
+%>
+<%
+'定义当前导航项.
+Dim ShowNavigationNo
+ShowNavigationNo=1
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="<% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_keyword",True,0) %>" />
+	<meta http-equiv="Description" content="<% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_description",True,0) %>" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+    <%
+	'定义当前页的标题文字.
+	Dim PageTitleWords
+	PageTitleWords = CokeShow.setup(1,0) &"-"& CokeShow.otherField("[CXBG_controller]",1,"ID","site_title",True,0)
+	%>
+	<title><% =PageTitleWords %></title>
+	
+	<!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+		
+		@import "/scriptcokeshowcomcndojov110/dojox/image/resources/image.css";
+	</style>
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		dojo.require("dojo.parser");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		dojo.require("dijit.Dialog");
+		dojo.require("dojox.image.Lightbox");
+		
+		//dojo.require("dijit.Dialog");
+		dojo.require("dijit.form.Button");
+		dojo.addOnLoad(function(){
+			picrun_ini();		//轮换广告.
+		});
+	</script>
+    <script type="text/javascript" src="/script/public.js"></script>
+    
+    <link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+    <link href="/css/index.css" type="text/css" rel="stylesheet" />
+    <script src="/js/leftrightjq.js" type="text/javascript"></script>
+    <script src="/js/tjimg.js" type="text/javascript"></script>
+    
+    <link href="/style/StarRating.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/script/ONCEFOREVER/StarRating.js"></script>
+	
+	<!--#include virtual="/AD_IMG.Welcome"-->
+	
+	<!--2012广告代码-->
+	<LINK rel=stylesheet type=text/css href="css/AD_2011Birthday/lrtk.css" media=screen>
+	<SCRIPT type=text/javascript src="js/AD_2011Birthday/jquery.min.js"></SCRIPT>
+	<SCRIPT type=text/javascript src="js/AD_2011Birthday/jquery-ui.min.js"></SCRIPT>
+	<SCRIPT type=text/javascript src="js/AD_2011Birthday/howdydo-bar.js"></SCRIPT>
+	<SCRIPT type=text/javascript>
+		$(document).ready( function(){
+			$( '#howdy' ).howdyDo({
+				action		: 'hover',
+				effect		: 'slide',
+				easing		: 'easeInOutExpo',
+				duration	: 600,
+				openAnchor	: '<img src="images/AD_2011Birthday/down-arr-16x16.png" border=0 />',
+				closeAnchor	: '<img src="images/AD_2011Birthday/close-16x16.png" border=0 />'
+			});
+		});
+	</SCRIPT>
+	<!--2012广告代码-->
+	
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<!--2012广告代码-->
+<DIV id=howdy>
+	<img src="images/AD_2011Birthday/2011Birthday.jpg" width=972 />
+</DIV>
+<!--2012广告代码-->
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgbody">
+
+
+
+<div id="cxbgbg_img">
+ <div id="cxbgbg_imgmid">
+  <div id="cxbg_headbg">
+ <!--header start-->
+	<!--#include virtual="/_include/_include_PublicHeadSearch_Code.asp"-->
+ <!--header end-->
+  </div>
+ <!--show start-->
+	<!--#include virtual="/_include/Index/_include_AdvertisementArea_Code.asp"-->
+ <!--show end-->
+<!--middle start-->
+  <div class="cxbgmidbg">
+    <div class="cxbg_left">
+      <div id="cxbgfuctbg" class="fontred">欢迎光临，抢座预订请拨打：<span class="font25">6493 0888</span>， 6493 7666</div>
+	  <div class="left_cp">
+	   <div class="leftindex_cp">
+	    <div class="index_bt01"><span class="font16fff">星级菜</span> <span class="font14000">推荐</span><a class="more_01" href="/ChineseDish/ChineseDish.Welcome?StarRating=True"></a></div>
+		<ul class="index_xjctj">
+			<!--#include virtual="/_include/Index/_include_RecommendStarLevelDishArea_Code.asp"-->
+		</ul>
+		<div class="index_bt03"><span class="font16fff">餐厅</span> <span class="font14000">环境</span><a class="more_01" href="/DiningArea/DiningArea.Welcome"></a></div>
+		<div class="index_cthj">
+			<!--#include virtual="/_include/Index/_include_DiningArea_Code2.asp"-->
+		</div>
+	   </div>
+	   <div class="rightindex_cp">
+		<div class="index_bt02"><span class="font16fff">新品</span> <span class="font14000">推荐</span><a class="more_01" href="/ChineseDish/ChineseDish.Welcome?ExecuteSearch=1"></a></div>
+        <ul class="intctj_imgtxt">
+			<!--#include virtual="/_include/Index/_include_RecommendSetMealsArea_Code.asp"-->
+		</ul>
+	   </div>
+	  </div>
+	  <div class="left_line01"></div>
+	  <div class="left_pldh">
+	   <div class="left_dhq">
+	     <div class="index_bt04"><span class="font16fff">礼品券</span> <span class="font14000">会员乐享</span><a class="more_01" href="/Club/GiftCertificateds.Welcome"></a></div>
+		 <ul class="left_dhq_txt">
+			<!--#include virtual="/_include/Index/_include_GiftCertificatedArea_Code.asp"-->
+		 </ul>
+	   </div>
+	   <div class="left_hypl">
+	     <div class="index_bt05"><span class="font16fff">会员</span> <span class="font14000">点评</span><a class="more_01" href="/Club/RemarkOns.Welcome"></a></div>
+		 <ul class="left_hypl_txt">
+			<!--#include virtual="/_include/Index/_include_MemberCommentsArea_Code.asp"-->
+		 </ul>
+	   </div>
+	  </div>
+	</div>
+	<div class="cxbg_right">
+      <div class="index_rightbt"><span class="fontredbt14">最新</span><span class="font16000">动态</span><a class="more_02" href="/Details/Details.Welcome?ExecuteSearch=2"></a></div>
+	  <ul class="index_xxlist">
+			<!--#include virtual="/_include/Index/_include_Right_NewestNewsArea_Code.asp"-->
+	  </ul>
+      <div class="index_rightbt">
+          <span class="fontredbt14">最新</span>
+          <span class="font16000">
+          	促销
+            <%
+			'显示是否有最新促销（近期，即七天之内发布的优惠券信息！）.
+			Dim rsRight_isNewestSalesPromotionArea_Code,sqlRight_isNewestSalesPromotionArea_Code
+			sqlRight_isNewestSalesPromotionArea_Code="select top 1 * from [CXBG_details] where deleted=0 and isOnpublic=1 and details_class_id=12 and datediff(day,adddate,GETDATE())<=7"
+			Set rsRight_isNewestSalesPromotionArea_Code=Server.CreateObject("Adodb.RecordSet")
+			rsRight_isNewestSalesPromotionArea_Code.Open sqlRight_isNewestSalesPromotionArea_Code,CONN,1,1
+			
+			'如果记录不为空，显示Hot提示.
+		  	If Not rsRight_isNewestSalesPromotionArea_Code.EOF Then
+			%>
+          	&nbsp;<img src="/images/ico/hot.gif" />
+			<%
+            End If
+			
+			'关闭记录集.
+			rsRight_isNewestSalesPromotionArea_Code.Close
+			Set rsRight_isNewestSalesPromotionArea_Code=Nothing
+            %>
+          </span>
+      </div>
+	  <ul class="index_zxcxlist">
+			<!--#include virtual="/_include/Index/_include_Right_NewestSalesPromotionArea_Code.asp"-->
+	  </ul>
+      <div class="index_rightbt"><span class="fontredbt14">最新</span><span class="font16000">Party</span><a class="more_02" href="/Details/Details.Welcome?classid=11"></a></div>
+	  <ul class="index_partylist">
+			<!--#include virtual="/_include/Index/_include_Right_NewestPartyArea_Code.asp"-->
+	  </ul>
+	</div>
+    <div class="clear"></div>
+  </div>
+<!--middle end-->
+  <div class="left_line02"></div>
+    <div class="footer">
+	<!--底部-->
+	<!--#include virtual="/_include/_include_PublicFootCopyright_Code.asp"-->
+    <!--底部-->
+	</div>
+  <div class="footer_bom"></div>
+ </div>
+</div>
+
+
+
+
+
+</body>
+</html>

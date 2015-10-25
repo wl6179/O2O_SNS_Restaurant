@@ -1,0 +1,374 @@
+<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%
+Option Explicit
+Response.Buffer = True	'缓冲数据，才向客户输出；
+Response.Charset="utf-8"
+Session.CodePage = 65001
+%>
+<%
+'模块说明：餐厅环境.
+'日期说明：2010-05-10
+'版权说明：www.cokeshow.com.cn	可乐秀(北京)技术有限公司产品
+'友情提示：本产品已经申请专利，请勿用于商业用途，如果需要帮助请联系可乐秀。
+'联系电话：(010)-67659219
+'电子邮件：cokeshow@qq.com
+%>
+<!--#include virtual="/system/system_conn.asp"-->
+<!--#include virtual="/system/system_class.asp"-->
+
+<!--#include virtual="/system/foreground_class.asp"-->
+<!--#include virtual="/system/foreground_ToBrowseRecordsClass.asp"-->
+
+<%'!--#include virtual="/CokeCart/Shoppingcart.Class.asp"--%>
+
+<%
+'类实例化
+Dim CokeShow
+Set CokeShow = New SystemClass
+CokeShow.Start		'调用类的Start方法，初始化类里的ReloadSetup()函数，并得到二维数组Setup
+Call CokeShow.SQLWarningSys()	'预警.
+
+'前台类实例化
+Dim Coke
+Set Coke = New ForegroundClass
+Coke.Start
+
+''购物车类实例化
+'Dim CokeCart
+'Set CokeCart = New ShoppingcartClass
+%>
+
+<%
+'初始化赋值.
+'变量定义.
+Dim maxPerPage					'设置当前模块分页设置.
+Dim CurrentTableName			'设置当前模块所涉及的[表]名.
+Dim CurrentPageNow				'设置当前模块所在页面的文件名.
+Dim UnitName					'此主要列表展示中，所涉及的记录的单位名称.
+Dim totalPut,totalPages,currentPage			'分页用的控制变量.
+Dim RS, sql									'查询列表记录用的变量.
+Dim FoundErr,ErrMsg							'控制错误流程用的控制变量.
+Dim strFileName								'构建查询字符串用的控制变量.
+Dim ExecuteSearch,Keyword,TypeSearch,Action	'构建查询字符串以及流程控制用的控制变量.
+Dim strGuide								'导航文字.
+
+Dim classid,sql_product_class_id,sql_product_class_id_extend,strSQL_classAll
+Dim product_brand_id,sql_product_brand_id,strSQL_brandAll
+Dim product_PriceArea,sql_product_PriceArea,strSQL_PriceAreaAll
+Dim product_businessUSE_id,sql_product_businessUSE_id,sql_product_businessUSE_id_extend,strSQL_businessUSEAll
+Dim product_activityUSE_id,sql_product_activityUSE_id,sql_product_activityUSE_id_extend,strSQL_activityUSEAll
+Dim product_welfareUSE_id,sql_product_welfareUSE_id,sql_product_welfareUSE_id_extend,strSQL_welfareUSEAll
+
+Dim ListWay,OrderBy,strSQLOrderBy
+
+
+'接收参数.
+classid					=CokeShow.filtRequest(Request("classid"))
+product_brand_id		=CokeShow.filtRequest(Request("product_brand_id"))
+product_PriceArea		=CokeShow.filtRequest(Request("product_PriceArea"))
+product_businessUSE_id	=CokeShow.filtRequest(Request("product_businessUSE_id"))
+product_activityUSE_id	=CokeShow.filtRequest(Request("product_activityUSE_id"))
+product_welfareUSE_id	=CokeShow.filtRequest(Request("product_welfareUSE_id"))
+
+
+
+'接收参数.
+maxPerPage			=20
+CurrentTableName 	="[CXBG_DiningArea]"		'此模块涉及的[表]名.
+CurrentPageNow 		="/DiningArea/DiningArea.Welcome"
+UnitName			="餐厅环境图片"
+currentPage		=CokeShow.filtRequest(Request("Page"))
+ExecuteSearch	=CokeShow.filtRequest(Request("ExecuteSearch"))
+Keyword			=CokeShow.filtRequest(Request("Keyword"))
+TypeSearch		=CokeShow.filtRequest(Request("TypeSearch"))
+Action			=CokeShow.filtRequest(Request("Action"))
+
+ListWay				=CokeShow.filtRequest(Request("ListWay"))	'列表显示方式.
+OrderBy				=CokeShow.filtRequest(Request("OrderBy"))	'排序.
+
+'处理参数.
+'处理查询执行 控制变量.
+If ExecuteSearch="" Then
+	ExecuteSearch=0
+Else
+	If isNumeric(ExecuteSearch) Then ExecuteSearch=CokeShow.CokeClng(ExecuteSearch) Else ExecuteSearch=0
+End If
+'构造查询字符串.
+strFileName=CurrentPageNow &"?ExecuteSearch="& ExecuteSearch
+If Keyword<>"" Then
+	strFileName=strFileName&"&Keyword="& Keyword
+End If
+If TypeSearch<>"" Then
+	strFileName=strFileName&"&TypeSearch="& TypeSearch
+End If
+If ListWay<>"" Then
+	strFileName=strFileName&"&ListWay="& ListWay
+End If
+If OrderBy<>"" Then
+	strFileName=strFileName&"&OrderBy="& OrderBy
+	If OrderBy="TimeAsc" Then strSQLOrderBy=" adddate ASC," Else strSQLOrderBy=" adddate DESC,"
+Else
+	strSQLOrderBy=""
+End If
+'response.Write OrderBy
+
+
+'处理当前页码的控制变量，默认为第一页.
+If currentPage<>"" Then
+    If isNumeric(currentPage) Then currentPage=CokeShow.CokeClng(currentPage) Else currentPage=1
+Else
+	currentPage=1
+End If
+
+
+
+If classid<>"" Then
+    If isNumeric(classid) Then
+		classid=CokeShow.CokeClng(classid)
+		strSQL_classAll=" AND details_class_id="& classid &" "
+	Else
+		classid=0		'99999为了不让大导航条的首页按钮亮显，但在列表页classid有用时，必须不能用99999来代替0.
+		strSQL_classAll=""
+	End If
+Else
+	classid=0
+	strSQL_classAll=""
+End If
+'details_class_id
+Dim details_class_id
+If details_class_id<>"" Then
+    If isNumeric(details_class_id) Then
+		classid=CokeShow.CokeClng(details_class_id)
+	Else
+		details_class_id=1
+	End If
+Else
+	details_class_id=1
+End If
+
+
+
+'继续处理传参!
+'携带参数classid.
+If classid>0 Then
+	strFileName=strFileName&"&classid="& CokeShow.filtRequest(Request("classid"))
+End If
+'携带参数product_brand_id.
+If product_brand_id="" Then product_brand_id=0
+If product_brand_id>0 Then
+	strFileName=strFileName&"&product_brand_id="& CokeShow.filtRequest(Request("product_brand_id"))
+End If
+'携带参数product_brand_id.
+If product_PriceArea<>"" Then
+	strFileName=strFileName&"&product_PriceArea="& CokeShow.filtRequest(Request("product_PriceArea"))
+End If
+'携带参数product_businessUSE_id.
+If product_businessUSE_id<>"" Then
+	strFileName=strFileName&"&product_businessUSE_id="& CokeShow.filtRequest(Request("product_businessUSE_id"))
+End If
+'携带参数product_activityUSE_id.
+If product_activityUSE_id<>"" Then
+	strFileName=strFileName&"&product_activityUSE_id="& CokeShow.filtRequest(Request("product_activityUSE_id"))
+End If
+'携带参数product_welfareUSE_id.
+If product_welfareUSE_id<>"" Then
+	strFileName=strFileName&"&product_welfareUSE_id="& CokeShow.filtRequest(Request("product_welfareUSE_id"))
+End If
+
+
+
+'定义当前分类（菜品分类）的classid.专门用于控制是否显示首页高亮显示.[当大导航上的某个分类被浏览时，依然可以高亮显示该分类导航！]
+Dim intCurrentClassid
+'intCurrentClassid = classid
+intCurrentClassid = 99999		'如果等于99999，则表示无论如何，大导航都不会有高亮显示！
+%>
+<%
+'定义当前导航项.
+Dim ShowNavigationNo
+ShowNavigationNo=5
+%>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+	
+	<link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" href="/favicon.ico">
+	<meta name="generator" content="cokeshow.com.cn">
+	<meta name="keywords" content="餐厅环境 - <% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_keyword",True,0) %>" />
+	<meta http-equiv="Description" content="餐厅环境 - <% =CokeShow.otherField("[CXBG_controller]",1,"ID","site_description",True,0) %>" />
+	<meta content="all" name="robots" />
+	<meta name="author" content="wangliang,cokeshow@qq.com" />
+	<meta name="copyright" content="痴心不改餐厅" />
+    <%
+	'定义当前页的标题文字.
+	Dim PageTitleWords
+	PageTitleWords = "餐厅环境 - "& CokeShow.otherField("[CXBG_controller]",1,"ID","site_title",True,0)
+	%>
+	<title><% =PageTitleWords %></title>
+	
+	
+    <link href="/css/cxbg.css" type="text/css" rel="stylesheet" />
+    <link href="/css/sjym.css" type="text/css" rel="stylesheet" />
+    <script type="text/javascript" src="/js/jQ-1.2.3.pack.js"></script>
+	<script type="text/javascript" src="/js/Tab.js"></script>
+	
+    <!-- CSS -->
+	<style type="text/css">
+		@import "<% =filename_dj_MainCss_foreground %>";
+		@import "<% =filename_dj_ThemesCss_foreground %>";
+		
+		@import "/scriptcokeshowcomcndojov110/dojox/image/resources/image.css";
+	</style>
+	<script type="text/javascript" src="<% =filename_dj_foreground %>" djConfig="parseOnLoad: <% =parseOnLoad_dj_foreground %>, isDebug: <% =isDebug_dj_foreground %>, debugAtAllCosts: <% =isDebug_dj_foreground %>"></script>
+	<script type="text/javascript" src="<% =filenameWidgetsCompress_dj_foreground %>"></script>
+	<script type="text/javascript">
+	//专门对dojoType属性进行解析的Dojo解析器。（解析器使使用dojoType指定的Dojo widget来替换掉该元素如input等，这样DOM对象就被Dojo widget对象取代了。）
+	//解析将改写HTML，用Firebug中的DOM查看器查看即知。
+		dojo.require("dojo.parser");
+		//dojo.require("dijit.Menu");
+		//dojo.require("dijit.Tooltip");
+		//dojo.require("dijit.Dialog");
+		dojo.require("dojox.image.Lightbox");
+		
+		dojo.addOnLoad(function(){
+			
+		});
+	</script>
+    <script type="text/javascript" src="/script/public.js"></script>
+</head>
+
+<noscript><br />Come From MyHomestay-Developer Team<br /></noscript>
+<noscript><b>由 MyHomestay 原班创业团队开发设计制作，欢迎与CokeShow.com.cn联系.</b><br /></noscript>
+<noscript>BeiJing.China e-mail:cokeshow@qq.com</noscript>
+
+<body class="<% =classname_dj_ThemesCss_foreground %> cxbgbody">
+
+<div id="cxbgbg_img">
+ <div id="cxbgbg_imgmid">
+  <div id="cxbg_headbg">
+ <!--header start-->
+  <!--#include virtual="/_include/_include_PublicHeadSearch_Code.asp"-->
+ <!--header end-->
+  </div>
+ <!--middle start-->
+<div class="cxbgmidbg">
+    <div class="cxbg_left">
+      <div id="cxbgfuctbg_01" class="fontred">欢迎光临，抢座预订请拨打：<span class="font25">6493 0888</span>， 6493 7666</div>
+	    <!--CokeShow独有的分类广告营销展示区 Begin-->
+        <%
+		'CokeShow独有的分类广告营销展示区.
+		Dim rsClassID,sqlClassID,countClassID,numClassID
+		sqlClassID="select * from [CXBG_DiningArea_class] where isShow=1 ORDER BY RootID,OrderID"
+		Set rsClassID=Server.CreateObject("Adodb.RecordSet")
+		rsClassID.Open sqlClassID,CONN,1,1
+		countClassID=rsClassID.RecordCount
+		numClassID=1
+		%>
+        <%
+		Do While Not rsClassID.EOF
+		%>
+      <div class="left_sjym" id="div<% =rsClassID("classid") %>">
+	    <div class="cthj_bt">
+          <span class="font12fff">您现在的位置：</span><a href="/" class="f00012">首页</a><span class="font12000">-</span> <a class="f00014" href="/DiningArea/DiningArea.Welcome">餐厅环境</a>
+		</div>
+		<div class="left_sjym_cthj">
+		  
+		<%
+        '主程序.Begin
+        sql="SELECT TOP 30 * FROM [CXBG_DiningArea] WHERE deleted=0 AND isOnpublic=1 AND details_class_id="& rsClassID("classid") &" order by details_orderid desc,id asc"
+        If Not IsObject(CONN) Then link_database
+        Set RS=Server.CreateObject("Adodb.RecordSet")
+        '	Response.Write "<br />"& sql
+        '	Response.End 
+        RS.Open sql,CONN,1,1
+        
+        If RS.Eof And RS.Bof Then
+            'Response.Redirect "/err404.asp"
+			Response.Write "欢迎光临，餐厅尚未上传相关的餐厅环境图片：） "
+            '没有相关图片.
+        End If
+        %>
+        <%
+		Do While Not RS.EOF
+		%>
+          
+          <a class="abg01" href="<% If RS("Photo")<>"" Then Response.Write RS("Photo") Else Response.Write "/images/NoPic.png" %>" dojoType="dojox.image.Lightbox" group="group<% =rsClassID("classid") %>" title="<% =CokeShow.otherField("[CXBG_DiningArea_class]",RS("details_class_id"),"classid","classname",True,0) %>--<% =RS("topic") %>"><img src="<% If RS("Photo")<>"" Then Response.Write RS("Photo") Else Response.Write "/images/NoPic.png" %>" width="110" height="110" /></a>
+        <%
+			RS.MoveNext
+		Loop
+		
+		'关闭记录集.
+		RS.Close
+		'/Set RS=Nothing
+		%>
+          <div class="clear"></div>
+		</div>
+        <div class="digg">
+	     
+        </div>
+	  </div>
+		<%
+			numClassID=numClassID+1
+			rsClassID.MoveNext
+		Loop
+		
+		'关闭记录集.
+		rsClassID.Close
+		Set rsClassID=Nothing
+		Set RS=Nothing
+		%>
+        <!--CokeShow独有的分类广告营销展示区End-->
+	</div>
+	<div class="sjym_right">
+      <div class="flxx_rightbt"><span class="fontredbt14">餐厅环境</span><span class="font16000">分类</span></div>
+	  <ul class="flxx_ullist">
+	    <%
+		'CokeShow独有的分类广告营销展示区.
+		'/Dim rsClassID,sqlClassID,countClassID,numClassID
+		sqlClassID="select * from [CXBG_DiningArea_class] where isShow=1 ORDER BY RootID,OrderID"
+		Set rsClassID=Server.CreateObject("Adodb.RecordSet")
+		rsClassID.Open sqlClassID,CONN,1,1
+		countClassID=rsClassID.RecordCount
+		numClassID=1
+		%>
+        <%
+		Do While Not rsClassID.EOF
+		%>
+        <li id="mod<% =rsClassID("classid") %>" tabcontentid="div<% =rsClassID("classid") %>" activeclass="flxx_ullist_vis" deactiveclass="flxx_ullist_link" groupname="m1" <% If numClassID=1 Then Response.Write "default=""default""" %> class="flxx_ullist_link" hoverclass="flxx_ullist_hov"><span class="font12fff">餐厅环境 - </span><% =rsClassID("classname") %><span class="font10fff" style="display:none;"> (20)</span></li>
+        <%
+			numClassID=numClassID+1
+			rsClassID.MoveNext
+		Loop
+		
+		'关闭记录集.
+		rsClassID.Close
+		Set rsClassID=Nothing
+		%>
+	    
+        
+        <div class="clear"></div>
+	  </ul>
+	  <div class="flxx_rightbt_bot"></div>
+	</div>
+    <div class="clear"></div>
+  </div>
+<!--middle end-->
+
+  <div class="left_line02"></div>
+    <div class="footer">
+  	<!--底部-->
+	<!--#include virtual="/_include/_include_PublicFootCopyright_Code.asp"-->
+    <!--底部-->
+    </div>
+  <div class="footer_bom"></div>
+ </div>
+</div>
+</body>
+</html>
+
+
+<%
+'使用Detail.ASP原型.
+%>
