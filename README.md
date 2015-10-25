@@ -17,3 +17,4 @@
 - 此时，我已经关注扫条码机、收款机、及针对监控采集前厅电话线的开发了，以便创建出超级会员系统。但是此时还是诺基亚的天下，没有安卓系统体系，所有迹象表明只能重新开始研究 C、Delphi、Visual Basic，而终结！
 - 我是具有探索精神的实践者、总设计师：Chris Wang
 - 2010 年 ASP 作品
+- 工具：CVSNT Server 古董级的版本质量控制、WinCVS、Windows Server、SQL Server 2005 最新窗口函数（SNS必用！）、Dreamweaver、ASP、Visual Basic、dojo 1.4.1 框架、Microsoft Web Application Stress Tool 微软性能测试工具 等
