@@ -24,11 +24,11 @@
 例子1 - 窗口函数：
 ````sql
 --最受欢迎菜
-select top 7 *,
+select top 7 *,   --这个 * 在现在看来，是性能隐患~
   (
   select distinct cast(sumChineseDish_Taste as decimal)/TotalChineseDish_Taste as avgChineseDish_Taste 
   from (select product_id, 
-          sum(ChineseDish_Taste) over() as sumChineseDish_Taste, 
+          sum(ChineseDish_Taste) over() as sumChineseDish_Taste,    --这就是 SQL Server 2005 最新的新特性 - 窗口函数
           count(ChineseDish_Taste) over() as TotalChineseDish_Taste 
         from [CXBG_account_RemarkOn] 
         where product_id=[CXBG_product].id 
