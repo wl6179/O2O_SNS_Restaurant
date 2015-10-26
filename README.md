@@ -29,7 +29,7 @@ select top 7 *,   --这个 * 在现在看来，是性能隐患~
   select distinct cast(sumChineseDish_Taste as decimal)/TotalChineseDish_Taste as avgChineseDish_Taste 
   from (select product_id, 
           sum(ChineseDish_Taste) over() as sumChineseDish_Taste,    --这就是 SQL Server 2005 最新的新特性 - 窗口函数
-          count(ChineseDish_Taste) over() as TotalChineseDish_Taste 
+          count(ChineseDish_Taste) over() as TotalChineseDish_Taste	--窗口函数 能避免大量使用 GROUP BY，还能避免过多的子查询，同时能提高查询性能，适用于复杂的报表统计数据展现
         from [CXBG_account_RemarkOn] 
         where product_id=[CXBG_product].id 
           and deleted=0 and ChineseDish_Taste>0
