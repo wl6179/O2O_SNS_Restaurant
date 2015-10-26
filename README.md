@@ -40,3 +40,24 @@ where
   deleted=0 and isOnsale=1 
 order by avgChineseDish_TasteNow desc,OrderID desc,id desc
 ````
+
+例子2 - 窗口函数：
+````sql
+--首页新品推荐[套餐]
+select top 3 *,
+	(
+	select distinct cast(sumStarRating as decimal)/TotalStarRating as avgStarRating 
+	from (select product_id,
+			  sum(theStarRatingForChineseDishInformation) over() as sumStarRating,
+			  count(theStarRatingForChineseDishInformation)over() as TotalStarRating 
+		  from [CXBG_account_RemarkOn] 
+		  where product_id=[CXBG_product].id 
+			  and deleted=0 
+			  and theStarRatingForChineseDishInformation>0
+		  ) as x
+	) as avgStarRatingNow 
+from [CXBG_product] 
+where 
+  deleted=0 and isOnsale=1 and isSetMeals=1 and 1=1 
+order by avgStarRatingNow desc,OrderID desc,id desc
+````
