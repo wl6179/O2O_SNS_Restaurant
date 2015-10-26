@@ -43,7 +43,7 @@ order by avgChineseDish_TasteNow desc,OrderID desc,id desc
 
 例子2 - 窗口函数：
 ````sql
---首页新品推荐[套餐]【客户点评最赞的3道，套餐菜品】
+--首页新品推荐[套餐]【由客户点评出来的，最赞的3道，套餐菜品】
 select top 3 *,		--得出星评率最高e前3名（的菜品）！
 	(
 	select distinct cast(sumStarRating as decimal)/TotalStarRating as avgStarRating		--计算所有会员对每一道菜品的星评率
