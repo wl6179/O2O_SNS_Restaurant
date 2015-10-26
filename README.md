@@ -44,20 +44,20 @@ order by avgChineseDish_TasteNow desc,OrderID desc,id desc
 例子2 - 窗口函数：
 ````sql
 --首页新品推荐[套餐]
-select top 3 *,
+select top 3 *,		--得出星评率最高e前3名（的菜品）！
 	(
-	select distinct cast(sumStarRating as decimal)/TotalStarRating as avgStarRating 
+	select distinct cast(sumStarRating as decimal)/TotalStarRating as avgStarRating		--计算所有会员对每一道菜品的星评率
 	from (select product_id,
-			  sum(theStarRatingForChineseDishInformation) over() as sumStarRating,
-			  count(theStarRatingForChineseDishInformation)over() as TotalStarRating 
+			  sum(theStarRatingForChineseDishInformation) over() as sumStarRating,	--统计本菜的评星总数
+			  count(theStarRatingForChineseDishInformation)over() as TotalStarRating	--统计本菜的总评人数
 		  from [CXBG_account_RemarkOn] 
 		  where product_id=[CXBG_product].id 
-			  and deleted=0 
-			  and theStarRatingForChineseDishInformation>0
+			  and deleted=0	--有效的食评
+			  and theStarRatingForChineseDishInformation>0	--大于等于1星的（有效的）食评
 		  ) as x
 	) as avgStarRatingNow 
 from [CXBG_product] 
 where 
-  deleted=0 and isOnsale=1 and isSetMeals=1 and 1=1 
-order by avgStarRatingNow desc,OrderID desc,id desc
+  deleted=0 and isOnsale=1 and isSetMeals=1 and 1=1	--是套餐
+order by avgStarRatingNow desc,OrderID desc,id desc	-- * （关键）以"星评率"作排序！
 ````
